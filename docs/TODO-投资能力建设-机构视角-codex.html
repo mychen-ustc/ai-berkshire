@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI Berkshire 机构级投资能力建设路线图：从投研工具箱到可复现、可审计、可持续改进的投资决策系统。">
+  <title>AI Berkshire · 机构级投资能力建设路线图</title>
+  <style>
+    :root {
+      --paper: #f3f0e8;
+      --surface: #fffdf8;
+      --surface-2: #ebe6da;
+      --ink: #15231f;
+      --muted: #62706a;
+      --line: #d7d1c4;
+      --forest: #164c3b;
+      --forest-2: #2d725e;
+      --mint: #d8e8df;
+      --gold: #b78627;
+      --gold-2: #ead7a7;
+      --coral: #b95745;
+      --coral-2: #f0d5ce;
+      --blue: #315f7d;
+      --blue-2: #d9e6ec;
+      --violet: #665b89;
+      --shadow: 0 18px 50px rgba(34, 48, 42, .09);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 100% 0, rgba(183, 134, 39, .12), transparent 28rem),
+        radial-gradient(circle at 0 28rem, rgba(45, 114, 94, .10), transparent 30rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+
+    a { color: inherit; }
+    button, input { font: inherit; }
+    .shell { width: min(1220px, calc(100% - 36px)); margin: 0 auto; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--forest-2);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .section-kicker { color: var(--gold); }
+    .muted { color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    .topbar {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      border-bottom: 1px solid rgba(215, 209, 196, .86);
+      background: rgba(243, 240, 232, .86);
+      backdrop-filter: blur(18px);
+    }
+    .topbar-inner {
+      display: flex;
+      min-height: 64px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 850; }
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 11px;
+      color: #fff;
+      background: var(--forest);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+    }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .date-chip, .status-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 11px;
+      color: var(--muted);
+      background: rgba(255,253,248,.72);
+      font-size: .78rem;
+      font-weight: 700;
+    }
+    .status-chip { color: var(--forest); background: var(--mint); border-color: transparent; }
+    .progress-cluster { display: flex; align-items: center; gap: 9px; min-width: 166px; }
+    .progress-track { width: 88px; height: 7px; overflow: hidden; border-radius: 999px; background: var(--surface-2); }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: var(--forest-2); transition: width .25s ease; }
+    .progress-label { min-width: 58px; color: var(--muted); font-size: .7rem; font-weight: 850; }
+    .action-btn { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--line); border-radius: 11px; color: var(--muted); background: var(--surface); cursor: pointer; font-weight: 900; }
+    .action-btn:hover { border-color: var(--forest-2); color: var(--forest); }
+    .action-btn:focus-visible, .filter-btn:focus-visible, .contents-nav a:focus-visible { outline: 3px solid rgba(49, 95, 125, .22); outline-offset: 2px; }
+
+    .hero { padding: 88px 0 42px; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(330px, .75fr); gap: 58px; align-items: end; }
+    h1 {
+      max-width: 820px;
+      margin: 0;
+      font-family: Georgia, "Songti SC", "STSong", serif;
+      font-size: clamp(2.6rem, 6vw, 5.6rem);
+      font-weight: 600;
+      letter-spacing: -.055em;
+      line-height: .98;
+    }
+    .hero-lead {
+      max-width: 760px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.7vw, 1.28rem);
+      line-height: 1.8;
+    }
+    .hero-lead strong { color: var(--ink); }
+    .hero-note {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(22, 76, 59, .16);
+      border-radius: var(--radius);
+      padding: 28px;
+      background: var(--forest);
+      color: #edf6f1;
+      box-shadow: var(--shadow);
+    }
+    .hero-note::after {
+      position: absolute;
+      right: -35px;
+      bottom: -70px;
+      width: 170px;
+      height: 170px;
+      border: 26px solid rgba(255,255,255,.07);
+      border-radius: 50%;
+      content: "";
+    }
+    .hero-note-label { color: #b7d4c8; font-size: .75rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .hero-note p { position: relative; z-index: 1; margin: 12px 0 0; font-size: 1.17rem; line-height: 1.75; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      overflow: hidden;
+      margin: 24px 0 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .summary-card { min-height: 150px; padding: 24px; border-right: 1px solid var(--line); }
+    .summary-card:last-child { border-right: 0; }
+    .summary-num { font-size: 2.35rem; font-weight: 850; letter-spacing: -.05em; line-height: 1; }
+    .summary-label { margin-top: 12px; font-weight: 800; }
+    .summary-copy { margin-top: 5px; color: var(--muted); font-size: .82rem; line-height: 1.55; }
+
+    .main { padding: 58px 0 100px; }
+    .contents-nav {
+      position: sticky;
+      z-index: 15;
+      top: 64px;
+      display: flex;
+      overflow-x: auto;
+      gap: 6px;
+      margin: 18px 0 -18px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 7px;
+      background: rgba(255,253,248,.92);
+      box-shadow: 0 10px 28px rgba(34, 48, 42, .07);
+      backdrop-filter: blur(14px);
+      scrollbar-width: none;
+    }
+    .contents-nav::-webkit-scrollbar { display: none; }
+    .contents-nav a { flex: 0 0 auto; border-radius: 10px; padding: 7px 11px; color: var(--muted); font-size: .7rem; font-weight: 800; text-decoration: none; }
+    .contents-nav a:hover { color: var(--forest); background: var(--mint); }
+    section { scroll-margin-top: 88px; margin-top: 80px; }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
+      gap: 56px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+    h2 {
+      margin: 0;
+      font-family: Georgia, "Songti SC", "STSong", serif;
+      font-size: clamp(2rem, 3.7vw, 3.45rem);
+      font-weight: 600;
+      letter-spacing: -.04em;
+      line-height: 1.08;
+    }
+    .section-intro { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.8; }
+
+    .model-grid { display: grid; grid-template-columns: 1.12fr .88fr; gap: 22px; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .panel-pad { padding: 30px; }
+    .panel-title { margin: 0; font-size: 1.08rem; }
+    .panel-subtitle { margin: 5px 0 0; color: var(--muted); font-size: .84rem; }
+
+    .workflow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 28px; }
+    .flow-node {
+      position: relative;
+      min-height: 104px;
+      border-radius: 17px;
+      padding: 16px 13px;
+      background: var(--surface-2);
+    }
+    .flow-node:not(:last-child)::after {
+      position: absolute;
+      z-index: 2;
+      top: 45px;
+      right: -10px;
+      color: var(--gold);
+      content: "→";
+      font-weight: 900;
+    }
+    .flow-index { color: var(--gold); font-size: .72rem; font-weight: 850; }
+    .flow-name { margin-top: 9px; font-size: .88rem; font-weight: 800; line-height: 1.35; }
+    .workflow-second { grid-template-columns: repeat(4, 1fr); margin-top: 8px; }
+    .workflow-second .flow-node { background: var(--blue-2); }
+
+    .rails { display: grid; gap: 10px; margin-top: 24px; }
+    .rail { display: grid; grid-template-columns: 28px 125px 1fr; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
+    .rail-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--forest-2); }
+    .rail strong { font-size: .83rem; }
+    .rail span:last-child { color: var(--muted); font-size: .78rem; }
+
+    .scope-card { display: grid; gap: 14px; }
+    .scope-item { border-radius: 17px; padding: 20px; }
+    .scope-item.core { color: #edf6f1; background: var(--forest); }
+    .scope-item.alpha { background: var(--gold-2); }
+    .scope-item.ops { background: var(--coral-2); }
+    .scope-tag { font-size: .7rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; opacity: .78; }
+    .scope-item h3 { margin: 8px 0 5px; font-size: 1.15rem; }
+    .scope-item p { margin: 0; font-size: .82rem; line-height: 1.6; opacity: .86; }
+
+    .maturity-layout { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 24px; }
+    .maturity-chart { padding: 30px; }
+    .maturity-rows { display: grid; gap: 12px; margin-top: 28px; }
+    .maturity-row { display: grid; grid-template-columns: 148px 1fr 58px; align-items: center; gap: 14px; }
+    .maturity-label { overflow: hidden; font-size: .82rem; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+    .maturity-track { position: relative; height: 12px; border-radius: 999px; background: var(--surface-2); }
+    .maturity-track::after { position: absolute; inset: -4px 20% -4px auto; width: 1px; background: rgba(98,112,106,.24); content: ""; }
+    .maturity-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--forest), var(--forest-2)); }
+    .maturity-fill.low { background: var(--coral); }
+    .maturity-fill.mid { background: var(--gold); }
+    .maturity-value { color: var(--muted); font-size: .77rem; font-weight: 800; text-align: right; }
+    .legend-scale { display: grid; grid-template-columns: repeat(6, 1fr); margin: 12px 58px 0 162px; color: var(--muted); font-size: .68rem; }
+    .legend-scale span:last-child { text-align: right; }
+
+    .maturity-note { padding: 28px; }
+    .maturity-note h3 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: 1.55rem; }
+    .maturity-note p { color: var(--muted); font-size: .86rem; }
+    .level-list { display: grid; gap: 8px; margin-top: 22px; }
+    .level { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: start; }
+    .level b { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; color: #fff; background: var(--forest); font-size: .72rem; }
+    .level span { color: var(--muted); font-size: .76rem; line-height: 1.45; }
+
+    .phase-strip {
+      display: grid;
+      grid-template-columns: 1.05fr 1.15fr 1.05fr .75fr;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .phase-cell { position: relative; min-height: 178px; padding: 24px; border-right: 1px solid rgba(255,255,255,.38); }
+    .phase-cell:last-child { border-right: 0; }
+    .phase-cell.p0 { color: #edf6f1; background: var(--forest); }
+    .phase-cell.p1 { background: var(--blue-2); }
+    .phase-cell.p2 { background: var(--gold-2); }
+    .phase-cell.p3 { background: var(--coral-2); }
+    .phase-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .phase-code { font-size: 1.5rem; font-weight: 900; letter-spacing: -.04em; }
+    .phase-count { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: .78rem; font-weight: 850; opacity: .72; }
+    .phase-cell h3 { margin: 20px 0 4px; font-size: 1.02rem; }
+    .phase-cell p { margin: 0; font-size: .78rem; line-height: 1.55; opacity: .76; }
+    .phase-arrow { position: absolute; z-index: 3; top: 70px; right: -13px; display: grid; width: 26px; height: 26px; place-items: center; border-radius: 50%; color: var(--ink); background: var(--surface); font-weight: 900; }
+
+    .roadmap-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin: 28px 0 14px; }
+    .filter-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filter-btn {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 13px;
+      color: var(--muted);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+    .filter-btn.active { border-color: var(--forest); color: #fff; background: var(--forest); }
+    .roadmap-note { color: var(--muted); font-size: .76rem; }
+
+    .phase-block { overflow: hidden; margin: 14px 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+    .phase-block > summary { display: flex; list-style: none; align-items: center; gap: 16px; padding: 22px 26px; cursor: pointer; }
+    .phase-block > summary::-webkit-details-marker { display: none; }
+    .phase-badge { display: grid; flex: 0 0 auto; width: 50px; height: 50px; place-items: center; border-radius: 16px; color: #fff; background: var(--forest); font-weight: 900; }
+    .phase-block[data-phase="p1"] .phase-badge { background: var(--blue); }
+    .phase-block[data-phase="p2"] .phase-badge { color: var(--ink); background: var(--gold-2); }
+    .phase-block[data-phase="p3"] .phase-badge { color: var(--ink); background: var(--coral-2); }
+    .phase-summary-copy { flex: 1; }
+    .phase-summary-copy h3 { margin: 0; font-size: 1.04rem; }
+    .phase-summary-copy p { margin: 3px 0 0; color: var(--muted); font-size: .78rem; }
+    .phase-progress { display: inline-block; margin-left: 8px; color: var(--forest-2); font-weight: 900; }
+    .phase-chevron { color: var(--muted); transition: transform .18s ease; }
+    .phase-block[open] .phase-chevron { transform: rotate(180deg); }
+    .task-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; border-top: 1px solid var(--line); background: var(--line); }
+    .task-card { position: relative; min-height: 218px; padding: 24px; background: var(--surface); }
+    .task-head { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; }
+    .task-check { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .check-ui { display: grid; width: 24px; height: 24px; place-items: center; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; }
+    .task-check:focus-visible + .check-ui { outline: 3px solid rgba(49, 95, 125, .24); outline-offset: 2px; }
+    .task-check:checked + .check-ui { border-color: var(--forest); color: #fff; background: var(--forest); }
+    .task-check:checked + .check-ui::after { content: "✓"; font-size: .78rem; font-weight: 900; }
+    .task-card:has(.task-check:checked) { background: #f2f6f3; }
+    .task-card:has(.task-check:checked) .task-title { color: var(--muted); text-decoration: line-through; }
+    .task-title { margin: 1px 0 0; font-size: 1rem; line-height: 1.45; }
+    .task-id { display: inline-block; margin-right: 7px; color: var(--gold); font-size: .7rem; font-weight: 900; vertical-align: .12em; }
+    .task-copy { margin: 13px 0 0 38px; color: var(--muted); font-size: .79rem; line-height: 1.65; }
+    .task-meta { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0 0 38px; }
+    .meta-pill { border-radius: 999px; padding: 4px 8px; color: var(--muted); background: var(--surface-2); font-size: .66rem; font-weight: 800; }
+    .meta-pill.hot { color: var(--coral); background: var(--coral-2); }
+    .meta-pill.dep { color: var(--blue); background: var(--blue-2); }
+    .dod { margin: 14px 0 0 38px; border-left: 2px solid var(--gold-2); padding-left: 12px; color: var(--muted); font-size: .73rem; }
+    .dod b { display: block; margin-bottom: 2px; color: var(--ink); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+    .conditional-ribbon { display: inline-block; margin-left: 8px; border-radius: 999px; padding: 3px 8px; color: var(--coral); background: var(--coral-2); font-size: .65rem; font-weight: 900; vertical-align: middle; }
+
+    .dependency-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; }
+    .dep-chart { padding: 30px; }
+    .dep-layers { display: grid; gap: 8px; margin-top: 28px; }
+    .dep-layer { display: grid; grid-template-columns: 112px 1fr; gap: 14px; align-items: stretch; }
+    .dep-stage { display: grid; place-items: center; border-radius: 14px; color: var(--muted); background: var(--surface-2); font-size: .72rem; font-weight: 850; text-align: center; }
+    .dep-nodes { display: grid; gap: 8px; }
+    .dep-nodes.two { grid-template-columns: repeat(2, 1fr); }
+    .dep-nodes.three { grid-template-columns: repeat(3, 1fr); }
+    .dep-node { position: relative; display: grid; min-height: 68px; place-items: center; border: 1px solid var(--line); border-radius: 15px; padding: 12px; background: #fff; font-size: .77rem; font-weight: 800; text-align: center; }
+    .dep-node.foundation { color: #fff; border-color: var(--forest); background: var(--forest); }
+    .dep-node.data { border-color: rgba(49,95,125,.2); background: var(--blue-2); }
+    .dep-node.loop { border-color: rgba(183,134,39,.2); background: var(--gold-2); }
+    .dep-node.alpha { border-color: rgba(185,87,69,.2); background: var(--coral-2); }
+    .dep-connector { display: grid; height: 22px; place-items: center; color: var(--gold); font-weight: 900; }
+    .control-band { margin-top: 18px; border: 1px dashed var(--forest-2); border-radius: 16px; padding: 12px 15px; color: var(--forest); background: var(--mint); font-size: .76rem; font-weight: 800; text-align: center; }
+
+    .shift-panel { padding: 30px; }
+    .shift-list { display: grid; gap: 12px; margin-top: 24px; }
+    .shift-item { display: grid; grid-template-columns: 1fr 34px 1fr; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; }
+    .shift-before, .shift-after { font-size: .75rem; line-height: 1.5; }
+    .shift-before { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(185,87,69,.4); }
+    .shift-after { font-weight: 750; }
+    .shift-arrow { color: var(--gold); font-weight: 900; text-align: center; }
+
+    .priority-layout { display: grid; grid-template-columns: 1.25fr .75fr; gap: 22px; margin-top: 22px; }
+    .matrix-panel { padding: 30px; }
+    .matrix-wrap { position: relative; margin: 28px 4px 0 36px; padding-bottom: 28px; }
+    .matrix-y { position: absolute; top: 50%; left: -58px; color: var(--muted); font-size: .68rem; font-weight: 800; transform: rotate(-90deg) translateY(-50%); }
+    .matrix-x { position: absolute; right: 0; bottom: 0; color: var(--muted); font-size: .68rem; font-weight: 800; }
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 132px);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--line);
+      gap: 1px;
+    }
+    .matrix-cell { position: relative; padding: 9px; background: var(--surface); }
+    .matrix-cell.hot-zone { background: linear-gradient(135deg, var(--mint), var(--surface)); }
+    .matrix-cell.risk-zone { background: linear-gradient(135deg, var(--coral-2), var(--surface)); }
+    .matrix-label { position: absolute; top: 8px; left: 9px; color: var(--muted); font-size: .59rem; font-weight: 850; text-transform: uppercase; }
+    .bubble { position: absolute; display: grid; place-items: center; border-radius: 999px; padding: 6px 9px; color: #fff; background: var(--forest); box-shadow: 0 5px 16px rgba(22,76,59,.18); font-size: .64rem; font-weight: 850; line-height: 1.2; text-align: center; }
+    .bubble.blue { background: var(--blue); }
+    .bubble.gold { color: var(--ink); background: var(--gold-2); }
+    .bubble.coral { background: var(--coral); }
+    .bubble.violet { background: var(--violet); }
+    .bubble.a { top: 34px; left: 10px; }
+    .bubble.b { top: 76px; right: 8px; }
+    .bubble.c { top: 34px; left: 12px; }
+    .bubble.d { top: 76px; right: 10px; }
+    .bubble.e { top: 38px; left: 12px; }
+    .bubble.f { top: 82px; right: 9px; }
+
+    .principle-panel { padding: 30px; }
+    .principle-stack { display: grid; gap: 10px; margin-top: 24px; }
+    .principle { border-left: 3px solid var(--forest); padding: 8px 0 8px 14px; }
+    .principle:nth-child(2) { border-color: var(--blue); }
+    .principle:nth-child(3) { border-color: var(--gold); }
+    .principle:nth-child(4) { border-color: var(--coral); }
+    .principle b { display: block; font-size: .8rem; }
+    .principle span { color: var(--muted); font-size: .72rem; line-height: 1.5; }
+
+    .milestones { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; margin-top: 30px; }
+    .milestone { position: relative; padding: 0 9px; }
+    .milestone::before { position: absolute; top: 17px; left: 0; right: 0; height: 2px; background: var(--line); content: ""; }
+    .milestone:first-child::before { left: 50%; }
+    .milestone:last-child::before { right: 50%; }
+    .milestone-dot { position: relative; z-index: 2; display: grid; width: 36px; height: 36px; margin: 0 auto; place-items: center; border: 5px solid var(--surface); border-radius: 50%; color: #fff; background: var(--forest); box-shadow: 0 0 0 1px var(--line); font-size: .68rem; font-weight: 900; }
+    .milestone:nth-child(2) .milestone-dot, .milestone:nth-child(3) .milestone-dot { background: var(--blue); }
+    .milestone:nth-child(4) .milestone-dot { color: var(--ink); background: var(--gold); }
+    .milestone:nth-child(5) .milestone-dot { background: var(--violet); }
+    .milestone:nth-child(6) .milestone-dot { background: var(--coral); }
+    .milestone h4 { margin: 14px 0 4px; font-size: .75rem; text-align: center; }
+    .milestone p { margin: 0; color: var(--muted); font-size: .65rem; line-height: 1.45; text-align: center; }
+
+    .kpi-flow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-top: 24px; }
+    .kpi-node { position: relative; min-height: 128px; border: 1px solid var(--line); border-radius: 16px; padding: 16px 12px; background: var(--surface); }
+    .kpi-node:not(:last-child)::after { position: absolute; top: 52px; right: -8px; z-index: 2; color: var(--gold); content: "›"; font-size: 1.3rem; font-weight: 900; }
+    .kpi-icon { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; color: #fff; background: var(--forest); font-size: .68rem; font-weight: 900; }
+    .kpi-node h4 { margin: 12px 0 5px; font-size: .78rem; }
+    .kpi-node p { margin: 0; color: var(--muted); font-size: .65rem; line-height: 1.45; }
+
+    .dod-layout { display: grid; grid-template-columns: 280px 1fr; gap: 22px; margin-top: 22px; }
+    .dod-core { display: grid; min-height: 310px; place-items: center; padding: 30px; color: #fff; border-radius: var(--radius); background: var(--forest); box-shadow: var(--shadow); text-align: center; }
+    .dod-ring { display: grid; width: 176px; height: 176px; place-items: center; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; box-shadow: 0 0 0 22px rgba(255,255,255,.06), 0 0 0 44px rgba(255,255,255,.035); }
+    .dod-ring b { max-width: 110px; font-family: Georgia, "Songti SC", serif; font-size: 1.15rem; line-height: 1.35; }
+    .dod-checks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .dod-check { border: 1px solid var(--line); border-radius: 16px; padding: 15px 16px; background: var(--surface); }
+    .dod-check b { display: block; font-size: .76rem; }
+    .dod-check span { color: var(--muted); font-size: .68rem; line-height: 1.45; }
+
+    .footer { border-top: 1px solid var(--line); padding: 28px 0 45px; color: var(--muted); font-size: .78rem; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .footer a { color: var(--forest); font-weight: 800; text-decoration: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid, .section-head, .model-grid, .maturity-layout { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .summary-card:nth-child(2) { border-right: 0; }
+      .summary-card:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .phase-strip { grid-template-columns: repeat(2, 1fr); }
+      .phase-cell:nth-child(2) { border-right: 0; }
+      .phase-cell:nth-child(-n+2) { border-bottom: 1px solid rgba(255,255,255,.4); }
+      .phase-arrow { display: none; }
+      .dependency-grid, .priority-layout, .dod-layout { grid-template-columns: 1fr; }
+      .milestones { grid-template-columns: repeat(3, 1fr); row-gap: 28px; }
+      .kpi-flow { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 22px, 1220px); }
+      .topbar-inner { min-height: 58px; }
+      .date-chip { display: none; }
+      .progress-cluster { min-width: 118px; }
+      .progress-track { width: 56px; }
+      .action-btn[data-action="reset"] { display: none; }
+      .hero { padding-top: 62px; }
+      .hero-grid { gap: 30px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .summary-card { min-height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .summary-card:last-child { border-bottom: 0; }
+      section { margin-top: 58px; }
+      .workflow, .workflow-second { grid-template-columns: 1fr 1fr; }
+      .flow-node::after { display: none; }
+      .maturity-chart { padding: 22px 16px; }
+      .maturity-row { grid-template-columns: 108px 1fr 42px; gap: 9px; }
+      .legend-scale { margin-left: 117px; margin-right: 42px; }
+      .rail { grid-template-columns: 20px 100px 1fr; }
+      .phase-strip, .task-grid { grid-template-columns: 1fr; }
+      .phase-cell { min-height: 140px; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.4); }
+      .phase-cell:last-child { border-bottom: 0; }
+      .phase-block > summary { padding: 18px; }
+      .task-card { min-height: auto; padding: 20px 17px; }
+      .dep-layer { grid-template-columns: 76px 1fr; }
+      .dep-nodes.three { grid-template-columns: 1fr; }
+      .matrix { grid-template-rows: repeat(3, 150px); }
+      .milestones, .kpi-flow, .dod-checks { grid-template-columns: repeat(2, 1fr); }
+      .kpi-node:not(:last-child)::after { display: none; }
+      .contents-nav { top: 58px; margin-left: -4px; margin-right: -4px; }
+      .footer-inner { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media print {
+      @page { size: A4; margin: 14mm; }
+      body { background: #fff; color: #111; font-size: 9pt; }
+      .shell { width: 100%; max-width: none; }
+      .topbar, .contents-nav, .roadmap-controls, .action-btn, .check-ui { display: none !important; }
+      .hero { padding: 0 0 20px; }
+      h1 { font-size: 34pt; }
+      section { margin-top: 34px; scroll-margin-top: 0; }
+      .main { padding: 0; }
+      .panel, .summary-grid, .phase-block, .phase-strip, .dod-core { box-shadow: none; break-inside: avoid; }
+      .task-card, .summary-card, .phase-cell, .dep-node, .kpi-node, .dod-check { break-inside: avoid; }
+      .phase-block { display: block !important; }
+      .phase-block > summary { break-after: avoid; }
+      .task-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero-note, .scope-item.core, .dep-node.foundation, .dod-core { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .footer { padding-bottom: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <div class="brand"><span class="brand-mark">AB</span><span>AI Berkshire Roadmap</span></div>
+      <div class="top-actions">
+        <div class="progress-cluster" aria-live="polite"><div class="progress-track"><div class="progress-fill" id="progressFill"></div></div><span class="progress-label" id="progressLabel">0 / 28</span></div>
+        <span class="status-chip">Codex 优化版</span><span class="date-chip">数据截点 · 2026-07-10</span>
+        <button class="action-btn" type="button" data-action="print" title="打印或导出 PDF" aria-label="打印或导出 PDF">⇩</button>
+        <button class="action-btn" type="button" data-action="reset" title="清空 TODO 状态" aria-label="清空 TODO 状态">↺</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="shell">
+      <section class="hero" id="overview">
+        <div class="hero-grid">
+          <div>
+            <p class="eyebrow">Institutional investment capability roadmap</p>
+            <h1>从研究工具箱，<br>到投资决策系统。</h1>
+            <p class="hero-lead">下一阶段的关键，不是让 AI Berkshire <strong>会分析更多东西</strong>，而是让每一个数据、判断、仓位和结果都可复现、可审计、可持续改进。</p>
+          </div>
+          <aside class="hero-note">
+            <div class="hero-note-label">核心判断</div>
+            <p>优先补齐 <strong>投资授权、统一账本、点时数据、测试治理、风险与业绩</strong>。Alpha 模块应建立在这些底座之上，而不是与底座争夺最高优先级。</p>
+          </aside>
+        </div>
+
+        <div class="summary-grid" aria-label="路线图摘要">
+          <div class="summary-card"><div class="summary-num">15</div><div class="summary-label">能力域</div><div class="summary-copy">覆盖研究、组合、控制线与条件性资管运营</div></div>
+          <div class="summary-card"><div class="summary-num">4</div><div class="summary-label">建设阶段</div><div class="summary-copy">P0 底座、P1 闭环、P2 Alpha、P3 真实运营</div></div>
+          <div class="summary-card"><div class="summary-num">6</div><div class="summary-label">里程碑</div><div class="summary-copy">从定规则到可持续运行，再扩展策略与运营</div></div>
+          <div class="summary-card"><div class="summary-num">L4</div><div class="summary-label">核心目标</div><div class="summary-copy">自动化、测试、监控、异常处理与版本齐全</div></div>
+        </div>
+      </section>
+
+      <nav class="contents-nav" aria-label="页面目录">
+        <a href="#overview">总览</a><a href="#model">能力模型</a><a href="#maturity">成熟度</a><a href="#roadmap">P0–P3 TODO</a><a href="#dependencies">依赖与优先级</a><a href="#measurement">里程碑与 KPI</a>
+      </nav>
+
+      <div class="main">
+        <section id="model">
+          <div class="section-head">
+            <div><p class="eyebrow section-kicker">01 · Operating model</p><h2>一条主流程，<br>五条控制线。</h2></div>
+            <p class="section-intro">机构投资不是 14 个先后相接的孤立环节。数据、风险、合规、模型治理和审计留痕必须横跨投资授权、研究决策、组合管理与复盘。</p>
+          </div>
+
+          <div class="model-grid">
+            <div class="panel panel-pad">
+              <h3 class="panel-title">投资主流程</h3>
+              <p class="panel-subtitle">从授权出发，以复盘和规则迭代闭环</p>
+              <div class="workflow">
+                <div class="flow-node"><div class="flow-index">01</div><div class="flow-name">投资授权</div></div>
+                <div class="flow-node"><div class="flow-index">02</div><div class="flow-name">机会发现</div></div>
+                <div class="flow-node"><div class="flow-index">03</div><div class="flow-name">研究预测</div></div>
+                <div class="flow-node"><div class="flow-index">04</div><div class="flow-name">估值决策</div></div>
+                <div class="flow-node"><div class="flow-index">05</div><div class="flow-name">组合构建</div></div>
+              </div>
+              <div class="workflow workflow-second">
+                <div class="flow-node"><div class="flow-index">06</div><div class="flow-name">交易执行</div></div>
+                <div class="flow-node"><div class="flow-index">07</div><div class="flow-name">持续监控</div></div>
+                <div class="flow-node"><div class="flow-index">08</div><div class="flow-name">归因复盘</div></div>
+                <div class="flow-node"><div class="flow-index">09</div><div class="flow-name">规则迭代</div></div>
+              </div>
+              <div class="rails" aria-label="横向控制线">
+                <div class="rail"><span class="rail-dot"></span><strong>数据治理</strong><span>时点、来源、版本、质量与授权</span></div>
+                <div class="rail"><span class="rail-dot"></span><strong>风险管理</strong><span>限额、暴露、流动性与尾部情景</span></div>
+                <div class="rail"><span class="rail-dot"></span><strong>合规边界</strong><span>MNPI、隐私、利益冲突与人审</span></div>
+                <div class="rail"><span class="rail-dot"></span><strong>模型治理</strong><span>测试、登记、监控、异常与回滚</span></div>
+                <div class="rail"><span class="rail-dot"></span><strong>审计留痕</strong><span>结论可追溯，历史可重放</span></div>
+              </div>
+            </div>
+
+            <div class="scope-card">
+              <article class="scope-item core"><div class="scope-tag">Universal foundation</div><h3>机构底座</h3><p>IPS、账本、点时数据、估值、风险、业绩、监控、测试和审计。所有策略共用。</p></article>
+              <article class="scope-item alpha"><div class="scope-tag">Strategy modules</div><h3>Alpha 实验室</h3><p>新兴赢家、因子、宏观、板块、特殊机会与渠道验证。必须有独立假设、风险预算和样本外检验。</p></article>
+              <article class="scope-item ops"><div class="scope-tag">Conditional operations</div><h3>真实资管运营</h3><p>OMS/EMS、托管、清算、NAV、监管和客户报告。仅在管理第三方资金时启动，并按属地要求前置。</p></article>
+            </div>
+          </div>
+        </section>
+
+        <section id="maturity">
+          <div class="section-head">
+            <div><p class="eyebrow section-kicker">02 · Maturity map</p><h2>研究最成熟，<br>底座仍不完整。</h2></div>
+            <p class="section-intro">评分采用 L0–L5 成熟度，而不是未经验证的“世界级/强/弱”。当前最成熟的是结构化公司研究；最大缺口集中在业绩归因、资管运营、风险、治理和统一事实源。</p>
+          </div>
+
+          <div class="maturity-layout">
+            <div class="panel maturity-chart">
+              <h3 class="panel-title">15 个能力域 · 当前成熟度</h3>
+              <p class="panel-subtitle">目标线为 L4；L5 需要独立验证或审计</p>
+              <div class="maturity-rows">
+                <div class="maturity-row"><div class="maturity-label">尽调研究</div><div class="maturity-track"><div class="maturity-fill" style="width:60%"></div></div><div class="maturity-value">L3</div></div>
+                <div class="maturity-row"><div class="maturity-label">机会发现</div><div class="maturity-track"><div class="maturity-fill mid" style="width:40%"></div></div><div class="maturity-value">L2</div></div>
+                <div class="maturity-row"><div class="maturity-label">估值建模</div><div class="maturity-track"><div class="maturity-fill mid" style="width:40%"></div></div><div class="maturity-value">L2</div></div>
+                <div class="maturity-row"><div class="maturity-label">决策与仓位</div><div class="maturity-track"><div class="maturity-fill mid" style="width:40%"></div></div><div class="maturity-value">L2</div></div>
+                <div class="maturity-row"><div class="maturity-label">组合构建</div><div class="maturity-track"><div class="maturity-fill mid" style="width:40%"></div></div><div class="maturity-value">L2</div></div>
+                <div class="maturity-row"><div class="maturity-label">监控与跟踪</div><div class="maturity-track"><div class="maturity-fill mid" style="width:40%"></div></div><div class="maturity-value">L2</div></div>
+                <div class="maturity-row"><div class="maturity-label">数据基础设施</div><div class="maturity-track"><div class="maturity-fill mid" style="width:40%"></div></div><div class="maturity-value">L2</div></div>
+                <div class="maturity-row"><div class="maturity-label">知识管理</div><div class="maturity-track"><div class="maturity-fill low" style="width:30%"></div></div><div class="maturity-value">L1–2</div></div>
+                <div class="maturity-row"><div class="maturity-label">投资授权治理</div><div class="maturity-track"><div class="maturity-fill low" style="width:20%"></div></div><div class="maturity-value">L1</div></div>
+                <div class="maturity-row"><div class="maturity-label">风险管理</div><div class="maturity-track"><div class="maturity-fill low" style="width:20%"></div></div><div class="maturity-value">L1</div></div>
+                <div class="maturity-row"><div class="maturity-label">交易执行</div><div class="maturity-track"><div class="maturity-fill low" style="width:20%"></div></div><div class="maturity-value">L1</div></div>
+                <div class="maturity-row"><div class="maturity-label">宏观与配置</div><div class="maturity-track"><div class="maturity-fill low" style="width:20%"></div></div><div class="maturity-value">L1</div></div>
+                <div class="maturity-row"><div class="maturity-label">合规与模型治理</div><div class="maturity-track"><div class="maturity-fill low" style="width:20%"></div></div><div class="maturity-value">L1</div></div>
+                <div class="maturity-row"><div class="maturity-label">业绩与归因</div><div class="maturity-track"><div class="maturity-fill low" style="width:10%"></div></div><div class="maturity-value">L0–1</div></div>
+                <div class="maturity-row"><div class="maturity-label">资管运营</div><div class="maturity-track"><div class="maturity-fill low" style="width:2%"></div></div><div class="maturity-value">L0</div></div>
+              </div>
+              <div class="legend-scale"><span>L0</span><span>L1</span><span>L2</span><span>L3</span><span>L4</span><span>L5</span></div>
+            </div>
+
+            <aside class="panel maturity-note">
+              <p class="eyebrow">Maturity standard</p>
+              <h3>存在，不等于成熟。</h3>
+              <p>一个 skill 或一份报告只能证明能力“出现过”。机构化要求结构化、自动化、异常处理和历史重放。</p>
+              <div class="level-list">
+                <div class="level"><b>L0</b><span>没有明确流程或资产</span></div>
+                <div class="level"><b>L1</b><span>原则、模板或人工流程</span></div>
+                <div class="level"><b>L2</b><span>skill / 工具可重复运行</span></div>
+                <div class="level"><b>L3</b><span>结构化输入输出与交叉验证</span></div>
+                <div class="level"><b>L4</b><span>自动化、测试、监控和版本齐全</span></div>
+                <div class="level"><b>L5</b><span>可完整重放并经独立审计</span></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="roadmap">
+          <div class="section-head">
+            <div><p class="eyebrow section-kicker">03 · Phased roadmap</p><h2>先建事实源，<br>再扩展 Alpha。</h2></div>
+            <p class="section-intro">路线图按真实依赖重排。P0 解决“是否可信”，P1 解决“是否闭环”，P2 解决“如何扩展超额收益”，P3 仅在管理第三方资金时转为强制建设。</p>
+          </div>
+
+          <div class="phase-strip" aria-label="P0 到 P3 建设阶段">
+            <article class="phase-cell p0"><div class="phase-top"><span class="phase-code">P0</span><span class="phase-count">5</span></div><h3>机构底座</h3><p>授权、账本、点时数据、测试治理、风险与业绩 MVP</p><span class="phase-arrow">→</span></article>
+            <article class="phase-cell p1"><div class="phase-top"><span class="phase-code">P1</span><span class="phase-count">7</span></div><h3>投资闭环</h3><p>决策日志、估值、风险、归因、监控、仓位与治理</p><span class="phase-arrow">→</span></article>
+            <article class="phase-cell p2"><div class="phase-top"><span class="phase-code">P2</span><span class="phase-count">7</span></div><h3>Alpha 实验室</h3><p>新兴赢家、因子、宏观、行业、事件与一手验证</p><span class="phase-arrow">→</span></article>
+            <article class="phase-cell p3"><div class="phase-top"><span class="phase-code">P3</span><span class="phase-count">9</span></div><h3>真实资管运营</h3><p>第三方资金触发；届时立即升级为 P0</p></article>
+          </div>
+
+          <div class="roadmap-controls">
+            <div class="filter-group" role="group" aria-label="按阶段筛选">
+              <button class="filter-btn active" type="button" data-filter="all">全部</button>
+              <button class="filter-btn" type="button" data-filter="p0">P0 底座</button>
+              <button class="filter-btn" type="button" data-filter="p1">P1 闭环</button>
+              <button class="filter-btn" type="button" data-filter="p2">P2 Alpha</button>
+              <button class="filter-btn" type="button" data-filter="p3">P3 运营</button>
+            </div>
+            <div class="roadmap-note">勾选状态将在当前浏览器本地保存</div>
+          </div>
+
+          <details class="phase-block" data-phase="p0" open>
+            <summary><span class="phase-badge">P0</span><span class="phase-summary-copy"><h3>先补机构底座</h3><p>任何一次决策都能记录、复现、监控和复盘</p></span><span class="phase-chevron">⌄</span></summary>
+            <div class="task-grid">
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p0-1" data-task="p0-1"><label class="check-ui" for="p0-1" aria-label="完成 P0-1"></label><h4 class="task-title"><span class="task-id">P0-1</span>投资授权与 IPS</h4></div><p class="task-copy">定义投资范围、总回报基准、风险预算、仓位/集中度上限、流动性、禁投、杠杆权限、审批和复审频率。</p><div class="task-meta"><span class="meta-pill hot">影响 ★★★★★</span><span class="meta-pill">工作量 小–中</span><span class="meta-pill dep">无前置依赖</span></div><div class="dod"><b>完成定义</b>所有风险、仓位与卖出建议引用同一套机器可读约束，不再硬编码通用阈值。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p0-2" data-task="p0-2"><label class="check-ui" for="p0-2" aria-label="完成 P0-2"></label><h4 class="task-title"><span class="task-id">P0-2</span>标的主数据与组合主账</h4></div><p class="task-copy">建立 security master、交易/现金账本、公司行动、FX、费用税费与每日持仓净值的唯一事实源。</p><div class="task-meta"><span class="meta-pill hot">影响 ★★★★★</span><span class="meta-pill">工作量 大</span><span class="meta-pill dep">依赖 P0-1</span></div><div class="dod"><b>完成定义</b>任意历史日期可重建持仓、现金和净值，差异可定位到具体交易或公司行动。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p0-3" data-task="p0-3"><label class="check-ui" for="p0-3" aria-label="完成 P0-3"></label><h4 class="task-title"><span class="task-id">P0-3</span>统一数据层 v1</h4></div><p class="task-copy">统一 A/H/美股行情、总回报、财报、估值、FX、基准和公司行动；保留 as_of、available_at、来源和版本。</p><div class="task-meta"><span class="meta-pill hot">影响 ★★★★★</span><span class="meta-pill">工作量 大</span><span class="meta-pill dep">依赖 P0-2 模型</span></div><div class="dod"><b>完成定义</b>同一快照可复现相同输出；缺失、过期和冲突数据不会被静默使用。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p0-4" data-task="p0-4"><label class="check-ui" for="p0-4" aria-label="完成 P0-4"></label><h4 class="task-title"><span class="task-id">P0-4</span>测试与模型治理</h4></div><p class="task-copy">为工具建立单元/边界/golden tests；为 skill 建输出回归；登记模型版本、用途、限制、审批、异常与回滚。</p><div class="task-meta"><span class="meta-pill hot">影响 ★★★★★</span><span class="meta-pill">工作量 中</span><span class="meta-pill dep">与数据并行</span></div><div class="dod"><b>完成定义</b>修复伪精确运算；升级能自动识别破坏性变化，关键建议显示版本、假设和人审状态。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p0-5" data-task="p0-5"><label class="check-ui" for="p0-5" aria-label="完成 P0-5"></label><h4 class="task-title"><span class="task-id">P0-5</span>风险与业绩计算 MVP</h4></div><p class="task-copy">组合波动、回撤、beta、HHI、行业/地域/货币暴露、相关性、压力情景，以及 TWR/MWR、基准超额和多币种收益。</p><div class="task-meta"><span class="meta-pill hot">影响 ★★★★★</span><span class="meta-pill">工作量 中–大</span><span class="meta-pill dep">依赖 P0-1/2/3</span></div><div class="dod"><b>完成定义</b>与人工样例及第二实现交叉验证；VaR 不替代回撤、流动性、集中度和尾部情景。</div></article>
+            </div>
+          </details>
+
+          <details class="phase-block" data-phase="p1" open>
+            <summary><span class="phase-badge">P1</span><span class="phase-summary-copy"><h3>跑通投资闭环</h3><p>研究—决策—组合—监控—复盘形成学习系统</p></span><span class="phase-chevron">⌄</span></summary>
+            <div class="task-grid">
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p1-1" data-task="p1-1"><label class="check-ui" for="p1-1" aria-label="完成 P1-1"></label><h4 class="task-title"><span class="task-id">P1-1</span>结构化决策日志</h4></div><p class="task-copy">记录论文版本、价格、估值、情景概率、证伪条件、仓位、替代机会、审批和复审日期。</p><div class="dod"><b>完成定义</b>历史时点只展示当时已知信息，后续结果不得回填改写原始判断。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p1-2" data-task="p1-2"><label class="check-ui" for="p1-2" aria-label="完成 P1-2"></label><h4 class="task-title"><span class="task-id">P1-2</span>估值模型框架</h4></div><p class="task-copy">多阶段/反向 DCF、WACC 敏感性、SOTP、重复加计检查和金融/资源/SaaS/消费等行业模板。</p><div class="dod"><b>完成定义</b>假设有来源与版本；终值占比过高自动警示；至少与一种独立方法交叉验证。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p1-3" data-task="p1-3"><label class="check-ui" for="p1-3" aria-label="完成 P1-3"></label><h4 class="task-title"><span class="task-id">P1-3</span>完整风险与压力测试</h4></div><p class="task-copy">补充因子、风格、流动性、容量、拥挤、杠杆和交易对手暴露，支持历史、假设和反向压力测试。</p><div class="dod"><b>完成定义</b>风险限额来自 IPS；越限自动生成解释、降级或审批记录。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p1-4" data-task="p1-4"><label class="check-ui" for="p1-4" aria-label="完成 P1-4"></label><h4 class="task-title"><span class="task-id">P1-4</span>业绩归因与决策校准</h4></div><p class="task-copy">按适用场景采用 Brinson、因子或交易级归因；拆分配置、选股、择时、汇率、费用和交互影响。</p><div class="task-meta"><span class="meta-pill">工作量 大</span><span class="meta-pill dep">依赖交易账本</span></div><div class="dod"><b>完成定义</b>统计 Brier score、估值区间覆盖率和红线命中率，形成可检索错误模式库。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p1-5" data-task="p1-5"><label class="check-ui" for="p1-5" aria-label="完成 P1-5"></label><h4 class="task-title"><span class="task-id">P1-5</span>统一 Watchlist 与监控</h4></div><p class="task-copy">合并多套 watchlist/召回池，建立发现→初筛→深研→候选→持有→退出状态机和催化剂日历。</p><div class="dod"><b>完成定义</b>每个标的有负责人、论文版本、红线和复审日；告警支持去重、重试和过期提示。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p1-6" data-task="p1-6"><label class="check-ui" for="p1-6" aria-label="完成 P1-6"></label><h4 class="task-title"><span class="task-id">P1-6</span>仓位与卖出纪律</h4></div><p class="task-copy">分数凯利只作参考，叠加 IPS、流动性、相关性、风险预算和概率区间；卖出覆盖论文、估值、机会成本和税务。</p><div class="dod"><b>完成定义</b>禁止仅凭单一评分或“高赔率”直接产生固定仓位。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p1-7" data-task="p1-7"><label class="check-ui" for="p1-7" aria-label="完成 P1-7"></label><h4 class="task-title"><span class="task-id">P1-7</span>会计异常与治理筛查</h4></div><p class="task-copy">覆盖应收、存货、现金流背离、资本化、关联交易、商誉、审计意见、股权质押、AB 股和薪酬对齐。</p><div class="dod"><b>完成定义</b>Benford/Beneish 只作为异常线索，不得输出“证明造假”。</div></article>
+            </div>
+          </details>
+
+          <details class="phase-block" data-phase="p2">
+            <summary><span class="phase-badge">P2</span><span class="phase-summary-copy"><h3>扩展 Alpha 实验室</h3><p>在稳定底座上验证策略，而不是事后寻找成功故事</p></span><span class="phase-chevron">⌄</span></summary>
+            <div class="task-grid">
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p2-1" data-task="p2-1"><label class="check-ui" for="p2-1" aria-label="完成 P2-1"></label><h4 class="task-title"><span class="task-id">P2-1</span>新兴赢家发现引擎</h4></div><p class="task-copy">用 TAM、渗透率、单位经济、资本效率、管理层、壁垒、期权价值和失败可承受估值筛选候选。</p><div class="dod"><b>验证要求</b>采用点时股票池、退市与失败样本；报告假阳性、回撤、容量和样本外表现。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p2-2" data-task="p2-2"><label class="check-ui" for="p2-2" aria-label="完成 P2-2"></label><h4 class="task-title"><span class="task-id">P2-2</span>多因子系统筛选</h4></div><p class="task-copy">价值、质量、成长、动量、低波、规模和盈利修正；纳入行业中性、退市收益、换手、滑点和税费。</p><div class="dod"><b>验证要求</b>训练、验证和样本外严格分离；用于缩小研究范围，不自动下单。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p2-3" data-task="p2-3"><label class="check-ui" for="p2-3" aria-label="完成 P2-3"></label><h4 class="task-title"><span class="task-id">P2-3</span>宏观 Regime 与配置</h4></div><p class="task-copy">增长、通胀、流动性、信用、利率、汇率和政策周期，连接目标配置区间、再平衡和风险预算。</p><div class="dod"><b>策略约束</b>明确宏观判断影响哪些决策，避免随意污染自下而上估值。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p2-4" data-task="p2-4"><label class="check-ui" for="p2-4" aria-label="完成 P2-4"></label><h4 class="task-title"><span class="task-id">P2-4</span>行业景气与主题</h4></div><p class="task-copy">订单、价格、产能、库存、盈利修正、资金流、相对强弱，以及主题受益纯度、拥挤度和退出条件。</p><div class="dod"><b>完成定义</b>与行业研究/漏斗共享分类和候选主数据，避免多套口径。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p2-5" data-task="p2-5"><label class="check-ui" for="p2-5" aria-label="完成 P2-5"></label><h4 class="task-title"><span class="task-id">P2-5</span>事件驱动与特殊机会</h4></div><p class="task-copy">并购、分拆、私有化、要约、回购、重组、指数调整和融资事件分别建模概率、时间价值和法律条件。</p><div class="dod"><b>风险原则</b>不把整个类别概括为“确定性较高”；必须建失败与融资情景。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p2-6" data-task="p2-6"><label class="check-ui" for="p2-6" aria-label="完成 P2-6"></label><h4 class="task-title"><span class="task-id">P2-6</span>一手验证与信息 Edge</h4></div><p class="task-copy">scuttlebutt、渠道验证、专家访谈和另类数据；区分可验证事实、受访者观点与研究员推断。</p><div class="dod"><b>前置条件</b>先通过 MNPI、保密、隐私、利益冲突和数据授权检查。</div></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p2-7" data-task="p2-7"><label class="check-ui" for="p2-7" aria-label="完成 P2-7"></label><h4 class="task-title"><span class="task-id">P2-7</span>分市场与另类资产模块</h4></div><p class="task-copy">A 股制度/可转债、港股流动性/配售、美股做空/期权；一级、REITs、债券、商品和加密另建 mandate。</p><div class="dod"><b>风险原则</b>“下有保底”“小盘易十倍”只能是待验证假设，不能作为产品承诺。</div></article>
+            </div>
+          </details>
+
+          <details class="phase-block" data-phase="p3">
+            <summary><span class="phase-badge">P3</span><span class="phase-summary-copy"><h3>真实资管运营<span class="conditional-ribbon">第三方资金触发</span></h3><p>一旦管理客户资产，本阶段立即升级为 P0</p></span><span class="phase-chevron">⌄</span></summary>
+            <div class="task-grid">
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p3-1" data-task="p3-1"><label class="check-ui" for="p3-1" aria-label="完成 P3-1"></label><h4 class="task-title"><span class="task-id">P3-1</span>OMS / EMS</h4></div><p class="task-copy">订单、审批、分配、撤单、成交和异常状态的完整生命周期。</p></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p3-2" data-task="p3-2"><label class="check-ui" for="p3-2" aria-label="完成 P3-2"></label><h4 class="task-title"><span class="task-id">P3-2</span>交易合规</h4></div><p class="task-copy">预交易/交易后禁投、集中度、关联交易、最佳执行和个人交易。</p></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p3-3" data-task="p3-3"><label class="check-ui" for="p3-3" aria-label="完成 P3-3"></label><h4 class="task-title"><span class="task-id">P3-3</span>经纪与交易对手</h4></div><p class="task-copy">经纪商、托管人、保证金、借券、授信与交易对手风险。</p></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p3-4" data-task="p3-4"><label class="check-ui" for="p3-4" aria-label="完成 P3-4"></label><h4 class="task-title"><span class="task-id">P3-4</span>清算与对账</h4></div><p class="task-copy">现金、公司行动、交收、持仓和交易的日常对账与异常处置。</p></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p3-5" data-task="p3-5"><label class="check-ui" for="p3-5" aria-label="完成 P3-5"></label><h4 class="task-title"><span class="task-id">P3-5</span>基金会计与 NAV</h4></div><p class="task-copy">估值政策、费用计提、价格挑战、NAV 计算和错误更正。</p></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p3-6" data-task="p3-6"><label class="check-ui" for="p3-6" aria-label="完成 P3-6"></label><h4 class="task-title"><span class="task-id">P3-6</span>流动性与申赎</h4></div><p class="task-copy">容量、申赎、压力下变现计划、闸门和流动性分层。</p></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p3-7" data-task="p3-7"><label class="check-ui" for="p3-7" aria-label="完成 P3-7"></label><h4 class="task-title"><span class="task-id">P3-7</span>客户与监管报告</h4></div><p class="task-copy">客户报告、监管报送、绩效展示、费用披露和错误更正政策。</p></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p3-8" data-task="p3-8"><label class="check-ui" for="p3-8" aria-label="完成 P3-8"></label><h4 class="task-title"><span class="task-id">P3-8</span>安全与业务连续性</h4></div><p class="task-copy">权限、密钥、网络安全、灾备、业务连续性和供应商风险。</p></article>
+              <article class="task-card"><div class="task-head"><input class="task-check" type="checkbox" id="p3-9" data-task="p3-9"><label class="check-ui" for="p3-9" aria-label="完成 P3-9"></label><h4 class="task-title"><span class="task-id">P3-9</span>利益冲突与 MNPI</h4></div><p class="task-copy">利益冲突、礼品招待、专家网络、重大非公开信息和举报机制。</p></article>
+            </div>
+          </details>
+        </section>
+
+        <section id="dependencies">
+          <div class="section-head">
+            <div><p class="eyebrow section-kicker">04 · Dependencies</p><h2>先后关系，<br>比项目数量更重要。</h2></div>
+            <p class="section-intro">风险、归因、监控、仓位和 Alpha 都依赖同一套授权、账本和点时数据。把依赖画清楚，能避免“工具完成了、能力却无法使用”的伪进展。</p>
+          </div>
+
+          <div class="dependency-grid">
+            <div class="panel dep-chart">
+              <h3 class="panel-title">能力依赖图</h3>
+              <p class="panel-subtitle">从规则与事实源，逐层长出投资闭环和 Alpha</p>
+              <div class="dep-layers">
+                <div class="dep-layer"><div class="dep-stage">规则层</div><div class="dep-nodes"><div class="dep-node foundation">投资授权 · IPS · 基准 · 风险预算</div></div></div>
+                <div class="dep-connector">↓</div>
+                <div class="dep-layer"><div class="dep-stage">事实层</div><div class="dep-nodes two"><div class="dep-node data">Security master<br>交易 / 现金账本</div><div class="dep-node data">点时数据层<br>FX / 基准 / 公司行动</div></div></div>
+                <div class="dep-connector">↓</div>
+                <div class="dep-layer"><div class="dep-stage">衡量层</div><div class="dep-nodes three"><div class="dep-node loop">业绩基线</div><div class="dep-node loop">组合风险</div><div class="dep-node loop">决策日志</div></div></div>
+                <div class="dep-connector">↓</div>
+                <div class="dep-layer"><div class="dep-stage">闭环层</div><div class="dep-nodes three"><div class="dep-node loop">归因校准</div><div class="dep-node loop">统一监控</div><div class="dep-node loop">规则迭代</div></div></div>
+                <div class="dep-connector">↓</div>
+                <div class="dep-layer"><div class="dep-stage">扩展层</div><div class="dep-nodes"><div class="dep-node alpha">新兴赢家 · 因子 · 宏观 · 行业 · 特殊机会</div></div></div>
+              </div>
+              <div class="control-band">测试 · 模型治理 · 合规 · 审计留痕 —— 贯穿全部层级</div>
+            </div>
+
+            <aside class="panel shift-panel">
+              <h3 class="panel-title">优先级纠偏</h3>
+              <p class="panel-subtitle">从“快做一个工具”转向“建立可用能力”</p>
+              <div class="shift-list">
+                <div class="shift-item"><span class="shift-before">先做凯利仓位工具</span><span class="shift-arrow">→</span><span class="shift-after">先定义 IPS 与组合风险预算</span></div>
+                <div class="shift-item"><span class="shift-before">数据基建排在 Alpha 后</span><span class="shift-arrow">→</span><span class="shift-after">主数据、账本和点时数据前置 P0</span></div>
+                <div class="shift-item"><span class="shift-before">合规 / IPS 为低影响</span><span class="shift-arrow">→</span><span class="shift-after">升级为横向 P0 控制线</span></div>
+                <div class="shift-item"><span class="shift-before">十倍股是最高核心 Alpha</span><span class="shift-arrow">→</span><span class="shift-after">改为有风险预算的卫星策略</span></div>
+                <div class="shift-item"><span class="shift-before">卖出纪律属于 Alpha</span><span class="shift-arrow">→</span><span class="shift-after">并入决策、风险与机会成本闭环</span></div>
+                <div class="shift-item"><span class="shift-before">执行 / TCA 工作量小</span><span class="shift-arrow">→</span><span class="shift-after">个人模式简化；资管模式为大型工程</span></div>
+              </div>
+            </aside>
+          </div>
+
+          <div class="priority-layout">
+            <div class="panel matrix-panel">
+              <h3 class="panel-title">影响 × 工作量优先级矩阵</h3>
+              <p class="panel-subtitle">左上优先快速推进；右上需要依赖拆解和持续投入</p>
+              <div class="matrix-wrap">
+                <span class="matrix-y">影响：低 → 高</span>
+                <div class="matrix">
+                  <div class="matrix-cell hot-zone"><span class="matrix-label">高影响 · 小</span><span class="bubble a">IPS</span><span class="bubble blue b">卖出纪律</span></div>
+                  <div class="matrix-cell hot-zone"><span class="matrix-label">高影响 · 中</span><span class="bubble c">测试治理</span><span class="bubble blue d">决策日志</span></div>
+                  <div class="matrix-cell hot-zone"><span class="matrix-label">高影响 · 大</span><span class="bubble e">统一账本</span><span class="bubble violet f">数据层</span></div>
+                  <div class="matrix-cell"><span class="matrix-label">中影响 · 小</span><span class="bubble gold a">治理筛查</span></div>
+                  <div class="matrix-cell"><span class="matrix-label">中影响 · 中</span><span class="bubble blue c">DCF</span><span class="bubble gold d">监控</span></div>
+                  <div class="matrix-cell"><span class="matrix-label">中影响 · 大</span><span class="bubble violet e">风险 / 归因</span></div>
+                  <div class="matrix-cell"><span class="matrix-label">低影响 · 小</span></div>
+                  <div class="matrix-cell"><span class="matrix-label">低影响 · 中</span><span class="bubble gold c">主题模块</span></div>
+                  <div class="matrix-cell risk-zone"><span class="matrix-label">低确定 · 大</span><span class="bubble coral e">Alpha 扩展</span><span class="bubble violet f">真实运营</span></div>
+                </div>
+                <span class="matrix-x">工作量：小 → 大</span>
+              </div>
+            </div>
+
+            <aside class="panel principle-panel">
+              <h3 class="panel-title">排序原则</h3>
+              <p class="panel-subtitle">避免被“看起来有产出”的项目带偏</p>
+              <div class="principle-stack">
+                <div class="principle"><b>先规则，后算法</b><span>没有 mandate，仓位和风险建议就没有约束依据。</span></div>
+                <div class="principle"><b>先事实源，后归因</b><span>没有交易、现金和公司行动，业绩拆解不可复现。</span></div>
+                <div class="principle"><b>先闭环，后扩张</b><span>不能监控和复盘时，更多策略只会增加不可控复杂度。</span></div>
+                <div class="principle"><b>先风险预算，后故事</b><span>新兴赢家和特殊机会必须作为有限预算的策略模块。</span></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="measurement">
+          <div class="section-head">
+            <div><p class="eyebrow section-kicker">05 · Milestones & metrics</p><h2>每一步，<br>都必须能验收。</h2></div>
+            <p class="section-intro">路线图不是功能愿望清单。每个里程碑都有退出条件，每个能力都必须通过数据、工具、研究、决策、组合、监控和 Alpha 指标证明有效。</p>
+          </div>
+
+          <div class="panel panel-pad">
+            <h3 class="panel-title">六个建设里程碑</h3>
+            <p class="panel-subtitle">从“定规则”到“真实资管运营”的渐进路径</p>
+            <div class="milestones">
+              <article class="milestone"><div class="milestone-dot">M0</div><h4>定规则</h4><p>IPS、基准、风险预算、审批与数据边界</p></article>
+              <article class="milestone"><div class="milestone-dot">M1</div><h4>建事实源</h4><p>主数据、交易账本、现金与点时数据</p></article>
+              <article class="milestone"><div class="milestone-dot">M2</div><h4>闭环 MVP</h4><p>业绩、风险、决策日志与论文版本</p></article>
+              <article class="milestone"><div class="milestone-dot">M3</div><h4>持续运行</h4><p>Watchlist、日历、告警、归因和校准</p></article>
+              <article class="milestone"><div class="milestone-dot">M4</div><h4>扩展 Alpha</h4><p>样本外、含成本验证新策略</p></article>
+              <article class="milestone"><div class="milestone-dot">M5</div><h4>真实运营</h4><p>交易、托管、NAV、合规与客户报告</p></article>
+            </div>
+          </div>
+
+          <div class="panel panel-pad" style="margin-top:22px">
+            <h3 class="panel-title">机构能力 KPI 链</h3>
+            <p class="panel-subtitle">指标评价系统是否可信，不替代长期投资判断</p>
+            <div class="kpi-flow">
+              <article class="kpi-node"><span class="kpi-icon">01</span><h4>数据</h4><p>完整率、新鲜度、差异、追溯与对账</p></article>
+              <article class="kpi-node"><span class="kpi-icon">02</span><h4>工具</h4><p>测试覆盖、回归、异常和复现率</p></article>
+              <article class="kpi-node"><span class="kpi-icon">03</span><h4>研究</h4><p>双源率、预测留痕与论文更新</p></article>
+              <article class="kpi-node"><span class="kpi-icon">04</span><h4>决策</h4><p>日志、审批、概率校准和红线</p></article>
+              <article class="kpi-node"><span class="kpi-icon">05</span><h4>组合</h4><p>基准、回撤、风险预算与流动性</p></article>
+              <article class="kpi-node"><span class="kpi-icon">06</span><h4>监控</h4><p>精确率、延迟、重复、漏报和过期拦截</p></article>
+              <article class="kpi-node"><span class="kpi-icon">07</span><h4>Alpha</h4><p>样本外、回撤、成本、换手和容量</p></article>
+            </div>
+          </div>
+
+          <div class="dod-layout">
+            <div class="dod-core"><div class="dod-ring"><b>机构能力<br>已落地</b></div></div>
+            <div class="dod-checks" aria-label="统一完成定义">
+              <div class="dod-check"><b>范围明确</b><span>适用什么 mandate，不解决什么问题</span></div>
+              <div class="dod-check"><b>输入明确</b><span>字段、单位、币种、时点、来源与缺失规则</span></div>
+              <div class="dod-check"><b>输出明确</b><span>结论、置信度、假设、限制和审批点</span></div>
+              <div class="dod-check"><b>可复现</b><span>同一快照、配置和版本产生同一结果</span></div>
+              <div class="dod-check"><b>可测试</b><span>正常、边界、异常和 golden case 自动验证</span></div>
+              <div class="dod-check"><b>防偏差</b><span>处理点时、幸存者、前视、成本和退市样本</span></div>
+              <div class="dod-check"><b>可追溯</b><span>从结论返回来源、转换、模型和决策人</span></div>
+              <div class="dod-check"><b>会失败</b><span>数据不足时停止或降级，不制造精确幻觉</span></div>
+              <div class="dod-check"><b>可监控</b><span>记录成功率、耗时、新鲜度和异常</span></div>
+              <div class="dod-check"><b>可复盘</b><span>上线前定义指标，上线后校准并淘汰无效规则</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer"><div class="shell footer-inner"><span>AI Berkshire · 机构能力建设与工程排期参考 · 不构成投资、法律或合规意见</span><a href="TODO-投资能力建设-机构视角-codex.md">查看 Markdown 对照版 →</a></div></footer>
+  <script>
+    (() => {
+      const STORAGE_KEY = 'ai-berkshire-roadmap-codex-v1';
+      const checks = [...document.querySelectorAll('.task-check')];
+      const blocks = [...document.querySelectorAll('.phase-block')];
+      const filterButtons = [...document.querySelectorAll('.filter-btn')];
+      const progressFill = document.getElementById('progressFill');
+      const progressLabel = document.getElementById('progressLabel');
+
+      const readState = () => {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+        catch (_) { return {}; }
+      };
+      const writeState = (state) => {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        catch (_) { /* File previews may disable storage; checks still work for this session. */ }
+      };
+
+      const updateProgress = () => {
+        const completed = checks.filter(check => check.checked).length;
+        const total = checks.length;
+        const pct = total ? Math.round(completed / total * 100) : 0;
+        progressFill.style.width = pct + '%';
+        progressLabel.textContent = `${completed} / ${total}`;
+
+        blocks.forEach(block => {
+          const phaseChecks = [...block.querySelectorAll('.task-check')];
+          const phaseDone = phaseChecks.filter(check => check.checked).length;
+          let label = block.querySelector('.phase-progress');
+          if (!label) {
+            label = document.createElement('span');
+            label.className = 'phase-progress';
+            block.querySelector('.phase-summary-copy p').append(label);
+          }
+          label.textContent = `· ${phaseDone}/${phaseChecks.length}`;
+        });
+      };
+
+      const saved = readState();
+      checks.forEach(check => {
+        check.checked = Boolean(saved[check.dataset.task]);
+        check.addEventListener('change', () => {
+          const next = readState();
+          next[check.dataset.task] = check.checked;
+          writeState(next);
+          updateProgress();
+        });
+      });
+      updateProgress();
+
+      filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const filter = button.dataset.filter;
+          filterButtons.forEach(item => item.classList.toggle('active', item === button));
+          blocks.forEach(block => {
+            const show = filter === 'all' || block.dataset.phase === filter;
+            block.hidden = !show;
+            if (show && filter !== 'all') block.open = true;
+          });
+        });
+      });
+
+      document.querySelector('[data-action="print"]').addEventListener('click', () => window.print());
+      document.querySelector('[data-action="reset"]').addEventListener('click', () => {
+        if (!window.confirm('清空这份路线图的所有勾选状态？')) return;
+        checks.forEach(check => { check.checked = false; });
+        try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+        updateProgress();
+      });
+
+      let printOpenState = [];
+      window.addEventListener('beforeprint', () => {
+        printOpenState = blocks.map(block => block.open);
+        blocks.forEach(block => { block.hidden = false; block.open = true; });
+      });
+      window.addEventListener('afterprint', () => {
+        blocks.forEach((block, index) => { block.open = printOpenState[index]; });
+        const active = filterButtons.find(button => button.classList.contains('active'));
+        if (active && active.dataset.filter !== 'all') {
+          blocks.forEach(block => { block.hidden = block.dataset.phase !== active.dataset.filter; });
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
