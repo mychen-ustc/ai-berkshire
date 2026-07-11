@@ -16,6 +16,7 @@ Usage (called automatically by Skills, no manual execution needed):
 """
 
 import argparse
+import ast
 import json
 import math
 import sys
@@ -285,32 +286,71 @@ def benford_check(values: list):
 # 5. Exact Calculator (精确计算器)
 # ---------------------------------------------------------------------------
 
+# Safe AST-based Decimal evaluator. Arithmetic runs entirely in Decimal, so
+# `0.1 + 0.2` yields exactly 0.3 with no float drift. The AST node whitelist
+# (only numeric literals and + - * / ** with parentheses) also makes eval
+# injection impossible — names, calls, attributes etc. are rejected.
+_AST_BINOPS = {
+    ast.Add: _CTX.add,
+    ast.Sub: _CTX.subtract,
+    ast.Mult: _CTX.multiply,
+    ast.Div: _CTX.divide,
+    ast.Pow: _CTX.power,
+}
+
+
+def _eval_decimal(node) -> Decimal:
+    """Recursively evaluate an AST node in exact Decimal arithmetic."""
+    if isinstance(node, ast.Expression):
+        return _eval_decimal(node.body)
+    if isinstance(node, ast.Constant):
+        if isinstance(node.value, bool) or not isinstance(node.value, (int, float)):
+            raise ValueError(f"不支持的常量: {node.value!r}")
+        # str() gives the shortest round-trip repr, so the literal itself is
+        # never float-polluted; drift only ever came from the arithmetic.
+        return Decimal(str(node.value))
+    if isinstance(node, ast.UnaryOp):
+        operand = _eval_decimal(node.operand)
+        if isinstance(node.op, ast.UAdd):
+            return operand
+        if isinstance(node.op, ast.USub):
+            return _CTX.minus(operand)
+        raise ValueError("不支持的一元运算符")
+    if isinstance(node, ast.BinOp):
+        op = _AST_BINOPS.get(type(node.op))
+        if op is None:
+            raise ValueError("不支持的运算符（仅支持 + - * / **）")
+        return op(_eval_decimal(node.left), _eval_decimal(node.right))
+    raise ValueError("不支持的表达式结构（仅允许数字与算术运算）")
+
+
 def exact_calc(expr: str):
     """Evaluate a financial expression with exact decimal arithmetic.
 
-    Supports: +, -, *, /, (), numbers (including scientific notation).
+    Supports: +, -, *, /, **, (), numbers (including scientific notation).
+    Arithmetic runs entirely in Decimal — no floating-point drift.
     """
     print("=" * 60)
     print("精确计算 (Exact Calculator)")
     print("=" * 60)
 
-    # Safe evaluation: only allow numbers and arithmetic
-    allowed = set("0123456789.+-*/() eE")
-    if not all(c in allowed for c in expr.replace(" ", "")):
-        print(f"  ❌ 不安全的表达式: {expr}")
-        return None
-
     try:
-        # Replace scientific notation for Decimal compatibility
-        result = eval(expr, {"__builtins__": {}}, {})
-        d_result = exact(result)
-        print(f"  表达式: {expr}")
-        print(f"  结果:   {fmt_number(d_result)}")
-        print(f"  精确值: {d_result}")
-        return float(d_result)
-    except Exception as e:
+        tree = ast.parse(expr, mode="eval")
+        d_result = _eval_decimal(tree)
+    except SyntaxError:
+        print(f"  ❌ 表达式语法错误: {expr}")
+        return None
+    except ZeroDivisionError:
+        print("  ❌ 计算错误: 除以零")
+        return None
+    except (ValueError, InvalidOperation) as e:
         print(f"  ❌ 计算错误: {e}")
         return None
+
+    print(f"  表达式: {expr}")
+    print(f"  结果:   {fmt_number(d_result)}")
+    print(f"  精确值: {d_result}")
+    return float(d_result)
 
 
 # ---------------------------------------------------------------------------
