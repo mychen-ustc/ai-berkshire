@@ -1,0 +1,49 @@
+{
+  "_comment": "投资授权与政策的机器可读镜像。人读版见 docs/INVESTMENT-MANDATE.md。工具从本文件读取约束，禁止在 skill/工具中硬编码阈值。用 JSON 而非 YAML 以保持零外部依赖(Python 3.9 无 tomllib/PyYAML)。",
+  "version": "0.1",
+  "status": "draft-待确认",
+  "as_of": "2026-07-11",
+  "mandate": {
+    "style": "基本面驱动·长期·价值偏成长·长仓为主·集中持有",
+    "universe": ["A股", "港股", "美股"],
+    "horizon_years": [3, 5],
+    "leverage_allowed": false,
+    "shorting_allowed": false,
+    "derivatives": "仅备兑/保护性/建仓类期权(如卖出PUT建仓)，不做投机裸头寸",
+    "capital": "自有资金",
+    "decision": "AI给证据/情景/建议，人类审批后执行"
+  },
+  "benchmark": {
+    "type": "混合·可投资总回报",
+    "components": ["沪深300TR", "恒生TR", "标普500TR"],
+    "note": "权重随实际市场敞口，待确认"
+  },
+  "risk_budget": {
+    "max_drawdown_warn_pct": 35,
+    "cash_range_pct": [0, 30],
+    "survival_rule": "任一持仓仓位不得使组合面临永久出局风险"
+  },
+  "position_limits": {
+    "single_name_max_pct": 50,
+    "top3_max_pct": 90,
+    "core_positions_max_count": 10,
+    "single_sector_max_pct": 60,
+    "single_country_max_pct": 80,
+    "alpha_sleeve_total_max_pct": 15,
+    "alpha_sleeve_single_max_pct": 3
+  },
+  "liquidity": {
+    "min_adv_multiple": null,
+    "hk_avoid_shell_stocks": true
+  },
+  "exclusions": [
+    "能力圈外/看不懂商业模式",
+    "重大诚信或治理污点/疑似财务造假",
+    "需杠杆或博傻才能获利"
+  ],
+  "review": {
+    "holdings": "weekly",
+    "portfolio": "quarterly",
+    "ips": "annual"
+  }
+}
