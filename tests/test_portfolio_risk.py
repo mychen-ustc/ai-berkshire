@@ -46,6 +46,20 @@ class TestRiskMath(unittest.TestCase):
         self.assertAlmostEqual(w["A"], 0.5)
         self.assertAlmostEqual(w["B"], 0.5)
 
+    def test_parse_fx(self):
+        fx = pr._parse_fx("USD=7.8,HKD=1")
+        self.assertEqual(fx, {"USD": 7.8, "HKD": 1.0})
+
+    def test_align_histories_intersection(self):
+        hists = {
+            "A": [("2026-01-01", 10.0), ("2026-01-08", 11.0), ("2026-01-15", 12.0)],
+            "B": [("2026-01-08", 20.0), ("2026-01-15", 21.0)],
+        }
+        dates, cols = pr._align_histories(hists)
+        self.assertEqual(len(dates), 2)                 # 只保留交集日期
+        self.assertEqual(cols["A"], [11.0, 12.0])
+        self.assertEqual(cols["B"], [20.0, 21.0])
+
 
 if __name__ == "__main__":
     unittest.main()

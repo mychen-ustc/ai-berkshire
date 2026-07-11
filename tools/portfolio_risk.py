@@ -127,12 +127,86 @@ def parse_weights(spec, available):
     return {k: v / total for k, v in w.items()}  # 归一化
 
 
+def _parse_fx(spec):
+    fx = {}
+    for part in (spec or "").split(","):
+        if "=" in part:
+            k, v = part.split("=", 1)
+            fx[k.strip().upper()] = float(v)
+    return fx
+
+
+def _period_key(date_str, freq):
+    """把日期归一到周期键，解决跨源周线日期不对齐（东财用周五、Yahoo用周一）。"""
+    d = datetime.strptime(date_str, "%Y-%m-%d")
+    if freq == "weekly":
+        y, w, _ = d.isocalendar()
+        return (y, w)
+    if freq == "monthly":
+        return (d.year, d.month)
+    return date_str  # daily 用精确日期
+
+
+def _align_histories(hists, freq="weekly"):
+    """{key: [(date, close)]} → (dates, {key:[close]})，按周期键取交集对齐（末值代表该周期）。"""
+    mapped = {}
+    for k, pts in hists.items():
+        m = {}
+        for ds, c in pts:  # pts 升序 → 同周期后者覆盖前者=期末值
+            m[_period_key(ds, freq)] = (ds, c)
+        mapped[k] = m
+    key_sets = [set(m) for m in mapped.values() if m]
+    common = sorted(set.intersection(*key_sets)) if key_sets else []
+    cols = {k: [mapped[k][pk][1] for pk in common] for k in mapped}
+    ref = next(iter(mapped.values())) if mapped else {}
+    dates = [datetime.strptime(ref[pk][0], "%Y-%m-%d") for pk in common] if ref else []
+    return dates, cols
+
+
+def build_matrix(args):
+    """三种来源统一成 (dates, cols, auto_weights, 来源标签)。auto_weights 仅 --from-ledger 有。"""
+    if getattr(args, "prices", None):
+        dates, cols = load_wide_prices(args.prices)
+        return dates, cols, None, os.path.basename(args.prices)
+    if getattr(args, "from_datalayer", None):
+        import datalayer as dl
+        syms = [s.strip() for s in args.from_datalayer.split(",") if s.strip()]
+        hists = {s: dl.fetch_history(s, freq=args.freq or "weekly", period=args.period)["points"] for s in syms}
+        dates, cols = _align_histories(hists, args.freq or "weekly")
+        return dates, cols, None, f"datalayer({len(syms)}只/前复权)"
+    if getattr(args, "from_ledger", None):
+        import datalayer as dl
+        import ledger
+        pos, _, _, _ = ledger.rebuild(ledger.load_ledger(args.from_ledger))
+        held = {s: p for s, p in pos.items() if p.qty > 0}
+        fx = _parse_fx(args.fx)
+        values, hists = {}, {}
+        for s, p in held.items():
+            q = dl.fetch_quote(s, cross=False)
+            values[s] = float(p.qty) * (q["price"] or 0) * fx.get(q["currency"], 1.0)
+            hists[s] = dl.fetch_history(s, freq=args.freq or "weekly", period=args.period)["points"]
+        total = sum(values.values())
+        weights = {s: v / total for s, v in values.items()} if total else None
+        dates, cols = _align_histories(hists, args.freq or "weekly")
+        return dates, cols, weights, f"ledger({len(held)}只持仓/市值权重)"
+    raise SystemExit("需指定 --prices / --from-datalayer / --from-ledger 之一")
+
+
 def analyze(args):
-    dates, cols = load_wide_prices(args.prices)
+    dates, cols, auto_w, src_label = build_matrix(args)
+    if not cols or len(dates) < 2 or any(len(v) < 2 for v in cols.values()):
+        raise SystemExit(f"可对齐的共同周期不足（{len(dates)} 期）：检查符号/网络/频率，"
+                         "或跨市场时确认交易日历有重叠")
     ppy = {"daily": 252, "weekly": 52, "monthly": 12}.get(args.freq) or periods_per_year(dates)
 
-    weights = (parse_weights(args.weights, list(cols))
-               if args.weights else {s: 1 / len(cols) for s in cols})
+    if auto_w:
+        weights = {k: v for k, v in auto_w.items() if k in cols}
+        tot = sum(weights.values())
+        weights = {k: v / tot for k, v in weights.items()} if tot else weights
+    elif args.weights:
+        weights = parse_weights(args.weights, list(cols))
+    else:
+        weights = {s: 1 / len(cols) for s in cols}
 
     rets = {s: pct_returns(cols[s]) for s in weights}
     n = min(len(r) for r in rets.values())
@@ -140,7 +214,7 @@ def analyze(args):
     nav = nav_from_returns(port)
 
     print("=" * 66)
-    print(f"组合风险分析 · {os.path.basename(args.prices)} · {len(port)} 期 · 年化因子 {ppy}")
+    print(f"组合风险分析 · {src_label} · {len(port)} 期 · 年化因子 {ppy}")
     print("=" * 66)
     print("  权重（归一化）:")
     for s, w in sorted(weights.items(), key=lambda x: -x[1]):
@@ -210,8 +284,13 @@ def main():
     ap = argparse.ArgumentParser(description="组合风险分析（P0-5，零依赖）")
     sub = ap.add_subparsers(dest="cmd")
     a = sub.add_parser("analyze", help="分析当前权重组合的历史风险画像")
-    a.add_argument("--prices", required=True, help="宽表价格 CSV: date,SYM1,SYM2,...")
-    a.add_argument("--weights", help='如 "TENCENT=0.47,PDD=0.42"；缺省等权')
+    src = a.add_mutually_exclusive_group(required=True)
+    src.add_argument("--prices", help="宽表价格 CSV: date,SYM1,SYM2,...")
+    src.add_argument("--from-datalayer", help='符号列表 "600519,0700.HK,AAPL"（经数据层取前复权历史）')
+    src.add_argument("--from-ledger", help="交易账本 CSV（持仓与权重经数据层实时计算）")
+    a.add_argument("--fx", help='多币种权重换算 "USD=7.8,HKD=1"（--from-ledger 用）')
+    a.add_argument("--period", default="5y", choices=["1y", "2y", "5y", "10y", "max"])
+    a.add_argument("--weights", help='如 "600519=0.47,..."；缺省等权（--from-ledger 时按市值）')
     a.add_argument("--benchmark", help="基准列名（价格表中的某列）")
     a.add_argument("--freq", choices=["daily", "weekly", "monthly"], help="频率(默认从日期推断)")
     a.add_argument("--rf", type=float, help="无风险利率(年化，算 Sharpe/Sortino)")

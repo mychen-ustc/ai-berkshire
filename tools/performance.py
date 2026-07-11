@@ -124,8 +124,37 @@ def flows_from_ledger(path, currency, as_of=None):
     return flows
 
 
+def portfolio_value(ledger_path, as_of=None, fx=None):
+    """账本持仓 × 数据层实时报价 + 现金 = 组合市值（分币种 + 可选换算到基准）。"""
+    import datalayer as dl
+    import ledger as ldg
+    from collections import defaultdict
+    fx = fx or {}
+    pos, cash, _, _ = ldg.rebuild(ldg.load_ledger(ledger_path), as_of=as_of)
+    holdings, by_ccy = [], defaultdict(lambda: Decimal("0"))
+    for s, p in pos.items():
+        if p.qty > 0:
+            q = dl.fetch_quote(s, cross=False)
+            price = Decimal(str(q["price"])) if q.get("price") else Decimal("0")
+            mv = p.qty * price
+            by_ccy[q["currency"]] += mv
+            holdings.append((s, p.qty, price, q["currency"], mv))
+    for ccy, amt in cash.items():
+        by_ccy[ccy] += amt
+    return holdings, dict(cash), dict(by_ccy)
+
+
+def _parse_fx(spec):
+    fx = {}
+    for part in (spec or "").split(","):
+        if "=" in part:
+            k, v = part.split("=", 1)
+            fx[k.strip().upper()] = Decimal(v.strip())
+    return fx
+
+
 def main():
-    ap = argparse.ArgumentParser(description="业绩计算：TWR / MWR(XIRR) / 总回报（零依赖）")
+    ap = argparse.ArgumentParser(description="业绩计算：TWR / MWR(XIRR) / 组合市值（零依赖）")
     sub = ap.add_subparsers(dest="cmd")
 
     m = sub.add_parser("mwr", help="货币加权(XIRR)：账本出入金 + 期末市值")
@@ -140,6 +169,12 @@ def main():
 
     x = sub.add_parser("xirr", help="通用 XIRR：现金流 CSV(date,amount)")
     x.add_argument("--flows", required=True)
+
+    v = sub.add_parser("value", help="组合市值：账本持仓 × 数据层实时报价 + 现金")
+    v.add_argument("--ledger", required=True)
+    v.add_argument("--as-of")
+    v.add_argument("--fx", help='换算到基准 "USD=7.8,HKD=1"（可选）')
+    v.add_argument("--base", help="基准币种(配合 --fx)")
 
     args = ap.parse_args()
 
@@ -173,6 +208,25 @@ def main():
         flows = load_flows_csv(args.flows)
         r = xirr(flows)
         print(f"XIRR(年化): {r * 100:.2f}%" if r is not None else "无法求解")
+
+    elif args.cmd == "value":
+        holdings, cash, by_ccy = portfolio_value(args.ledger, as_of=args.as_of)
+        print("=" * 62)
+        print(f"组合市值（账本 × 数据层实时报价{'，截至 ' + args.as_of if args.as_of else ''}）")
+        print("=" * 62)
+        for s, qty, price, ccy, mv in sorted(holdings, key=lambda x: -x[4]):
+            print(f"  {s:<10} {qty:>8} × {price:>10} {ccy} = {mv:>14,.2f}")
+        print("  " + "-" * 50)
+        for ccy, amt in cash.items():
+            print(f"  现金 {ccy:<6}{amt:>14,.2f}")
+        print("  分币种合计:")
+        for ccy, amt in by_ccy.items():
+            print(f"    {ccy:<6}{amt:>16,.2f}")
+        fx = _parse_fx(args.fx)
+        if fx:
+            base = args.base or "?"
+            total = sum(amt * fx.get(ccy, Decimal("1")) for ccy, amt in by_ccy.items())
+            print(f"  换算合计（{base}）: {total:,.2f}   [fx={args.fx}]")
 
     else:
         ap.print_help()

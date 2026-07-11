@@ -83,6 +83,21 @@ class TestParsers(unittest.TestCase):
     def test_stooq(self):
         self.assertEqual(dl.parse_stooq(STOOQ), 250.4)
 
+    def test_em_kline(self):
+        text = ('{"data":{"code":"600519","market":1,"name":"贵州茅台","klines":['
+                '"2026-06-26,1186.29,1168.63,1235.98,1168.10,260104,3.1e10",'
+                '"2026-07-10,1186.00,1204.98,1215.00,1170.28,180420,2.1e10"]}}')
+        name, pts = dl.parse_em_kline(text)
+        self.assertEqual(name, "贵州茅台")
+        self.assertEqual(pts, [("2026-06-26", 1168.63), ("2026-07-10", 1204.98)])  # 取 close
+
+    def test_yahoo_history_prefers_adjclose(self):
+        text = ('{"chart":{"result":[{"timestamp":[1625011200,1625616000],'
+                '"indicators":{"quote":[{"close":[140.0,142.0]}],'
+                '"adjclose":[{"adjclose":[138.5,141.0]}]}}]}}')
+        pts = dl.parse_yahoo_history(text)
+        self.assertEqual([p[1] for p in pts], [138.5, 141.0])  # 用前复权 adjclose 而非 close
+
 
 class TestCrossCheck(unittest.TestCase):
     def test_ok(self):

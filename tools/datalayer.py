@@ -172,6 +172,36 @@ def parse_stooq(csv_text):
         return None
 
 
+def parse_em_kline(text):
+    """东财 kline JSON → (name, [(date, close)])。klines 行: date,open,close,high,low,vol,amount。"""
+    d = json.loads(text)
+    data = d.get("data") or {}
+    pts = []
+    for row in data.get("klines") or []:
+        c = row.split(",")
+        if len(c) >= 3:
+            pts.append((c[0], float(c[2])))
+    return data.get("name"), pts
+
+
+def parse_yahoo_history(text):
+    """Yahoo chart JSON → [(date, adjclose)]（前复权：优先 adjclose，回退 close）。"""
+    d = json.loads(text)
+    r = d["chart"]["result"][0]
+    ts = r.get("timestamp") or []
+    ind = r.get("indicators", {})
+    series = None
+    if ind.get("adjclose"):
+        series = ind["adjclose"][0].get("adjclose")
+    if series is None:
+        series = ind.get("quote", [{}])[0].get("close")
+    pts = []
+    for t, c in zip(ts, series or []):
+        if c is not None:
+            pts.append((datetime.utcfromtimestamp(t).strftime("%Y-%m-%d"), float(c)))
+    return pts
+
+
 # --------------------------------------------------------------------------
 # 交叉校验 & 质量门禁（纯函数）
 # --------------------------------------------------------------------------
@@ -261,6 +291,39 @@ def _fetch_second(info, primary_price):
 
 
 # --------------------------------------------------------------------------
+# 价格历史（前复权）—— A/H 用东财 kline(fqt=1)，US 用 Yahoo adjclose
+# --------------------------------------------------------------------------
+def fetch_history(symbol, freq="weekly", period="5y"):
+    info = detect(symbol)
+    fetched_at = datetime.now().astimezone().isoformat(timespec="seconds")
+    ppy = {"daily": 252, "weekly": 52, "monthly": 12}[freq]
+    years = {"1y": 1, "2y": 2, "5y": 5, "10y": 10, "max": 30}.get(period, 5)
+    if info["market"] in ("A", "HK"):
+        klt = {"daily": 101, "weekly": 102, "monthly": 103}[freq]
+        if info["market"] == "HK":
+            secid = f"116.{re.sub(r'[^0-9]', '', info['tencent'])[-5:]}"
+        else:
+            pfx, code = info["tencent"][:2], info["tencent"][2:]
+            secid = f"{1 if pfx == 'sh' else 0}.{code}"
+        lmt = int(ppy * years) + 10
+        url = ("https://push2his.eastmoney.com/api/qt/stock/kline/get?"
+               f"secid={secid}&fields1=f1,f2,f3&fields2=f51,f52,f53,f54,f55,f56,f57"
+               f"&klt={klt}&fqt=1&end=20500101&lmt={lmt}")
+        name, points = parse_em_kline(_curl(url))
+        source, adjust = "eastmoney", "前复权(fqt=1)"
+    else:
+        interval = {"daily": "1d", "weekly": "1wk", "monthly": "1mo"}[freq]
+        url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{info['yahoo']}"
+               f"?interval={interval}&range={period}&events=div,split")
+        points = parse_yahoo_history(_curl(url))
+        name, source, adjust = info["symbol"], "yahoo_finance", "adjusted(splits+div, Yahoo adjclose)"
+    return {"symbol": info["symbol"], "market": info["market"], "name": name,
+            "field": "price_history", "freq": freq, "period": period, "adjust": adjust,
+            "currency": info["currency"], "source": source, "source_url": url,
+            "fetched_at": fetched_at, "version": VERSION, "n": len(points), "points": points}
+
+
+# --------------------------------------------------------------------------
 # 快照缓存（可复现）
 # --------------------------------------------------------------------------
 def cache_path(symbol):
@@ -316,6 +379,12 @@ def main():
     q.add_argument("--offline", action="store_true", help="只读缓存快照(可复现)")
     q.add_argument("--json", action="store_true")
     q.add_argument("--stale-days", type=int, default=5)
+    h = sub.add_parser("history", help="取价格历史(前复权)：A/H用东财kline，US用Yahoo adjclose")
+    h.add_argument("symbol")
+    h.add_argument("--freq", default="weekly", choices=["daily", "weekly", "monthly"])
+    h.add_argument("--period", default="5y", choices=["1y", "2y", "5y", "10y", "max"])
+    h.add_argument("--out", help="导出 CSV(date,close)")
+    h.add_argument("--json", action="store_true")
     s = sub.add_parser("sources", help="列出数据源与投研服务商登记册")
     s.add_argument("--market", choices=["A", "HK", "US"])
     s.add_argument("--tier", choices=["free-scrape", "free-api", "paid-pro"])
@@ -330,6 +399,24 @@ def main():
         print(json.dumps(env, ensure_ascii=False, indent=2) if args.json else "")
         if not args.json:
             _print_env(env)
+    elif args.cmd == "history":
+        hist = fetch_history(args.symbol, freq=args.freq, period=args.period)
+        if args.out:
+            os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
+            with open(args.out, "w", encoding="utf-8") as f:
+                f.write("date,close\n")
+                for d, c in hist["points"]:
+                    f.write(f"{d},{c}\n")
+        if args.json:
+            print(json.dumps(hist, ensure_ascii=False, indent=2))
+        else:
+            pts = hist["points"]
+            print(f"{hist['name']} [{hist['symbol']}] · {hist['freq']} · {hist['adjust']} · {hist['source']}")
+            print(f"  {hist['n']} 条  {pts[0][0]}~{pts[-1][0]}  首 {pts[0][1]}  末 {pts[-1][1]} {hist['currency']}"
+                  if pts else "  无数据")
+            if args.out:
+                print(f"  已导出 → {args.out}")
+
     elif args.cmd == "sources":
         reg = json.load(open(REGISTRY, encoding="utf-8"))
         rows = [x for x in reg["sources"]
