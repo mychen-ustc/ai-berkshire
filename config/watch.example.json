@@ -1,0 +1,6 @@
+{
+  "_default": {"stop_loss_pct": 25, "day_move_pct": 8},
+  "0700.HK": {"take_profit_pct": 60, "price_below": 400},
+  "9988.HK": {"stop_loss_pct": 30},
+  "PDD": {"stop_loss_pct": 30, "day_move_pct": 10, "price_below": 80}
+}

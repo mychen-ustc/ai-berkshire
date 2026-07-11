@@ -200,6 +200,8 @@ AI Berkshire 确保：**同样的输入 → 结构一致、深度一致的输出
 | [`/quality-screen`](skills/quality-screen.md) | 去劣筛选（7条硬指标） | 快速排除非一流公司，支持个股/行业/指数/主题批量筛 |
 | [`/bottleneck-hunter`](skills/bottleneck-hunter.md) | 供应链瓶颈猎手 | 从超级趋势出发，寻找产业链物理瓶颈和套利机会 |
 | [`/investment-checklist`](skills/investment-checklist.md) | 巴菲特买入前 Checklist | 六关快速筛选，10分钟决定是否值得深入 |
+| [`/sector-rotation`](skills/sector-rotation.md) | 板块轮动 | 动量与相对强弱排名，判断顺周期↔防御的轮动位置 |
+| [`/special-situations`](skills/special-situations.md) | 事件驱动/特殊机会 | 并购套利/分拆/困境反转/私有化/指数调整/回购——与大盘低相关的 alpha |
 
 ### 📈 持仓管理类
 
@@ -211,6 +213,8 @@ AI Berkshire 确保：**同样的输入 → 结构一致、深度一致的输出
 | [`/news-pulse`](skills/news-pulse.md) | 股价异动快速归因 | 股价大涨/大跌时10分钟搞清"发生了什么" |
 | [`/decision-journal`](skills/decision-journal.md) | 决策日志与校准 | 记录每个买卖决策的论点/概率/触发器，事后用 Brier 分数检验"你到底准不准" |
 | [`/performance-attribution`](skills/performance-attribution.md) | 业绩归因 | 收益从哪来：贡献分解 + Brinson 配置/选股效应，区分运气与能力 |
+| [`/watch`](skills/watch.md) | 持仓监控告警 | 从账本+数据层主动巡检：止损/止盈/价位/异动触发 + 催化剂日历（可 /loop 定时） |
+| [`/sell-discipline`](skills/sell-discipline.md) | 卖出纪律 | 何时该走按规则不按情绪：论点证伪/止损/超内在价值/机会成本/换仓 |
 
 ### 🧠 思维工具类
 
