@@ -209,6 +209,8 @@ AI Berkshire 确保：**同样的输入 → 结构一致、深度一致的输出
 | [`/thesis-tracker`](skills/thesis-tracker.md) | 投资论文追踪 | 买入后的纪律系统：持续跟踪论文是否被证伪 |
 | [`/thesis-drift`](skills/thesis-drift.md) | 投资论文漂移检测 | 对比两份论文/报告，区分事实变化、估值变化与措辞变化 |
 | [`/news-pulse`](skills/news-pulse.md) | 股价异动快速归因 | 股价大涨/大跌时10分钟搞清"发生了什么" |
+| [`/decision-journal`](skills/decision-journal.md) | 决策日志与校准 | 记录每个买卖决策的论点/概率/触发器，事后用 Brier 分数检验"你到底准不准" |
+| [`/performance-attribution`](skills/performance-attribution.md) | 业绩归因 | 收益从哪来：贡献分解 + Brinson 配置/选股效应，区分运气与能力 |
 
 ### 🧠 思维工具类
 
