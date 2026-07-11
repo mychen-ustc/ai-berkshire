@@ -187,7 +187,16 @@ python3 tools/financial_rigor.py verify-valuation \
 ### 第七步：估值与安全边际 — 巴菲特"内在价值" + 段永平"对的价格"
 
 - 当前市场定价（关键估值指标表格）—— **必须通过工具验算**
-- 反向DCF：当前股价隐含了什么增长预期？
+- **内在价值（DCF / 反向DCF / SOTP，`tools/dcf.py`，货币全程 Decimal）**：
+```bash
+# 多阶段 DCF（★注意 FCF 与股价币种必须一致，否则安全边际失真）
+python3 tools/dcf.py dcf --fcf0 {基年FCF} --growth "{各年增速,逗号}" --wacc {WACC} \
+  --terminal-growth {永续增速} --shares {股本} --net-debt {净负债>0/净现金<0} --price {股价} --currency {币}
+# 反向 DCF：当前股价隐含了多高的增长预期（低于你的判断=低估）
+python3 tools/dcf.py reverse --price {股价} --fcf0 {每股FCF} --wacc {WACC} --terminal-growth {永续} --years 10
+# 分部加总 SOTP（多业务/高投资组合公司，如腾讯：核心业务 + 净现金 + 投资组合打折）
+python3 tools/dcf.py sotp --parts "{业务1=值,业务2=值}" --net-cash {净现金} --investments {投资组合} --holdco-discount {折价率} --shares {股本}
+```
 - 三情景估值 —— **必须通过工具精确计算，禁止心算**：
 ```bash
 python3 tools/financial_rigor.py three-scenario \
