@@ -1,0 +1,49 @@
+{
+  "version": "0.1",
+  "status": "draft-待确认",
+  "updated": "2026-07-11",
+  "purpose": "统一数据层的数据源与投研服务商登记册（P0-3）。记录每个来源的市场覆盖、层级、数据类型、接入方式、鉴权、频控与许可/ToS限制，供 tools/datalayer.py 路由与合规参考。",
+  "conventions": {
+    "adjust": "历史序列一律用【前复权】做对比/涨幅/估值分位；总回报用后复权；快照用不复权。不得在同一分析内混用。",
+    "currency": "每条记录必须标注币种（CNY/HKD/USD）；跨币种比较前先换算并注明汇率时点。",
+    "unit": "每条记录标注单位（元/股、亿元、%），防止市值差一个零。",
+    "point_in_time": "基本面数据必须带 available_at（首次公布时点）；回测/历史分析不得使用当时尚未公布的数据（防前视偏差）。",
+    "provenance": "每条记录留存 source / source_url / fetched_at / as_of / version，标准化值与原始值均可追溯。",
+    "quality_gate": "缺失、过期、跨源冲突的数据不得被静默使用——必须显式标记 warn/stale/conflict。"
+  },
+  "tiers": {
+    "free-scrape": "免费网页/接口抓取，个人研究用途；须遵守 robots/ToS，商用或高频需授权",
+    "free-api": "免费或 freemium API，通常需注册 key，有频控",
+    "paid-pro": "机构级付费终端/数据服务，需订阅与授权，通常禁止再分发"
+  },
+  "sources": [
+    {"id": "tencent_gtimg", "name": "腾讯行情", "markets": ["A", "HK"], "tier": "free-scrape", "data": ["quote"], "access": "https://qt.gtimg.cn/q=<code>", "encoding": "GBK", "auth": "none", "rate_limit": "宽松，建议<10 req/s", "license": "个人研究；商用/高频需授权", "priority": 1, "live_adapter": true},
+    {"id": "sina_hq", "name": "新浪财经行情", "markets": ["A", "HK", "US"], "tier": "free-scrape", "data": ["quote"], "access": "https://hq.sinajs.cn/list=<code>", "encoding": "GBK", "auth": "需 Referer: finance.sina.com.cn", "rate_limit": "中等", "license": "个人研究；商用需授权", "priority": 2, "live_adapter": true},
+    {"id": "yahoo_finance", "name": "Yahoo Finance", "markets": ["US", "HK", "A", "global"], "tier": "free-scrape", "data": ["quote", "price_history", "fundamentals_basic"], "access": "https://query1.finance.yahoo.com/v8/finance/chart/<sym>", "auth": "none", "rate_limit": "有软限制，需 UA", "license": "个人研究；商用受限", "priority": 1, "live_adapter": true, "note": "美股主源；港股用 0700.HK，A股用 600519.SS/000001.SZ"},
+    {"id": "stooq", "name": "Stooq", "markets": ["US", "global"], "tier": "free-scrape", "data": ["quote", "price_history"], "access": "https://stooq.com/q/l/?s=<sym>.us&f=sd2t2ohlcv&e=csv", "auth": "none", "rate_limit": "中等", "license": "个人研究", "priority": 3, "live_adapter": true, "note": "美股/全球交叉校验第二源；CN 覆盖有限"},
+    {"id": "eastmoney", "name": "东方财富", "markets": ["A", "HK", "US"], "tier": "free-scrape", "data": ["quote", "fundamentals", "financials", "search"], "access": "push2.eastmoney.com / datacenter.eastmoney.com", "auth": "none/token", "rate_limit": "中等", "license": "个人研究；商用需授权", "priority": 1, "live_adapter": false, "note": "A股财务主源（financial-data 规范）；已由 tools/ashare_data.py 部分接入"},
+    {"id": "cninfo", "name": "巨潮资讯", "markets": ["A"], "tier": "free-scrape", "data": ["filings", "financials", "corp_actions"], "access": "http://www.cninfo.com.cn", "auth": "none", "rate_limit": "中等", "license": "官方指定披露平台", "priority": 1, "live_adapter": false, "note": "A股原始年报/季报一手源（副核）"},
+    {"id": "aastocks", "name": "AASTOCKS", "markets": ["HK"], "tier": "free-scrape", "data": ["quote", "fundamentals"], "access": "http://www.aastocks.com", "auth": "none", "rate_limit": "中等", "license": "个人研究", "priority": 1, "live_adapter": false, "note": "港股基本面主源（financial-data 规范）"},
+    {"id": "hkex", "name": "HKEX 披露易", "markets": ["HK"], "tier": "free-scrape", "data": ["filings", "corp_actions"], "access": "https://www.hkexnews.hk", "auth": "none", "rate_limit": "中等", "license": "官方披露平台", "priority": 1, "live_adapter": false, "note": "港股年报PDF一手源"},
+    {"id": "sec_edgar", "name": "SEC EDGAR", "markets": ["US"], "tier": "free-api", "data": ["filings", "financials", "corp_actions"], "access": "https://www.sec.gov/cgi-bin/browse-edgar ; data.sec.gov/api", "auth": "需声明 UA(邮箱)", "rate_limit": "≤10 req/s", "license": "公有领域", "priority": 1, "live_adapter": false, "note": "美股10-K/10-Q一手源；point-in-time 首选（有 filing date）"},
+    {"id": "stockanalysis", "name": "stockanalysis.com", "markets": ["US", "global"], "tier": "free-scrape", "data": ["financials", "fundamentals", "valuation"], "access": "https://stockanalysis.com/stocks/<sym>/financials/", "auth": "none", "rate_limit": "中等", "license": "个人研究", "priority": 2, "live_adapter": false, "note": "美股财务副核"},
+    {"id": "macrotrends", "name": "macrotrends", "markets": ["US"], "tier": "free-scrape", "data": ["financials", "price_history"], "access": "https://www.macrotrends.net/stocks/charts/<sym>", "auth": "none", "rate_limit": "有反爬(可能402)", "license": "个人研究", "priority": 2, "live_adapter": false, "note": "美股长历史财务；ADR如TCEHY"},
+    {"id": "morningstar", "name": "Morningstar", "markets": ["US", "global"], "tier": "free-scrape", "data": ["fair_value", "moat", "valuation"], "access": "lt.morningstar.com screener API", "auth": "none/token", "rate_limit": "中等", "license": "个人研究", "priority": 2, "live_adapter": false, "note": "公允价值/护城河；已由 tools/morningstar_fair_value.py 接入"},
+    {"id": "xueqiu", "name": "雪球", "markets": ["A", "HK", "US"], "tier": "free-scrape", "data": ["quote", "sentiment", "posts"], "access": "https://xueqiu.com (WAF)", "auth": "cookie/登录态", "rate_limit": "严(反爬)", "license": "个人研究", "priority": 3, "live_adapter": false, "note": "舆情/大V发言；已由 tools/xueqiu_scraper.py(playwright) 接入"},
+    {"id": "tushare", "name": "Tushare Pro", "markets": ["A", "HK"], "tier": "free-api", "data": ["quote", "price_history", "financials", "corp_actions", "index"], "access": "http api.tushare.pro", "auth": "需 token(积分制)", "rate_limit": "按积分", "license": "免费额度+付费；遵守其条款", "priority": 2, "live_adapter": false, "note": "A股结构化数据常用API；前复权/财报/停复牌齐全"},
+    {"id": "akshare", "name": "AkShare", "markets": ["A", "HK", "US", "global"], "tier": "free-api", "data": ["quote", "price_history", "financials", "macro", "index"], "access": "python 库(封装多免费源)", "auth": "none", "rate_limit": "取决底层源", "license": "开源(MIT)；底层源各自ToS", "priority": 2, "live_adapter": false, "note": "ROADMAP P0 指定接入；覆盖广但稳定性依赖底层源"},
+    {"id": "alpha_vantage", "name": "Alpha Vantage", "markets": ["US", "global", "FX"], "tier": "free-api", "data": ["quote", "price_history", "fundamentals", "fx", "technical"], "access": "https://www.alphavantage.co/query", "auth": "需 free key", "rate_limit": "免费5 req/min,500/日", "license": "免费+付费", "priority": 3, "live_adapter": false},
+    {"id": "fmp", "name": "Financial Modeling Prep", "markets": ["US", "global"], "tier": "free-api", "data": ["quote", "financials", "estimates", "fundamentals"], "access": "https://financialmodelingprep.com/api", "auth": "需 key", "rate_limit": "免费250/日", "license": "freemium", "priority": 3, "live_adapter": false},
+    {"id": "finnhub", "name": "Finnhub", "markets": ["US", "global"], "tier": "free-api", "data": ["quote", "fundamentals", "news", "estimates", "alt_data"], "access": "https://finnhub.io/api", "auth": "需 key", "rate_limit": "免费60/min", "license": "freemium", "priority": 3, "live_adapter": false},
+    {"id": "wind", "name": "Wind 万得", "markets": ["A", "HK", "US", "global"], "tier": "paid-pro", "data": ["quote", "price_history", "financials", "estimates", "corp_actions", "macro", "news"], "access": "WindPy / 终端", "auth": "机构订阅+账号", "rate_limit": "按合同", "license": "付费，禁止再分发", "priority": 1, "live_adapter": false, "note": "中国机构事实标准；point-in-time 与一致预期齐全"},
+    {"id": "ifind", "name": "同花顺 iFinD", "markets": ["A", "HK", "US"], "tier": "paid-pro", "data": ["quote", "financials", "estimates", "news"], "access": "iFinD API/终端", "auth": "机构订阅", "rate_limit": "按合同", "license": "付费", "priority": 2, "live_adapter": false},
+    {"id": "choice", "name": "东方财富 Choice", "markets": ["A", "HK", "US"], "tier": "paid-pro", "data": ["quote", "financials", "estimates", "macro"], "access": "Choice API/终端", "auth": "机构订阅", "rate_limit": "按合同", "license": "付费", "priority": 2, "live_adapter": false},
+    {"id": "hithink_juyuan", "name": "恒生聚源", "markets": ["A", "HK"], "tier": "paid-pro", "data": ["financials", "corp_actions", "estimates"], "access": "数据库授权", "auth": "机构订阅", "rate_limit": "按合同", "license": "付费", "priority": 3, "live_adapter": false, "note": "国内量化常用底层数据库"},
+    {"id": "bloomberg", "name": "Bloomberg Terminal", "markets": ["global", "US", "HK", "A"], "tier": "paid-pro", "data": ["quote", "price_history", "financials", "estimates", "fx", "fixed_income", "news", "alt_data"], "access": "BLPAPI / 终端", "auth": "机构订阅(账号绑定)", "rate_limit": "按合同", "license": "付费，严格禁止再分发", "priority": 1, "live_adapter": false},
+    {"id": "refinitiv", "name": "Refinitiv / LSEG (Eikon)", "markets": ["global", "US", "HK", "A"], "tier": "paid-pro", "data": ["quote", "financials", "estimates(I/B/E/S)", "fx", "news"], "access": "Eikon Data API / Workspace", "auth": "机构订阅", "rate_limit": "按合同", "license": "付费", "priority": 1, "live_adapter": false, "note": "I/B/E/S 一致预期权威源"},
+    {"id": "factset", "name": "FactSet", "markets": ["global", "US", "HK", "A"], "tier": "paid-pro", "data": ["quote", "financials", "estimates", "ownership", "news"], "access": "FactSet API / 终端", "auth": "机构订阅", "rate_limit": "按合同", "license": "付费", "priority": 2, "live_adapter": false},
+    {"id": "spglobal_capitaliq", "name": "S&P Capital IQ", "markets": ["global", "US"], "tier": "paid-pro", "data": ["financials", "estimates", "credit", "transactions", "ownership"], "access": "CapIQ Pro API", "auth": "机构订阅", "rate_limit": "按合同", "license": "付费", "priority": 2, "live_adapter": false},
+    {"id": "morningstar_direct", "name": "Morningstar Direct", "markets": ["global", "US"], "tier": "paid-pro", "data": ["fair_value", "moat", "fund_data", "financials"], "access": "Direct API", "auth": "机构订阅", "rate_limit": "按合同", "license": "付费", "priority": 3, "live_adapter": false},
+    {"id": "alphasense", "name": "AlphaSense / Sentieo", "markets": ["global"], "tier": "paid-pro", "data": ["research", "filings", "transcripts", "news", "expert_calls"], "access": "平台/API", "auth": "机构订阅", "rate_limit": "按合同", "license": "付费", "priority": 3, "live_adapter": false, "note": "投研资讯/纪要/专家访谈检索"}
+  ]
+}

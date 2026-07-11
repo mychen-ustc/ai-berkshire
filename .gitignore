@@ -31,3 +31,6 @@ reports/portfolio-latest.md
 data/portfolio/transactions.csv
 data/portfolio/prices.csv
 data/portfolio/*.local.*
+
+# 数据层快照缓存（不入库：尊重数据源ToS + 避免陈旧数据）
+data/cache/
