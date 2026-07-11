@@ -3,354 +3,240 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>投资能力建设路线图（机构视角）</title>
+<title>投资能力建设路线图（机构视角 · Claude 版）</title>
 <style>
 :root{
-  --bg:#f6f8fb; --card:#ffffff; --ink:#152030; --muted:#5b6472; --line:#e4e8ef;
-  --head:#0b2942; --accent:#0e7490; --accent2:#0f766e;
-  --green:#16a34a; --amber:#e0a010; --red:#dc2626; --blue:#2563eb; --purple:#7c3aed; --gray:#94a3b8;
-  --green-bg:#dcfce7; --amber-bg:#fef3c7; --red-bg:#fee2e2; --blue-bg:#dbeafe; --purple-bg:#ede9fe; --gray-bg:#eef2f6;
-  --grid:#e4e8ef; --radar:#0e7490;
+  --bg:#f6f8fb;--card:#fff;--ink:#152030;--muted:#5b6472;--line:#e4e8ef;--head:#0b2942;--accent:#0e7490;--accent2:#0f766e;
+  --green:#16a34a;--amber:#e0a010;--blue:#2563eb;--red:#dc2626;--purple:#7c3aed;
+  --green-bg:#dcfce7;--amber-bg:#fef3c7;--blue-bg:#dbeafe;--red-bg:#fee2e2;--purple-bg:#ede9fe;--gray-bg:#eef2f6;--grid:#e4e8ef;
 }
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg:#0e1116; --card:#161b22; --ink:#e6edf3; --muted:#9aa5b1; --line:#2a3139;
-    --head:#cfe8f5; --accent:#22b8cf; --accent2:#2dd4bf;
-    --green:#34d399; --amber:#f5c542; --red:#f87171; --blue:#60a5fa; --purple:#a78bfa; --gray:#64748b;
-    --green-bg:#0f2e1e; --amber-bg:#33280a; --red-bg:#3a1414; --blue-bg:#0f2038; --purple-bg:#221836; --gray-bg:#1b222b;
-    --grid:#2a3139; --radar:#22b8cf;
-  }
-}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e1116;--card:#161b22;--ink:#e6edf3;--muted:#9aa5b1;--line:#2a3139;--head:#cfe8f5;--accent:#22b8cf;--accent2:#2dd4bf;
+  --green:#34d399;--amber:#f5c542;--blue:#60a5fa;--red:#f87171;--purple:#a78bfa;
+  --green-bg:#0f2e1e;--amber-bg:#33280a;--blue-bg:#0f2038;--red-bg:#3a1414;--purple-bg:#221836;--gray-bg:#1b222b;--grid:#2a3139;}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);line-height:1.7;
   font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;}
 .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 80px;}
-header.top{border-bottom:3px solid var(--accent);padding-bottom:18px;margin-bottom:8px;}
-h1{font-size:1.9rem;color:var(--head);margin:.1em 0 .3em;}
+header.top{border-bottom:3px solid var(--accent);padding-bottom:18px;}
+h1{font-size:1.85rem;color:var(--head);margin:.1em 0 .3em;}
 .sub{color:var(--muted);font-size:.9rem;}
-.tagline{margin-top:14px;padding:14px 18px;background:linear-gradient(90deg,var(--blue-bg),var(--amber-bg));
-  border-radius:10px;font-size:.95rem;}
+.tagline{margin-top:14px;padding:14px 18px;background:linear-gradient(90deg,var(--blue-bg),var(--amber-bg));border-radius:10px;font-size:.95rem;}
 .tagline b{color:var(--head);}
-h2{font-size:1.3rem;color:var(--head);margin:2em 0 .6em;padding-left:.55em;border-left:5px solid var(--accent);}
-h3{font-size:1.05rem;color:var(--accent2);margin:1.4em 0 .5em;}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:16px 0;
-  box-shadow:0 1px 3px rgba(0,0,0,.04);}
-p{margin:.5em 0;} small{color:var(--muted);}
-strong{color:var(--head);}
-.note{background:var(--gray-bg);border-radius:8px;padding:10px 14px;font-size:.9rem;margin:12px 0;}
+h2{font-size:1.28rem;color:var(--head);margin:2em 0 .6em;padding-left:.55em;border-left:5px solid var(--accent);}
+h3{font-size:1.04rem;color:var(--accent2);margin:1.3em 0 .5em;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+p{margin:.5em 0;} strong{color:var(--head);} small{color:var(--muted);}
+.note{background:var(--gray-bg);border-radius:8px;padding:10px 14px;font-size:.88rem;margin:12px 0;}
+table{border-collapse:collapse;width:100%;font-size:.86rem;margin:6px 0;}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;}
+th{background:var(--gray-bg);color:var(--head);font-weight:700;}
+code{background:var(--gray-bg);padding:.1em .4em;border-radius:5px;font-size:.86em;}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;}
+.tablewrap table{margin:0;} .tablewrap th{white-space:nowrap;}
 
-/* KPI gauges */
-.gauges{display:grid;gap:14px;}
-.gauge-row{display:grid;grid-template-columns:160px 1fr 46px;align-items:center;gap:12px;}
-.gauge-label{font-weight:600;font-size:.92rem;}
-.gauge-track{background:var(--gray-bg);border-radius:99px;height:22px;position:relative;overflow:hidden;}
-.gauge-fill{height:100%;border-radius:99px;}
-.gauge-val{font-variant-numeric:tabular-nums;font-weight:700;text-align:right;}
-.g-green{background:var(--green);} .g-amber{background:var(--amber);} .g-red{background:var(--red);}
+/* maturity gap bars */
+.mbars{display:grid;gap:6px;}
+.mrow{display:grid;grid-template-columns:130px 1fr 62px;align-items:center;gap:10px;font-size:.84rem;}
+.mname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mtrack{position:relative;background:var(--gray-bg);border-radius:6px;height:18px;overflow:hidden;}
+.mfill{height:100%;border-radius:6px;}
+.mtarget{position:absolute;top:-2px;bottom:-2px;left:80%;width:2px;background:var(--green);opacity:.9;}
+.mlvl{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right;}
+.f-red{background:var(--red);}.f-amber{background:var(--amber);}.f-blue{background:var(--blue);}.f-green{background:var(--green);}
 
-/* radar + legend layout */
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center;}
-@media (max-width:760px){.two-col{grid-template-columns:1fr;}}
-svg{width:100%;height:auto;display:block;}
-.chart-cap{font-size:.82rem;color:var(--muted);text-align:center;margin-top:6px;}
-
-/* 14-link bars */
-.bars{display:grid;gap:7px;}
-.bar-row{display:grid;grid-template-columns:118px 1fr 34px;align-items:center;gap:10px;font-size:.86rem;}
-.bar-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.bar-track{background:var(--gray-bg);border-radius:6px;height:16px;overflow:hidden;}
-.bar-fill{height:100%;border-radius:6px;}
-.bar-val{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);}
-.bar-row.alpha .bar-name{font-weight:700;color:var(--red);}
-
-/* two axis cards */
-.axis-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-@media (max-width:760px){.axis-cards{grid-template-columns:1fr;}}
-.axis-cards .card{margin:0;border-top:4px solid;}
-.axis-flow{border-top-color:var(--blue)!important;}
-.axis-alpha{border-top-color:var(--amber)!important;}
-
-/* TODO items */
-.todo{border-left:4px solid var(--line);padding:10px 0 10px 16px;margin:12px 0;}
-.todo.p0{border-left-color:var(--red);} .todo.p1{border-left-color:var(--amber);} .todo.p2{border-left-color:var(--gray);}
-.todo .t{font-weight:700;color:var(--head);}
-.todo code{background:var(--gray-bg);padding:.1em .4em;border-radius:5px;font-size:.86em;}
-.todo ul{margin:.4em 0;padding-left:1.2em;}
-.meta{font-size:.82rem;color:var(--muted);margin-top:4px;}
-.pill{display:inline-block;font-size:.72rem;padding:1px 8px;border-radius:99px;font-weight:700;margin-left:6px;vertical-align:middle;}
-.pill.impact{background:var(--amber-bg);color:var(--amber);} .pill.effort{background:var(--gray-bg);color:var(--muted);}
-.tag{display:inline-block;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:5px;margin-right:6px;}
-.tag.p0{background:var(--red-bg);color:var(--red);} .tag.p1{background:var(--amber-bg);color:var(--amber);} .tag.p2{background:var(--gray-bg);color:var(--muted);}
-
-/* multibagger DNA */
-.dna{background:linear-gradient(135deg,var(--amber-bg),var(--card));border:1px solid var(--amber);border-radius:14px;padding:22px 24px;margin:16px 0;}
-.dna h3{color:var(--head);margin-top:0;}
-.dna-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin:12px 0;}
-@media (max-width:640px){.dna-grid{grid-template-columns:1fr;}}
-.dna-item{display:flex;gap:10px;font-size:.9rem;}
-.dna-num{flex:none;width:24px;height:24px;border-radius:50%;background:var(--amber);color:#3a2a00;font-weight:800;
-  display:flex;align-items:center;justify-content:center;font-size:.8rem;}
-
-/* priority quadrant */
-.quad{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--line);border-radius:12px;overflow:hidden;margin-top:8px;}
-.qcell{background:var(--card);padding:14px 16px;min-height:120px;}
-.qcell h4{margin:0 0 8px;font-size:.9rem;}
-.qcell.hot{background:linear-gradient(135deg,var(--green-bg),var(--card));}
-.chip{display:inline-block;font-size:.76rem;padding:3px 9px;border-radius:99px;margin:3px 4px 3px 0;border:1px solid transparent;}
-.chip.flow{background:var(--blue-bg);color:var(--blue);}
-.chip.alpha{background:var(--amber-bg);color:var(--amber);}
-.chip.base{background:var(--purple-bg);color:var(--purple);}
-.chip.other{background:var(--gray-bg);color:var(--muted);}
-.chip.star{font-weight:800;box-shadow:0 0 0 2px var(--amber);}
 .legend{font-size:.8rem;color:var(--muted);margin:10px 0;}
-.legend span{margin-right:14px;}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-right:4px;}
+.legend span{margin-right:14px;} .dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-right:4px;}
 
-/* roadmap */
-.road{display:flex;gap:0;flex-wrap:wrap;counter-reset:step;margin-top:10px;}
-.step{flex:1;min-width:150px;position:relative;padding:0 8px 8px;}
-.step .num{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;
-  display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
-.step .body{font-size:.85rem;}
-.step .ax{font-size:.72rem;font-weight:700;}
-.step.flow .num{background:var(--blue);} .step.alpha .num{background:var(--amber);color:#3a2a00;} .step.base .num{background:var(--purple);}
-.step .ax.flow{color:var(--blue);} .step .ax.alpha{color:var(--amber);} .step .ax.base{color:var(--purple);}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}@media(max-width:760px){.two{grid-template-columns:1fr;}}
+.two .card{margin:0;border-top:4px solid;}
+.b-base{border-top-color:var(--blue)!important;}.b-alpha{border-top-color:var(--amber)!important;}
 
-.final{background:linear-gradient(135deg,var(--blue-bg),var(--amber-bg));border-radius:14px;padding:22px 26px;margin-top:16px;}
+.road{display:flex;flex-wrap:wrap;margin-top:10px;}
+.step{flex:1;min-width:150px;padding:0 8px 10px;}
+.step .num{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:.85rem;}
+.step .ttl{font-weight:700;font-size:.88rem;} .step .bd{font-size:.8rem;color:var(--muted);}
+
+.newbadge{display:inline-block;background:var(--amber);color:#3a2a00;font-size:.68rem;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:8px;vertical-align:middle;}
+.hl{border:1px solid var(--amber);background:linear-gradient(135deg,var(--amber-bg),var(--card));}
+.final{background:linear-gradient(135deg,var(--blue-bg),var(--amber-bg));border-radius:14px;padding:20px 24px;margin-top:16px;}
 .final b{color:var(--head);}
-footer{color:var(--muted);font-size:.82rem;margin-top:30px;border-top:1px solid var(--line);padding-top:14px;}
-@media print{body{background:#fff;}.card,.dna,.final{box-shadow:none;}}
+footer{color:var(--muted);font-size:.8rem;margin-top:28px;border-top:1px solid var(--line);padding-top:12px;}
+svg{width:100%;height:auto;display:block;}
+@media print{body{background:#fff;}.card,.final,.hl{box-shadow:none;}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header class="top">
-  <h1>投资能力建设路线图（专业机构视角）</h1>
-  <div class="sub">AI Berkshire · 2026-07-10 · 从"个人研究工具箱"升级为"机构级投资流水线"</div>
+  <h1>投资能力建设路线图（专业机构视角 · Claude 版）</h1>
+  <div class="sub">AI Berkshire · 2026-07-10 · 从"个人研究工具箱"升级为可复现、可审计、可持续改进的机构级投资决策系统</div>
   <div class="tagline">
-    能力分两条正交的轴：<b>流程轴</b>（把事做对、不出错）与 <b>Alpha 轴</b>（比市场更早、更准地找到赢家）。
-    现在的它擅长<b>"确认一家好公司值不值得买"</b>，还不擅长<b>"率先找到那家没人注意的好公司"</b>——而十倍股只来自后者。
+    下一阶段的关键不是<b>"能分析更多东西"</b>，而是让每一个数据、判断、仓位、结果都能回答——<b>依据是什么、当时知道什么、承担多少风险、最终哪里对了/错了。</b>
   </div>
 </header>
 
-<!-- KPI gauges -->
 <div class="card">
-  <h3 style="margin-top:0">一眼看清：三大能力块的成熟度（0–5）</h3>
-  <div class="gauges">
-    <div class="gauge-row"><div class="gauge-label">研究 / 投资哲学</div>
-      <div class="gauge-track"><div class="gauge-fill g-green" style="width:94%"></div></div><div class="gauge-val" style="color:var(--green)">4.7</div></div>
-    <div class="gauge-row"><div class="gauge-label">组合运营（风险/归因/执行）</div>
-      <div class="gauge-track"><div class="gauge-fill g-amber" style="width:40%"></div></div><div class="gauge-val" style="color:var(--amber)">2.0</div></div>
-    <div class="gauge-row"><div class="gauge-label">Alpha 生成（宏观/板块/十倍股）</div>
-      <div class="gauge-track"><div class="gauge-fill g-red" style="width:24%"></div></div><div class="gauge-val" style="color:var(--red)">1.2</div></div>
-  </div>
-  <div class="note">世界级的"研究员"，尚未成为"投资机构"：越往组合、风险、归因、Alpha 走，缺口越大。</div>
+  <h3 style="margin-top:0">三条前提</h3>
+  <p><strong>① 能力 ≠ 有一个 skill。</strong>出过报告 ≠ 有稳定数据管线；跑通一次 ≠ 可复现/可监控/可审计。用成熟度 L0–L5 度量，不用"强/弱"。</p>
+  <p><strong>② 底座普适，Alpha 是选择。</strong>账本/风险/归因/合规是任何机构的底座；十倍股/宏观轮动/特殊机会是策略选择，取决于投资授权。</p>
+  <p><strong>③ 先能不亏钱地运转，再谈赚大钱。</strong>没有事实源和风险闭环，任何 Alpha 都无法被信任、评价、复用。</p>
 </div>
 
-<!-- Radar -->
-<h2>一、能力雷达：一个严重失衡的形状</h2>
-<div class="card two-col">
-  <div>
-    <svg viewBox="-70 -25 540 450" role="img" aria-label="能力雷达图">
-      <!-- grid rings -->
-      <g fill="none" stroke="var(--grid)" stroke-width="1">
-        <circle cx="200" cy="200" r="30"/><circle cx="200" cy="200" r="60"/><circle cx="200" cy="200" r="90"/>
-        <circle cx="200" cy="200" r="120"/><circle cx="200" cy="200" r="150"/>
-      </g>
-      <!-- spokes -->
-      <g stroke="var(--grid)" stroke-width="1">
-        <line x1="200" y1="200" x2="200" y2="50"/><line x1="200" y1="200" x2="306" y2="94"/>
-        <line x1="200" y1="200" x2="350" y2="200"/><line x1="200" y1="200" x2="306" y2="306"/>
-        <line x1="200" y1="200" x2="200" y2="350"/><line x1="200" y1="200" x2="94" y2="306"/>
-        <line x1="200" y1="200" x2="50" y2="200"/><line x1="200" y1="200" x2="94" y2="94"/>
-      </g>
-      <!-- data polygon -->
-      <polygon points="200,50 306,94 320,200 253,253 200,266 168,232 155,200 179,179"
-        fill="var(--radar)" fill-opacity="0.22" stroke="var(--radar)" stroke-width="2.5"/>
-      <g fill="var(--radar)">
-        <circle cx="200" cy="50" r="3.5"/><circle cx="306" cy="94" r="3.5"/><circle cx="320" cy="200" r="3.5"/>
-        <circle cx="253" cy="253" r="3.5"/><circle cx="200" cy="266" r="3.5"/><circle cx="168" cy="232" r="3.5"/>
-        <circle cx="155" cy="200" r="3.5"/><circle cx="179" cy="179" r="3.5"/>
-      </g>
-      <!-- labels -->
-      <g fill="var(--ink)" font-size="14" font-weight="600">
-        <text x="200" y="40" text-anchor="middle">研究尽调 5.0</text>
-        <text x="314" y="88" text-anchor="start">投资哲学 5.0</text>
-        <text x="358" y="204" text-anchor="start">想法筛选 4.0</text>
-        <text x="314" y="316" text-anchor="start">估值决策 2.5</text>
-        <text x="200" y="374" text-anchor="middle">组合风险 2.2</text>
-        <text x="86" y="316" text-anchor="end">复盘归因 1.5</text>
-        <text x="42" y="204" text-anchor="end">宏观板块 1.5</text>
-        <text x="86" y="88" text-anchor="end">Alpha·十倍股 1.0</text>
-      </g>
-    </svg>
-    <div class="chart-cap">越靠外越成熟（0=缺失，5=世界级）</div>
-  </div>
-  <div>
-    <p>雷达图直观暴露问题：<strong>上半部（研究、哲学、想法筛选）鼓得很满，下半部（估值决策、组合风险、复盘、宏观、Alpha）几乎塌陷。</strong></p>
-    <p>这正是"研究员"与"投资机构"的形状差异——机构应该是一个更接近正圆的均衡形状。</p>
-    <p style="color:var(--red)"><strong>最凹的一角是 Alpha·十倍股（1.0）</strong>：项目没有任何"在共识之前发现赢家"的能力。</p>
-  </div>
+<h2>一、能力地图：一条主流程 + 贯穿的控制线</h2>
+<div class="card">
+  <svg viewBox="0 0 960 190" role="img" aria-label="主流程与控制线">
+    <g font-size="13" font-weight="600" text-anchor="middle">
+      <rect x="6" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="62" y="36" fill="var(--ink)">投资授权</text>
+      <rect x="126" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="182" y="36" fill="var(--ink)">机会发现</text>
+      <rect x="246" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="302" y="36" fill="var(--ink)">研究预测</text>
+      <rect x="366" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="422" y="36" fill="var(--ink)">估值决策</text>
+      <rect x="486" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="542" y="36" fill="var(--ink)">组合构建</text>
+      <rect x="606" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="662" y="36" fill="var(--ink)">交易执行</text>
+      <rect x="726" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="782" y="36" fill="var(--ink)">持续监控</text>
+      <rect x="846" y="14" width="108" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="900" y="36" fill="var(--ink)">归因复盘</text>
+    </g>
+    <path d="M900 52 L900 66 L62 66 L62 52" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="480" y="80" fill="var(--muted)" font-size="11" text-anchor="middle">↑ 规则迭代（闭环）</text>
+    <g font-size="12" text-anchor="middle">
+      <text x="480" y="104" fill="var(--head)" font-weight="700" font-size="13">↓ 贯穿全程的控制线 ↓</text>
+      <rect x="6" y="114" width="150" height="26" rx="6" fill="var(--gray-bg)"/><text x="81" y="131" fill="var(--ink)">数据治理</text>
+      <rect x="166" y="114" width="150" height="26" rx="6" fill="var(--gray-bg)"/><text x="241" y="131" fill="var(--ink)">风险管理</text>
+      <rect x="326" y="114" width="160" height="26" rx="6" fill="var(--gray-bg)"/><text x="406" y="131" fill="var(--ink)">合规与信息边界</text>
+      <rect x="496" y="114" width="160" height="26" rx="6" fill="var(--gray-bg)"/><text x="576" y="131" fill="var(--ink)">模型治理与测试</text>
+      <rect x="666" y="114" width="150" height="26" rx="6" fill="var(--gray-bg)"/><text x="741" y="131" fill="var(--ink)">审计与知识管理</text>
+      <rect x="826" y="114" width="128" height="26" rx="6" fill="var(--amber-bg)" stroke="var(--amber)"/><text x="890" y="131" fill="var(--ink)" font-weight="700">AI 治理</text>
+    </g>
+    <text x="480" y="164" text-anchor="middle" font-size="11" fill="var(--muted)">风险/数据/合规不是"研究完再加"的步骤，而是从取数到绩效展示都必须遵守的横向约束</text>
+  </svg>
 </div>
 
-<!-- 14-link heatmap -->
-<h2>二、投资链条 14 环覆盖热力条</h2>
+<h2>二、成熟度差距（L0–L5，绿线=目标 L4）</h2>
 <div class="card">
-  <div class="bars">
-    <div class="bar-row"><div class="bar-name">1 投资哲学治理</div><div class="bar-track"><div class="bar-fill g-green" style="width:100%"></div></div><div class="bar-val">5.0</div></div>
-    <div class="bar-row"><div class="bar-name">2 想法来源筛选</div><div class="bar-track"><div class="bar-fill g-green" style="width:80%"></div></div><div class="bar-val">4.0</div></div>
-    <div class="bar-row"><div class="bar-name">3 尽调与研究</div><div class="bar-track"><div class="bar-fill g-green" style="width:100%"></div></div><div class="bar-val">5.0</div></div>
-    <div class="bar-row"><div class="bar-name">4 估值建模</div><div class="bar-track"><div class="bar-fill g-amber" style="width:50%"></div></div><div class="bar-val">2.5</div></div>
-    <div class="bar-row"><div class="bar-name">5 决策与仓位</div><div class="bar-track"><div class="bar-fill g-amber" style="width:50%"></div></div><div class="bar-val">2.5</div></div>
-    <div class="bar-row"><div class="bar-name">6 组合构建</div><div class="bar-track"><div class="bar-fill g-amber" style="width:50%"></div></div><div class="bar-val">2.5</div></div>
-    <div class="bar-row"><div class="bar-name">7 风险管理</div><div class="bar-track"><div class="bar-fill g-red" style="width:40%"></div></div><div class="bar-val">2.0</div></div>
-    <div class="bar-row"><div class="bar-name">8 执行与交易</div><div class="bar-track"><div class="bar-fill g-red" style="width:10%"></div></div><div class="bar-val">0.5</div></div>
-    <div class="bar-row"><div class="bar-name">9 监控与跟踪</div><div class="bar-track"><div class="bar-fill g-amber" style="width:60%"></div></div><div class="bar-val">3.0</div></div>
-    <div class="bar-row"><div class="bar-name">10 复盘与归因</div><div class="bar-track"><div class="bar-fill g-red" style="width:30%"></div></div><div class="bar-val">1.5</div></div>
-    <div class="bar-row"><div class="bar-name">11 宏观资产配置</div><div class="bar-track"><div class="bar-fill g-red" style="width:30%"></div></div><div class="bar-val">1.5</div></div>
-    <div class="bar-row"><div class="bar-name">12 数据基础设施</div><div class="bar-track"><div class="bar-fill g-amber" style="width:50%"></div></div><div class="bar-val">2.5</div></div>
-    <div class="bar-row"><div class="bar-name">13 合规与报告</div><div class="bar-track"><div class="bar-fill g-amber" style="width:50%"></div></div><div class="bar-val">2.5</div></div>
-    <div class="bar-row"><div class="bar-name">14 知识管理</div><div class="bar-track"><div class="bar-fill g-amber" style="width:50%"></div></div><div class="bar-val">2.5</div></div>
-    <div class="bar-row alpha"><div class="bar-name">＋ Alpha/十倍股</div><div class="bar-track"><div class="bar-fill g-red" style="width:20%"></div></div><div class="bar-val">1.0</div></div>
+  <div class="mbars">
+    <div class="mrow"><div class="mname">1 投资授权治理</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L4</div></div>
+    <div class="mrow"><div class="mname">2 机会发现</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
+    <div class="mrow"><div class="mname">3 尽调研究</div><div class="mtrack"><div class="mfill f-blue" style="width:60%"></div><div class="mtarget"></div></div><div class="mlvl">L3→L4</div></div>
+    <div class="mrow"><div class="mname">4 估值建模</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
+    <div class="mrow"><div class="mname">5 决策与仓位</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
+    <div class="mrow"><div class="mname">6 组合构建</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
+    <div class="mrow"><div class="mname">7 风险管理</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L4</div></div>
+    <div class="mrow"><div class="mname">8 交易执行</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L3</div></div>
+    <div class="mrow"><div class="mname">9 监控跟踪</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
+    <div class="mrow"><div class="mname">10 业绩归因</div><div class="mtrack"><div class="mfill f-red" style="width:12%"></div><div class="mtarget"></div></div><div class="mlvl">L0-1→L4</div></div>
+    <div class="mrow"><div class="mname">11 宏观配置</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L3</div></div>
+    <div class="mrow"><div class="mname">12 数据基建</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
+    <div class="mrow"><div class="mname">13 合规模型治理</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L4</div></div>
+    <div class="mrow"><div class="mname">14 知识管理</div><div class="mtrack"><div class="mfill f-red" style="width:30%"></div><div class="mtarget"></div></div><div class="mlvl">L1-2→L4</div></div>
+    <div class="mrow"><div class="mname">15 AI 系统治理</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L4</div></div>
+    <div class="mrow"><div class="mname">16 资管运营</div><div class="mtrack"><div class="mfill f-red" style="width:3%"></div><div class="mtarget"></div></div><div class="mlvl">L0→条件</div></div>
   </div>
   <div class="legend" style="margin-top:12px">
-    <span><span class="dot" style="background:var(--green)"></span>≥4 强</span>
-    <span><span class="dot" style="background:var(--amber)"></span>2–3.9 部分</span>
-    <span><span class="dot" style="background:var(--red)"></span>&lt;2 弱/缺</span>
+    <span><span class="dot" style="background:var(--red)"></span>L0-1 缺/人工</span>
+    <span><span class="dot" style="background:var(--amber)"></span>L2 可重复</span>
+    <span><span class="dot" style="background:var(--blue)"></span>L3 结构化</span>
+    <span><span class="dot" style="background:var(--green)"></span>L4+ 生产/可审计</span>
+    <span>｜ 绿竖线 = 目标 L4</span>
   </div>
+  <div class="note">最成熟的是"结构化公司研究工作流"（L3），但<strong>尚未经过基准测试、长期预测校准和独立审计，不宜自称"世界级"</strong>。机会发现<strong>不是空白</strong>（有 funnel/screener/watchlist/召回池原型），缺的是<strong>统一、点时、可评估、可稳定调度</strong>的生产级管线。</div>
 </div>
 
-<!-- two axes -->
-<h2>三、两条轴的缺口</h2>
-<div class="axis-cards">
-  <div class="card axis-flow">
-    <h3 style="margin-top:0;color:var(--blue)">流程轴 · 把事做对</h3>
-    <p style="font-size:.9rem">要成为"投资机构"，还差三条腿：</p>
-    <ul style="font-size:.9rem">
-      <li><strong>能量化组合风险</strong>（VaR/回撤/相关性/因子暴露）</li>
-      <li><strong>能诚实复盘归因</strong>（收益从哪来、决策校准、错题库）</li>
-      <li><strong>有扎实数据基建</strong>（A股全覆盖、前复权序列、基本面库）</li>
-    </ul>
-  </div>
-  <div class="card axis-alpha">
-    <h3 style="margin-top:0;color:var(--amber)">Alpha 轴 · 做对的事</h3>
-    <p style="font-size:.9rem">更根本——目前只会"深研已知大公司"，不会：</p>
-    <ul style="font-size:.9rem">
-      <li><strong>在市场发现之前找到下一个十倍股</strong>（无小盘/新兴赢家引擎）</li>
-      <li>自上而下的宏观 regime 与板块轮动</li>
-      <li>主题早期捕获、事件驱动、卖出纪律</li>
-    </ul>
-  </div>
+<h2>三、底座 vs Alpha</h2>
+<div class="two">
+  <div class="card b-base"><h3 style="margin-top:0;color:var(--blue)">机构底座（普适 · 先建）</h3>
+    <p style="font-size:.9rem">IPS、账本、数据、估值、风险、归因、合规、测试、监控。<br>解决"能否稳定、正确、可追责地管理投资决策"。</p></div>
+  <div class="card b-alpha"><h3 style="margin-top:0;color:var(--amber)">Alpha 模块（策略选择 · 后建）</h3>
+    <p style="font-size:.9rem">行业漏斗、新兴赢家、因子、宏观、事件驱动、渠道验证。<br>是"靠什么获取超额收益"——取决于投资授权，非人人必备。</p></div>
 </div>
 
-<!-- 十倍股 DNA -->
-<h2>四、Alpha 轴核心：十倍股挖掘（项目最大空白）</h2>
-<div class="dna">
-  <h3>🚀 十倍股 DNA — 筛选维度</h3>
-  <div class="dna-grid">
-    <div class="dna-item"><div class="dna-num">1</div><div><b>小市值基数</b>——低起点，大象难跳舞</div></div>
-    <div class="dna-item"><div class="dna-num">2</div><div><b>长长的雪道</b>——大 TAM + 低渗透 + S 曲线早期</div></div>
-    <div class="dna-item"><div class="dna-num">3</div><div><b>可复制单位经济</b>——门店/SaaS/平台，边际成本递减</div></div>
-    <div class="dna-item"><div class="dna-num">4</div><div><b>高速且可持续增长</b>——复合 20–40%，非一次性</div></div>
-    <div class="dna-item"><div class="dna-num">5</div><div><b>戴维斯双击</b>——盈利增长 × 估值提升 双轮</div></div>
-    <div class="dna-item"><div class="dna-num">6</div><div><b>卓越资本配置创始人</b>——再投资跑道长</div></div>
-    <div class="dna-item"><div class="dna-num">7</div><div><b>隐藏期权价值</b>——第二增长曲线（早期 AWS/微信）</div></div>
-    <div class="dna-item"><div class="dna-num">8</div><div><b>被市场忽视/看错</b>——覆盖少，信息优势来源</div></div>
-    <div class="dna-item"><div class="dna-num">9</div><div><b>结构性顺风</b>——AI/电动化/老龄化/创新药/机器人</div></div>
-    <div class="dna-item"><div class="dna-num">10</div><div><b>赢家通吃早期</b>——网络/规模效应未被看清时</div></div>
-  </div>
-  <div class="note" style="background:rgba(220,38,38,.08)">
-    <strong>打法（关键）</strong>：十倍股极稀有、失败率极高 → 用<b>塔勒布杠铃 + 风投式组合</b>：一篮子<b>小仓位</b>押多个非对称候选，允许多数归零、靠少数 10 倍拉动整体。<b>不是集中重仓。</b>
-    <br><strong>⚠️ 诚实警示</strong>：幸存者偏差极强、多数会失败、须严格小仓位、须区分"高潜力"与"高估值故事股"。
-  </div>
-  <div class="meta">交付 <code>/multibagger-hunter</code>：全市场（中小盘/科创/北交所/港股新经济）扫描 DNA → 候选池 → 四大师+费雪+林奇深研 → 风投式仓位。<span class="pill impact">影响 ★★★★★</span><span class="pill effort">工作量 大</span></div>
-</div>
+<h2>四、P0 · 机构底座（最小可用闭环）</h2>
+<div class="tablewrap"><table>
+  <thead><tr><th>项</th><th>内容</th><th>完成定义 / 关键点</th><th>影响·量</th></tr></thead>
+  <tbody>
+    <tr><td><b>P0-1</b><br>IPS</td><td>投资授权 + 机器可读 <code>investment-policy.yaml</code></td><td>所有仓位/风险/卖出引用同一约束；不再硬编码阈值</td><td>★★★★★<br>小中</td></tr>
+    <tr><td><b>P0-2</b><br>事实源</td><td>security master + 交易账本 + 组合主账</td><td>任意历史日可重建持仓/现金/净值；只此一个事实源</td><td>★★★★★<br>大</td></tr>
+    <tr><td><b>P0-3</b><br>数据层</td><td>统一行情/财报/FX/公司行动 + <b>point-in-time</b></td><td>同快照→同输出；缺失/过期不被静默使用；防前视偏差</td><td>★★★★★<br>大</td></tr>
+    <tr><td><b>P0-4</b><br>治理</td><td>测试/golden fixture + 模型登记 + <b>修复 calc 浮点 bug</b></td><td>0.1+0.2 精确测试通过；升级能识别是否破坏历史样例</td><td>★★★★★<br>中</td></tr>
+    <tr><td><b>P0-5</b><br>风险业绩</td><td><code>portfolio_risk.py</code> + <code>performance.py</code></td><td>波动/回撤/beta/HHI/暴露/相关性；TWR/MWR；VaR 仅补充</td><td>★★★★★<br>中大</td></tr>
+  </tbody>
+</table></div>
+<div class="note">✅ <strong>已验证 bug</strong>：<code>financial_rigor.py calc --expr "0.1 + 0.2"</code> 输出"精确值 0.30000000000000004"——calc 路径先浮点求值再转 Decimal，与"无浮点漂移"承诺相悖（核心 verify-* 路径用 exact() 包裹，未受影响）。</div>
 
-<h3>Alpha 轴其余 8 个集群</h3>
+<h2>五、P1 闭环 · P2 Alpha 实验室</h2>
 <div class="card" style="font-size:.9rem">
-  <p>🌍 <b>宏观研究深化</b> <code>/macro-regime</code>——经济/货币/信用/汇率周期、政策周期、流动性情绪 <span class="pill impact">★★★★</span></p>
-  <p>🏭 <b>板块轮动/主题</b> <code>/sector-rotation</code>——景气度、主题早期捕获、资金流 <span class="pill impact">★★★★</span></p>
-  <p>🔢 <b>量化因子选股</b> <code>/factor-screen</code>——全市场多因子扫描、因子回测 <span class="pill impact">★★★★</span></p>
-  <p>⚡ <b>事件驱动</b> <code>/special-situations</code>——并购套利/分拆/困境反转/增持（完全空白） <span class="pill impact">★★★</span></p>
-  <p>🔴 <b>卖出纪律</b> <code>/sell-discipline</code>——止盈止损、论文证伪退出、换仓（被严重忽视） <span class="pill impact">★★★★</span></p>
-  <p>🎯 <b>信息优势</b> <code>/expert-network</code>——专家网络/渠道调研/供应链访谈（费雪规模化） <span class="pill impact">★★★</span></p>
-  <p>🌏 <b>市场特色专精</b>——港股老千股防雷、A股龙虎榜/可转债、美股期权/做空报告 <span class="pill impact">★★★★</span></p>
-  <p>🧩 <b>一级/另类资产</b>——打新、可转债非对称、REITs、黄金、加密 <span class="pill impact">★★★</span></p>
+  <p><strong>P1（研究—决策—组合—监控—复盘）：</strong>决策日志 <code>/decision-journal</code>（不可回填）· 估值框架 <code>dcf.py</code>（DCF/反向/SOTP/行业模板）· 完整风险压力测试 · 业绩归因与决策校准 <code>/performance-attribution</code>（Brier score + 错误模式库，工作量"大"）· 统一 Watchlist 状态机 + 自动监控 · 仓位 <code>position_sizing.py</code> + 卖出纪律 <code>/sell-discipline</code> · 会计取证/治理筛查。</p>
+  <p><strong>P2（Alpha，须点时+样本外+含成本验证）：</strong><code>/emerging-winners</code>（"新兴赢家"替代"十倍股猎手"，带独立风险预算的卫星策略）· <code>/factor-screen</code> · <code>/macro-regime</code> · <code>/sector-rotation</code> · <code>/special-situations</code> · <code>/scuttlebutt</code> · 分市场（港股老千股防雷 / A股可转债 / 美股做空报告）。</p>
 </div>
 
-<!-- 流程轴 TODO -->
-<h2>五、流程轴缺口 TODO（按优先级）</h2>
+<h2>六、AI 系统特有治理 <span class="newbadge">差异化</span></h2>
+<div class="card hl">
+  <p style="font-size:.9rem">这是 AI 驱动的投资系统，有人类机构没有的失效面。项目现有加固（联网预检、report_audit 准出、"联网失败禁止伪装"、客观原则）是雏形，应成体系升到 L4。</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>AI 特有风险</th><th>表现</th><th>治理动作</th></tr></thead>
+    <tbody>
+      <tr><td>幻觉/编造</td><td>编造数据/来源/数字</td><td>双源交叉 + report_audit 强制抽检 + 来源可核</td></tr>
+      <tr><td><b>断网伪装</b></td><td>联网失败却用训练知识冒充（最危险，issue #58）</td><td>WebSearch 预检升级为<b>硬门禁</b>：无联网证据即拒绝出结论</td></tr>
+      <tr><td>过度依赖 LLM 判断</td><td>把"AI 说好公司"当结论</td><td>强制分离<b>"AI 说了什么" vs "数据证明了什么"</b></td></tr>
+      <tr><td>版本漂移</td><td>skill 改版→输出静默变，无法复现</td><td>模型登记 + 固定样本回归 + 报告标注 skill 版本</td></tr>
+      <tr><td>不可复现</td><td>同问题两次跑结果不同</td><td>量化走确定性工具，LLM 只做解释判断</td></tr>
+      <tr><td>谄媚/确认偏误</td><td>迎合预设立场</td><td>master-lens 异见庭强制唱反调，纳入决策日志</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<h2>七、投研运营节奏（机构的心跳） <span class="newbadge">差异化</span></h2>
 <div class="card">
-  <div class="todo p0"><div class="t"><span class="tag p0">P0</span>组合级风险量化工具 <code>tools/portfolio_risk.py</code></div>
-    <div class="meta">VaR/回撤/波动/beta/因子暴露/相关性矩阵/集中度 HHI——现有 portfolio-review 只有定性。<span class="pill impact">★★★★★</span><span class="pill effort">中</span></div></div>
-  <div class="todo p0"><div class="t"><span class="tag p0">P0</span>业绩归因与决策复盘 <code>/performance-attribution</code></div>
-    <div class="meta">收益从哪来（选股 vs 择时 vs 配置）+ 决策校准 + 错题库——机构自我进化的引擎。<span class="pill impact">★★★★★</span><span class="pill effort">中</span></div></div>
-  <div class="todo p0"><div class="t"><span class="tag p0">P0</span>完整估值建模 <code>tools/dcf.py</code>（DCF/反向DCF/SOTP）</div>
-    <div class="meta">现只有粗三情景；补多阶段 DCF、反向 DCF、分部加总、WACC 敏感性。<span class="pill impact">★★★★☆</span><span class="pill effort">中</span></div></div>
-  <div class="todo p0"><div class="t"><span class="tag p0">P0</span>数据基础设施补强（承接 ROADMAP）</div>
-    <div class="meta">akshare/东财 A股全覆盖、前复权历史序列、基本面库、公司行动处理——一切量化能力的地基。<span class="pill impact">★★★★★</span><span class="pill effort">大</span></div></div>
-  <div class="todo p1"><div class="t"><span class="tag p1">P1</span>仓位管理工具 <code>tools/position_sizing.py</code>（凯利/赔率）</div>
-    <div class="meta">赔率+胜率+确定性 → 建议仓位区间，接入 checklist / research 第七步半。<span class="pill impact">★★★★☆</span><span class="pill effort">小</span></div></div>
-  <div class="todo p1"><div class="t"><span class="tag p1">P1</span>自动化监控与告警 · 自上而下资产配置 · 量化压力测试 · 会计取证</div>
-    <div class="meta">告警(价格/论文KPI/财报日历) · 跨市场跨资产配置 · 组合数值压力 · Beneish M-Score 防雷。<span class="pill impact">★★★★☆</span><span class="pill effort">中</span></div></div>
-  <div class="todo p2"><div class="t"><span class="tag p2">P2</span>组合优化器 · 执行计划 · Watchlist知识库 · ESG治理 · IPS合规 · 致股东信</div>
-    <div class="meta">精细化与规模化能力，机构必备但可后置。<span class="pill impact">★★☆–★★★</span><span class="pill effort">小–大</span></div></div>
+<div class="tablewrap"><table>
+  <thead><tr><th>周期</th><th>动作</th><th>依赖能力</th></tr></thead>
+  <tbody>
+    <tr><td>每日</td><td>盘前：新闻扫描、红线检查、异动归因</td><td>自动监控、告警</td></tr>
+    <tr><td>每周</td><td>持仓健康巡检、候选初筛、数据新鲜度检查</td><td>watchlist 状态机、数据治理</td></tr>
+    <tr><td>财报季</td><td>逐个持仓财报精读、论文 KPI 更新、估值刷新</td><td>决策日志、估值框架</td></tr>
+    <tr><td><b>每季</b></td><td><b>组合层复盘：归因 + 决策校准(Brier) + 风险预算 + 淘汰无效规则</b></td><td>归因、风险、KPI</td></tr>
+    <tr><td>每年</td><td>IPS 复审、能力成熟度重评、错误模式库总结</td><td>IPS、成熟度盘点</td></tr>
+  </tbody>
+</table></div>
+<div class="note">没有节奏，"能力"只是躺在仓库里的 skill；有节奏，它才是一个运转的机构。</div>
 </div>
 
-<!-- priority quadrant -->
-<h2>六、优先级象限（影响 × 工作量）</h2>
-<div class="legend">
-  <span><span class="dot" style="background:var(--blue)"></span>流程轴</span>
-  <span><span class="dot" style="background:var(--amber)"></span>Alpha 轴</span>
-  <span><span class="dot" style="background:var(--purple)"></span>共同地基</span>
-  <span>★ = 影响最大</span>
+<h2>八、反模式清单（这类系统最常见的死法） <span class="newbadge">差异化</span></h2>
+<div class="card">
+<div class="tablewrap"><table>
+  <thead><tr><th>反模式</th><th>表现</th><th>对策</th></tr></thead>
+  <tbody>
+    <tr><td>过拟合/数据窥探</td><td>回测漂亮实盘失效</td><td>训练/验证/样本外分离 + 含成本验证</td></tr>
+    <tr><td>虚假精确</td><td>估计值报成"精确"小数</td><td>会失败原则：数据不足即停/降级</td></tr>
+    <tr><td>告警疲劳</td><td>告警太多→全忽略</td><td>去重/优先级/静默期</td></tr>
+    <tr><td>论文漂移</td><td>事实变了悄悄改说辞不认错</td><td>决策日志不可回填 + thesis-drift</td></tr>
+    <tr><td>抱团/伪分散</td><td>名义分散实押同一因子</td><td>相关性与因子暴露</td></tr>
+    <tr><td>叙事拟合</td><td>先有结论再找数据</td><td>客观原则 + 异见庭 + 空方强制</td></tr>
+  </tbody>
+</table></div>
 </div>
-<div class="quad">
-  <div class="qcell hot">
-    <h4>高影响 · 低工作量 —— 先做！</h4>
-    <span class="chip flow">仓位管理工具</span><span class="chip alpha">卖出纪律</span><span class="chip flow">Benford 取证</span>
-  </div>
-  <div class="qcell">
-    <h4>高影响 · 中工作量</h4>
-    <span class="chip flow">组合风险</span><span class="chip flow">业绩归因</span><span class="chip flow">DCF 工具</span><span class="chip alpha">宏观 regime</span><span class="chip alpha">板块轮动</span><span class="chip alpha">市场防雷</span><span class="chip flow">自动告警</span><span class="chip alpha">资产配置</span>
-  </div>
-  <div class="qcell">
-    <h4>中影响 · 中低工作量</h4>
-    <span class="chip alpha">专家网络</span><span class="chip alpha">事件驱动</span><span class="chip flow">执行计划</span><span class="chip flow">ESG治理</span><span class="chip other">Watchlist</span><span class="chip alpha">一级/另类</span>
-  </div>
-  <div class="qcell">
-    <h4>高影响 · 大工作量</h4>
-    <span class="chip alpha star">十倍股猎手 ★</span><span class="chip base star">数据基建 ★</span><span class="chip alpha">量化因子选股</span><span class="chip flow">组合优化器</span>
-  </div>
-</div>
-<div class="note">数据基建是 Alpha 轴与量化能力<strong>共同的地基</strong>，应尽早启动；<code>卖出纪律</code>是"影响高、工作量小"里最快见效的一项。</div>
 
-<!-- roadmap -->
-<h2>七、建议落地顺序</h2>
+<h2>九、里程碑 M0–M5</h2>
 <div class="card">
   <div class="road">
-    <div class="step flow"><div class="num">1</div><div class="body"><div class="ax flow">流程</div>仓位工具（凯利/赔率）</div></div>
-    <div class="step flow"><div class="num">2</div><div class="body"><div class="ax flow">流程</div>DCF / 反向DCF 工具</div></div>
-    <div class="step flow"><div class="num">3</div><div class="body"><div class="ax flow">流程</div>组合风险 + 业绩归因</div></div>
-    <div class="step alpha"><div class="num">4</div><div class="body"><div class="ax alpha">Alpha</div>卖出纪律（最快见效）</div></div>
-    <div class="step base"><div class="num">5</div><div class="body"><div class="ax base">地基</div>数据基建（A股/前复权/小盘）</div></div>
-    <div class="step alpha"><div class="num">6</div><div class="body"><div class="ax alpha">Alpha</div>十倍股猎手 ★（目标最高）</div></div>
-    <div class="step alpha"><div class="num">7</div><div class="body"><div class="ax alpha">Alpha</div>宏观 regime + 板块轮动</div></div>
+    <div class="step"><div class="num">0</div><div class="ttl">定规则</div><div class="bd">IPS/基准/风险预算/数据边界 → 任一建议能判断是否合 mandate</div></div>
+    <div class="step"><div class="num">1</div><div class="ttl">建事实源</div><div class="bd">主数据+账本+点时数据 → 任意日持仓净值可重放</div></div>
+    <div class="step"><div class="num">2</div><div class="ttl">闭环 MVP</div><div class="bd">业绩+风险+决策日志 → 一笔投资可从决策追到结果</div></div>
+    <div class="step"><div class="num">3</div><div class="ttl">可持续运行</div><div class="bd">watchlist+日历+告警+归因校准 → 稳定运行记录</div></div>
+    <div class="step"><div class="num">4</div><div class="ttl">扩展 Alpha</div><div class="bd">新兴赢家/因子/宏观 → 通过样本外含成本验证</div></div>
+    <div class="step"><div class="num">5</div><div class="ttl">真实资管</div><div class="bd">交易/托管/NAV/合规 → 按属地完成独立评估</div></div>
   </div>
+  <div class="note"><strong>对直觉排序的关键修正</strong>：先建 IPS/账本/数据/风险预算，再做仓位工具；数据基建前置 P0；合规/IPS 升为 P0 控制线；业绩归因工作量按"大"估；十倍股猎手 → 带风险预算的"新兴赢家"卫星策略；卖出纪律归决策/风险闭环。</div>
 </div>
 
-<!-- final -->
-<h2>八、一句话总结</h2>
+<h2>十、最终判断</h2>
 <div class="final">
-  <p>AI Berkshire 已经是一个<b>世界级的"研究员"</b>（尽调深度、四/十三大师异见庭、数据严谨性验证），但有两条大缺口：</p>
-  <p><b>流程轴</b>——要成为"投资机构"，还差三条腿：能量化组合风险、能诚实复盘归因、有扎实数据基建。</p>
-  <p><b>Alpha 轴（更根本）</b>——它只会"深研已知大公司"，不会"在市场发现之前找到下一个十倍股"。</p>
-  <p style="margin-top:12px;font-size:1.05rem"><b>现在的它擅长"确认一家好公司值不值得买"，还不擅长"率先找到那家没人注意的好公司"。前者是"不亏钱"的能力，后者才是"赚大钱"的能力——而十倍股，只可能来自后者。</b></p>
+  <p>AI Berkshire 已形成覆盖面广、可重复运行的<b>公司研究工作流</b>，也有机会发现原型。它现在最需要的不是横向增加更多"大师/主题 skill"，而是三次升级：</p>
+  <p>① <b>从报告 → 记录系统</b>（统一事实源）　② <b>从能运行 → 可信赖</b>（点时数据/测试/模型治理/AI 治理/审计）　③ <b>从研究个股 → 管理闭环</b>（组合风险、业绩、监控、归因校准）</p>
+  <p style="margin-top:12px;font-size:1.05rem"><b>它现在擅长"确认一家好公司值不值得买"；下一步要让它对每一个数据、判断、仓位、结果都能回答——依据是什么、当时知道什么、承担多少风险、最终哪里对了/错了。</b>前者是不亏钱的研究能力，后者才是一个可信赖、可进化的投资机构。</p>
 </div>
 
 <footer>
-  本文档为 AI Berkshire 能力建设 TODO，供迭代排期参考。现状标注与成熟度评分基于 2026-07-10 仓库实际 skills/tools。图表数据为定性评估打分（0–5），非精确度量。
+  本文档为能力建设与工程排期参考，不构成投资建议或法律/合规意见。现状盘点与成熟度评分基于 2026-07-10 仓库实际 skills/tools（含已实测的 financial_rigor calc 浮点 bug）。职业操守参考 CFA Asset Manager Code 与 GIPS Standards，不替代属地法律意见。
 </footer>
 
 </div>
