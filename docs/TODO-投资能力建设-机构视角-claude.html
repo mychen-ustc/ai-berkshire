@@ -157,11 +157,11 @@ svg{width:100%;height:auto;display:block;}
     <tr><td><b>P0-1</b><br>IPS</td><td>投资授权 + 机器可读 <code>investment-policy.yaml</code></td><td>所有仓位/风险/卖出引用同一约束；不再硬编码阈值</td><td>★★★★★<br>小中</td></tr>
     <tr><td><b>P0-2</b><br>事实源</td><td>security master + 交易账本 + 组合主账</td><td>任意历史日可重建持仓/现金/净值；只此一个事实源</td><td>★★★★★<br>大</td></tr>
     <tr><td><b>P0-3</b><br>数据层</td><td>统一行情/财报/FX/公司行动 + <b>point-in-time</b></td><td>同快照→同输出；缺失/过期不被静默使用；防前视偏差</td><td>★★★★★<br>大</td></tr>
-    <tr><td><b>P0-4</b><br>治理</td><td>测试/golden fixture + 模型登记 + <b>修复 calc 浮点 bug</b></td><td>0.1+0.2 精确测试通过；升级能识别是否破坏历史样例</td><td>★★★★★<br>中</td></tr>
+    <tr><td><b>P0-4</b><br>治理</td><td>测试/golden fixture + 模型登记 + <b>✅ 已修复 calc 浮点 bug</b></td><td>0.1+0.2 已输出精确 0.3；仍待补自动回归测试固化 golden case</td><td>★★★★★<br>中</td></tr>
     <tr><td><b>P0-5</b><br>风险业绩</td><td><code>portfolio_risk.py</code> + <code>performance.py</code></td><td>波动/回撤/beta/HHI/暴露/相关性；TWR/MWR；VaR 仅补充</td><td>★★★★★<br>中大</td></tr>
   </tbody>
 </table></div>
-<div class="note">✅ <strong>已验证 bug</strong>：<code>financial_rigor.py calc --expr "0.1 + 0.2"</code> 输出"精确值 0.30000000000000004"——calc 路径先浮点求值再转 Decimal，与"无浮点漂移"承诺相悖（核心 verify-* 路径用 exact() 包裹，未受影响）。</div>
+<div class="note">✅ <strong>已修复 bug（commit c05cc0e）</strong>：<code>financial_rigor.py calc --expr "0.1 + 0.2"</code> 原输出"精确值 0.30000000000000004"（calc 先浮点求值再转 Decimal）——已改为 <code>ast.parse</code> + 全程 Decimal 求值器，现输出 0.3，并以 AST 白名单堵死 eval 注入。核心 verify-* 路径一直用 exact() 包裹，未受此 bug 影响。</div>
 
 <h2>五、P1 闭环 · P2 Alpha 实验室</h2>
 <div class="card" style="font-size:.9rem">
@@ -236,7 +236,7 @@ svg{width:100%;height:auto;display:block;}
 </div>
 
 <footer>
-  本文档为能力建设与工程排期参考，不构成投资建议或法律/合规意见。现状盘点与成熟度评分基于 2026-07-10 仓库实际 skills/tools（含已实测的 financial_rigor calc 浮点 bug）。职业操守参考 CFA Asset Manager Code 与 GIPS Standards，不替代属地法律意见。
+  本文档为能力建设与工程排期参考，不构成投资建议或法律/合规意见。现状盘点与成熟度评分基于 2026-07 仓库实际 skills/tools（financial_rigor calc 浮点 bug 已修复，commit c05cc0e）。职业操守参考 CFA Asset Manager Code 与 GIPS Standards，不替代属地法律意见。
 </footer>
 
 </div>
