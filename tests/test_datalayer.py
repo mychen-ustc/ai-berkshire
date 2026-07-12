@@ -49,6 +49,14 @@ class TestDetect(unittest.TestCase):
         self.assertEqual((d["market"], d["symbol"], d["stooq"], d["currency"]),
                          ("US", "AAPL", "aapl.us", "USD"))
 
+    def test_us_class_share_dot_to_dash(self):
+        # BRK.B 在 Yahoo 需用 BRK-B（class 股符号点号→短横线）
+        d = dl.detect("BRK.B")
+        self.assertEqual(d["market"], "US")
+        self.assertEqual(d["symbol"], "BRK.B")   # 规范符号保留点号
+        self.assertEqual(d["yahoo"], "BRK-B")    # Yahoo 用短横线
+        self.assertEqual(d["stooq"], "brk-b.us")
+
 
 class TestParsers(unittest.TestCase):
     def test_tencent_a(self):

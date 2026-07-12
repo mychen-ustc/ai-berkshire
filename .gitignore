@@ -35,3 +35,6 @@ data/portfolio/*.local.*
 # 数据层快照缓存（不入库：尊重数据源ToS + 避免陈旧数据）
 data/cache/
 data/portfolio/decisions.jsonl
+
+# 组合体检等含真实持仓/规模的私密报告，只存本地
+reports/private/

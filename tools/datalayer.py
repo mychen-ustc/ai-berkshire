@@ -93,9 +93,10 @@ def detect(symbol):
                 "tencent": f"{pfx}{code}", "sina": f"{pfx}{code}",
                 "yahoo": f"{code}{yh}", "stooq": None, "currency": "CNY"}
 
-    # 其余按美股
+    # 其余按美股。class 股(如 BRK.B)在 Yahoo 用短横线 BRK-B、stooq 同理
     return {"market": "US", "symbol": u, "tencent": None, "sina": None,
-            "yahoo": u, "stooq": f"{s.lower()}.us", "currency": "USD"}
+            "yahoo": u.replace(".", "-"), "stooq": f"{s.lower().replace('.', '-')}.us",
+            "currency": "USD"}
 
 
 # --------------------------------------------------------------------------
