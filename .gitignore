@@ -43,3 +43,6 @@ reports/private/
 config/secrets.local.json
 .env
 *.key
+
+# 个人研究流水线（watchlist 状态机的真实内容，只存本地）
+data/watchlist.pipeline.json

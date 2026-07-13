@@ -66,7 +66,7 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
 <div class="wrap">
 <header class="top">
   <h1>五面能力盘点 × 投资流派适配 × 建设规划</h1>
-  <div class="sub">AI Berkshire 工具箱系统性盘点 · 2026-07-13 · 消息面 / 技术面 / 基本面 / 资金面 / 情绪面（+宏观背景板）· 35 工具 · 42 skill · 183 测试 · 美股预期(Finnhub/Nasdaq)+机构13F(SEC EDGAR)已接</div>
+  <div class="sub">AI Berkshire 工具箱系统性盘点 · 2026-07-13 · 消息面 / 技术面 / 基本面 / 资金面 / 情绪面（+宏观背景板）· 42 工具 · 48 skill · 205 测试 · 新增:一键全景体检 + 数据源韧性 + watchlist状态机/催化剂日历 + 三表/行业估值/情景引擎</div>
 </header>
 <nav><a href="#radar">① 五面雷达</a><a href="#faces">② 逐面工具箱</a><a href="#schools">③ 流派适配矩阵</a><a href="#plan">④ 建设规划</a><a href="#next">⑤ 优先补建</a></nav>
 
@@ -220,9 +220,17 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
       <li><b>✅ 机构 13F 持仓</b> <code>tools/edgar_13f.py</code>：SEC EDGAR 官方(免费无key)——机构 Top 持仓 + 环比新建/加/减/清仓(伯克希尔/桥水/Scion 等内置别名)。</li>
     </ul>
   </div>
-  <div class="pitem later"><span class="pt">仍待（纯建模或更专业数据）</span> <span class="star">★★</span>
+  <div class="pitem" style="border-left-color:var(--green)"><span class="pt" style="color:var(--green)">✅ 工程与建模补强（本轮完成）</span> <span class="star">★★★</span>
     <ul>
-      <li>三表联动模型 · 行业专用估值(银行/保险/地产/SaaS) · 跨资产 SAA/TAA · 退市样本库(消除幸存者偏差) · 产业链图谱 · ESG · 期权情绪(put/call/skew)。</li>
+      <li><b>✅ 编排层</b> <code>portfolio_scan.py</code>：一键全景体检(五面×持仓 + 组合因子/风险/情绪/宏观 → 综合 HTML)。</li>
+      <li><b>✅ 数据源韧性</b> <code>fetcher.py</code> + datalayer 重试/退避/多源降级/TTL缓存。</li>
+      <li><b>✅ P3 运营骨架</b> <code>watchlist.py</code>(状态机:发现→深研→持有→退出) + <code>catalysts.py</code>(财报/催化剂日历)。</li>
+      <li><b>✅ P4 深度建模</b> <code>statement_model.py</code>(三表→FCF) + <code>industry_valuation.py</code>(银行/保险/地产/SaaS) + <code>scenario.py</code>(牛熊基概率加权+非对称赔率)。</li>
+    </ul>
+  </div>
+  <div class="pitem later"><span class="pt">仍待（需专业/付费数据）</span> <span class="star">★★</span>
+    <ul>
+      <li>跨资产 SAA/TAA(债/商品/加密) · 退市样本库(消除回测幸存者偏差) · 产业链图谱 · ESG · 期权情绪(put/call/skew) · A股前瞻财报日 · 美股内部人 Form4。</li>
     </ul>
   </div>
 </div>
@@ -238,7 +246,7 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
 <script>
 // ---- 五面雷达 ----
 const faces=[
- {n:"基本面",v:88,c:"var(--c-fund)"},
+ {n:"基本面",v:92,c:"var(--c-fund)"},
  {n:"技术面",v:78,c:"var(--c-tech)"},
  {n:"资金面",v:68,c:"var(--c-flow)"},
  {n:"情绪面",v:55,c:"var(--c-senti)"},
