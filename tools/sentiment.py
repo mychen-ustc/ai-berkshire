@@ -22,6 +22,7 @@ import argparse
 import json
 import os
 import sys
+from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import datalayer as dl  # noqa: E402
@@ -117,6 +118,14 @@ def market_sentiment(market="US", period="2y"):
     if vix is not None:
         comp["vix"] = clamp((40 - vix) / 30 * 100)   # VIX 10→贪婪100 / 40→恐惧0
         raw["vix"] = round(vix, 2)
+    if market == "A":                                # A 股加市场宽度（涨停/跌停家数）
+        try:
+            b = fetch_breadth()
+            if b["score"] is not None:
+                comp["breadth"] = b["score"]
+                raw["limit_up_down"] = f"涨停{b['limit_up']}/跌停{b['limit_down']}"
+        except Exception:  # noqa: BLE001
+            pass
     score = _composite(comp)
     return {"market": market, "index": idx, "index_name": env.get("name"),
             "score": round(score, 1) if score is not None else None,
@@ -157,6 +166,45 @@ def text_sentiment(text):
 
 
 # --------------------------------------------------------------------------
+# ④ 市场宽度（A 股涨停/跌停家数——极端情绪计）
+# --------------------------------------------------------------------------
+def _pool_tc(kind, date):
+    """东财涨停(ZT)/跌停(DT)池 → (家数 tc, 实际交易日 qdate)。"""
+    url = (f"https://push2ex.eastmoney.com/getTopic{kind}Pool?ut=7eea3edcaed734bea9cbfc24409ed989"
+           f"&dpt=wz.ztzt&Pageindex=0&pagesize=1&sort=fund%3Aasc&date={date}")
+    d = (json.loads(dl._curl(url)).get("data")) or {}
+    return d.get("tc"), d.get("qdate")
+
+
+def breadth_score(zt, dt):
+    """涨停/跌停家数 → 0–100 情绪分（涨停多=贪婪、跌停多=恐惧）。"""
+    if zt is None or dt is None:
+        return None
+    # 净涨停占比映射：净=zt-dt，除以总数平滑到 0–100
+    tot = zt + dt
+    net_ratio = (zt - dt) / tot if tot else 0.0     # -1..1
+    return clamp(50 + net_ratio * 50)
+
+
+def fetch_breadth():
+    """A 股市场宽度：涨停/跌停家数 + 极端情绪读数。"""
+    date = datetime.now().strftime("%Y%m%d")
+    zt, qd = _pool_tc("ZT", date)
+    dt, _ = _pool_tc("DT", date)
+    score = breadth_score(zt, dt)
+    if score is None:
+        lab = "数据不足"
+    elif score >= 70:
+        lab = "情绪偏热（涨停远多于跌停）"
+    elif score <= 30:
+        lab = "情绪偏冷（跌停占优/恐慌）"
+    else:
+        lab = "情绪中性"
+    return {"qdate": qd, "limit_up": zt, "limit_down": dt,
+            "score": round(score, 1) if score is not None else None, "label": lab}
+
+
+# --------------------------------------------------------------------------
 # 展示
 # --------------------------------------------------------------------------
 def _bar(score):
@@ -170,7 +218,8 @@ def render_score(d, title):
     L = ["=" * 60, title, "=" * 60]
     L.append(f"  恐惧贪婪分: {d['score']}/100  [{_bar(d['score'])}]  {d['label']}")
     L.append("  分量（0=极度恐惧 100=极度贪婪）:")
-    names = {"rsi": "RSI 强弱", "position": "距52周高位置", "momentum": "近3月动量", "vix": "VIX 风险计"}
+    names = {"rsi": "RSI 强弱", "position": "距52周高位置", "momentum": "近3月动量",
+             "vix": "VIX 风险计", "breadth": "涨跌停宽度"}
     for k, v in d["components"].items():
         L.append(f"    {names.get(k, k):<14}{v if v is not None else '—'}")
     L.append(f"  原始: {d['raw']}")
@@ -192,6 +241,8 @@ def main():
     t = sub.add_parser("text", help="舆情情感（中文金融词典）")
     t.add_argument("text")
     t.add_argument("--json", action="store_true")
+    b = sub.add_parser("breadth", help="A股市场宽度（涨停/跌停家数极端情绪）")
+    b.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
     if args.cmd == "stock":
@@ -209,6 +260,13 @@ def main():
         else:
             print(f"舆情情感: {d['label']}  score={d['score']}  (正{d['pos']}/负{d['neg']})")
             print(f"  命中: {'、'.join(d['hits']) or '无'}")
+    elif args.cmd == "breadth":
+        d = fetch_breadth()
+        if args.json:
+            print(json.dumps(d, ensure_ascii=False, indent=2))
+        else:
+            print(f"A股市场宽度 · {d['qdate']}：涨停 {d['limit_up']} / 跌停 {d['limit_down']} 家  "
+                  f"→ 情绪分 {d['score']}/100  {d['label']}")
     else:
         ap.print_help()
 

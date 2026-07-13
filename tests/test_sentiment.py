@@ -48,5 +48,13 @@ class TestTextSentiment(unittest.TestCase):
         self.assertEqual(r["label"], "无情感词")
 
 
+class TestBreadth(unittest.TestCase):
+    def test_breadth_score(self):
+        self.assertAlmostEqual(st.breadth_score(90, 10), 90.0, places=1)   # 涨停多→贪婪
+        self.assertAlmostEqual(st.breadth_score(10, 90), 10.0, places=1)   # 跌停多→恐惧
+        self.assertAlmostEqual(st.breadth_score(50, 50), 50.0, places=1)   # 均衡→中性
+        self.assertIsNone(st.breadth_score(None, 5))                        # 缺数据→None
+
+
 if __name__ == "__main__":
     unittest.main()
