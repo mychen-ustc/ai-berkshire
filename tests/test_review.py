@@ -32,20 +32,50 @@ class TestFlags(unittest.TestCase):
         self.assertEqual(rv.holding_flags({"tech": "上升趋势 · MACD多头", "senti": {"score": 55}}), [])
 
 
+class TestReversal(unittest.TestCase):
+    def test_reversal_candidate(self):     # 极度恐惧+主力吸筹+趋势未转 → 反转候选
+        h = {"tech": "偏空 · 深跌", "main_flow": "主力净流入 +2.16亿", "senti": {"score": 15}}
+        self.assertIn("反转候选", rv.reversal_signal(h))
+
+    def test_reversal_confirmed(self):     # +趋势转多 → 反转确认
+        h = {"tech": "偏多 · 多头", "main_flow": "主力净流入", "senti": {"score": 20}}
+        self.assertIn("反转确认", rv.reversal_signal(h))
+
+    def test_no_reversal(self):
+        self.assertIsNone(rv.reversal_signal({"tech": "上升", "main_flow": "净流出", "senti": {"score": 60}}))
+
+
+class TestMarketVerdict(unittest.TestCase):
+    def test_greed_caution(self):
+        mkt = {"sentiment": {"US": {"score": 76}, "HK": {"score": 72}}, "macro": {"regime": "复苏"}, "breadth": None}
+        v = rv.market_verdict_of(mkt)
+        self.assertIn("不追高", v["caution"])
+        self.assertIn("复苏", v["summary"])
+
+    def test_weak_breadth(self):
+        mkt = {"sentiment": {"A": {"score": 54}}, "macro": {"regime": "复苏"},
+               "breadth": {"score": 14, "limit_up": 29, "limit_down": 172}}
+        self.assertIn("广度弱", rv.market_verdict_of(mkt)["summary"])
+
+
 class TestActions(unittest.TestCase):
     def test_build_actions(self):
         holdings = [{"symbol": "603986", "name": "兆易创新",
                      "tech": "偏多", "main_flow": "主力净流出（派发）", "senti": {"score": 54}}]
         due = [{"symbol": "AAPL", "name": "苹果", "review_date": "2026-07-13"}]
         imminent = [{"date": "2026-07-22", "symbol": "GOOGL", "detail": "Q2财报"}]
-        acts = rv.build_actions(holdings, due, imminent)
+        acts = rv.build_actions(holdings, [], due, imminent, {"caution": ""})
         self.assertTrue(any("复审到期" in a and "AAPL" in a for a in acts))
         self.assertTrue(any("临近催化剂" in a and "GOOGL" in a for a in acts))
         self.assertTrue(any("红线关注" in a and "603986" in a for a in acts))
 
+    def test_market_caution_in_actions(self):
+        acts = rv.build_actions([], [], [], [], {"caution": "情绪偏热→保持现金"})
+        self.assertTrue(any("市场" in a for a in acts))
+
     def test_empty_actions(self):
         holdings = [{"symbol": "VOO", "tech": "上升趋势", "senti": {"score": 55}}]
-        self.assertEqual(rv.build_actions(holdings, [], []), [])
+        self.assertEqual(rv.build_actions(holdings, [], [], [], {"caution": ""}), [])
 
 
 if __name__ == "__main__":
