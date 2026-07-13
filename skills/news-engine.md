@@ -11,7 +11,10 @@
 python3 tools/news_engine.py timeline 603986 --limit 30        # 催化剂时间线（突出重大/近期）
 python3 tools/news_engine.py announcements 600519 --limit 15   # A股公告结构化 + 分类
 python3 tools/news_engine.py classify "拟回购股份并披露业绩预增，但收到监管问询函"  # 任意标题分类
+python3 tools/news_engine.py market                            # 市场消息面：宏观/政策要闻(新浪7×24)+美股(Finnhub)
 ```
+
+**市场消息面 `market`**（填补"市场级消息面"）：新浪 7×24（中文宏观/政策，无 key）+ Finnhub 通用新闻（美股/全球，用 key）。对中文头条做**政策关键词标记**（降准/加息/关税/监管/央行/美联储…）+ 情感方向，聚合"政策要闻数 + 要闻情绪"，供 `/review` 的市场五面使用。
 
 输出：
 - **事件分类**：业绩/分红送转/回购/增减持/并购重组/再融资/监管处罚/诉讼仲裁/停复牌/管理层/合同订单/质押担保/关联交易；命中并购重组/监管/诉讼/停复牌/再融资标记**「重大事项」**。

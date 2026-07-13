@@ -35,6 +35,30 @@ class TestClassify(unittest.TestCase):
         self.assertEqual(r["tags"], ["其他"])
 
 
+class TestMarketNews(unittest.TestCase):
+    def test_policy_bearish(self):
+        r = ne.classify_market_news("证监会对某公司立案调查，市场承压")
+        self.assertTrue(r["is_policy"])                 # 证监会/监管
+        self.assertIn("证监会", r["policy_kw"])
+        self.assertEqual(r["direction"], "利空")        # 立案+承压
+
+    def test_policy_bullish(self):
+        r = ne.classify_market_news("央行降准，释放流动性利好股市回暖")
+        self.assertTrue(r["is_policy"])                 # 央行/降准
+        self.assertEqual(r["direction"], "利好")        # 利好+回暖
+
+    def test_non_policy_neutral(self):
+        r = ne.classify_market_news("某公司发布新款硬件产品")
+        self.assertFalse(r["is_policy"])
+
+    def test_parse_sina_724(self):
+        raw = ('{"result":{"data":{"feed":{"list":['
+               '{"rich_text":"【标题A】正文内容"},{"rich_text":"【标题B】更多内容"},{"rich_text":""}]}}}}')
+        out = ne.parse_sina_724(raw, 5)
+        self.assertEqual(len(out), 2)                   # 空文本被过滤
+        self.assertEqual(out[0], "【标题A】正文内容")
+
+
 class TestParseAndSummarize(unittest.TestCase):
     FIXTURE = json.dumps({"data": {"list": [
         {"title_ch": "某公司关于回购股份的公告", "notice_date": "2026-07-01 00:00:00",

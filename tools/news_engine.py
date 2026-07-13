@@ -69,6 +69,58 @@ def classify(title):
 # --------------------------------------------------------------------------
 # A 股公告（东财 anotice API）
 # --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# 市场级新闻/要闻（宏观/政策）—— 填补"市场消息面"
+# --------------------------------------------------------------------------
+POLICY_KW = ["降准", "降息", "加息", "LPR", "关税", "制裁", "实体清单", "监管", "刺激", "财政",
+             "货币政策", "国常会", "央行", "美联储", "降税", "减税", "补贴", "限制", "禁令",
+             "反垄断", "汇率", "政治局", "国务院", "证监会", "退市", "IPO", "注册制"]
+
+
+def classify_market_news(text):
+    """市场新闻分类：政策标记 + 情感方向（纯函数，复用 sentiment 词典，可离线测试）。"""
+    senti = st.text_sentiment(text)
+    policy = [k for k in POLICY_KW if k in text]
+    return {"is_policy": bool(policy), "policy_kw": policy, "sentiment": senti["score"],
+            "direction": "利好" if senti["score"] > 0.2 else ("利空" if senti["score"] < -0.2 else "中性")}
+
+
+def parse_sina_724(raw, limit):
+    d = json.loads(raw)
+    items = (((d.get("result") or {}).get("data") or {}).get("feed") or {}).get("list") or []
+    out = []
+    for it in items[:limit]:
+        t = (it.get("rich_text") or "").strip()
+        if t:
+            out.append(t)
+    return out
+
+
+def fetch_market_news(limit=8):
+    """市场消息面：新浪7×24(中文宏观/政策,无key) + Finnhub(美股/全球,有key)。头条做情感+政策标记。"""
+    out = {"cn": [], "us": []}
+    try:
+        url = (f"https://zhibo.sina.com.cn/api/zhibo/feed?page=1&page_size={limit * 2}"
+               "&zhibo_id=152&tag_id=0&dire=f&dpc=1")
+        for t in parse_sina_724(dl._curl(url, headers=["Referer: https://finance.sina.com.cn"]), limit):
+            out["cn"].append({"text": t[:90], **classify_market_news(t)})
+    except Exception as e:  # noqa: BLE001
+        out["cn_err"] = str(e)
+    try:
+        import keys
+        k = keys.get_key("FINNHUB_API_KEY")
+        if k:
+            arr = json.loads(dl._curl(f"https://finnhub.io/api/v1/news?category=general&token={k}"))
+            for x in (arr or [])[:limit]:
+                out["us"].append({"headline": x.get("headline", ""), "source": x.get("source", "")})
+    except Exception as e:  # noqa: BLE001
+        out["us_err"] = str(e)
+    cn_s = [c["sentiment"] for c in out["cn"]]
+    out["cn_tone"] = round(sum(cn_s) / len(cn_s), 3) if cn_s else None
+    out["policy_count"] = sum(1 for c in out["cn"] if c["is_policy"])
+    return out
+
+
 def parse_em_announcements(text):
     d = json.loads(text)
     lst = (d.get("data") or {}).get("list") or []
@@ -149,6 +201,9 @@ def main():
     c = sub.add_parser("classify", help="对任意标题做事件分类 + 情感方向")
     c.add_argument("title")
     c.add_argument("--json", action="store_true")
+    mk = sub.add_parser("market", help="市场消息面：宏观/政策要闻(新浪7×24) + 美股(Finnhub)")
+    mk.add_argument("--limit", type=int, default=8)
+    mk.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
     if args.cmd in ("announcements", "timeline"):
@@ -164,6 +219,22 @@ def main():
         else:
             flag = "🔴重大事项" if r["material"] else "常规"
             print(f"事件分类: {'、'.join(r['tags'])}  [{flag}]  方向: {r['direction']}（情感 {r['senti_score']}）")
+    elif args.cmd == "market":
+        d = fetch_market_news(args.limit)
+        if args.json:
+            print(json.dumps(d, ensure_ascii=False, indent=2))
+        else:
+            tone = d.get("cn_tone")
+            print(f"市场消息面 · 政策要闻 {d['policy_count']} 条 · CN情绪 {tone if tone is not None else '—'}")
+            print("\n【宏观/政策(新浪7×24)】")
+            for c in d["cn"]:
+                mk = "🏛️政策" if c["is_policy"] else "  "
+                dot = {"利好": "🟢", "利空": "🔴", "中性": "⚪"}[c["direction"]]
+                print(f"  {mk}{dot} {c['text']}")
+            if d.get("us"):
+                print("\n【美股/全球(Finnhub)】")
+                for x in d["us"][:6]:
+                    print(f"  · [{x['source']}] {x['headline'][:66]}")
     else:
         ap.print_help()
 

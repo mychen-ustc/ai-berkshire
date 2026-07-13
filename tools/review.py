@@ -25,6 +25,7 @@ import catalysts as cal  # noqa: E402
 import technicals as ta  # noqa: E402
 import sentiment as st  # noqa: E402
 import macro_regime as mac  # noqa: E402
+import news_engine as ne  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MKT_CN = {"A": "A股", "US": "美股", "HK": "港股"}
@@ -113,6 +114,13 @@ def market_verdict_of(mkt):
     if b and b.get("score") is not None and b["score"] <= 30:
         bits.append(f"A股广度弱(涨停{b['limit_up']}/跌停{b['limit_down']}，内部分化)")
         caution = (caution or "") + " 回避高位小盘、看广度是否恶化"
+    nw = mkt.get("news") or {}
+    if nw.get("policy_count"):
+        bits.append(f"政策要闻{nw['policy_count']}条")
+    tone = nw.get("cn_tone")
+    if tone is not None and tone <= -0.25:
+        bits.append(f"要闻情绪偏负({tone})")
+        caution = (caution or "") + " 留意政策/宏观利空发酵"
     return {"summary": " · ".join(bits) or "市场信号中性", "caution": (caution or "").strip()}
 
 
@@ -145,6 +153,10 @@ def market_five_faces(bench_cache, markets):
             out["breadth"] = st.fetch_breadth()
         except Exception:  # noqa: BLE001
             out["breadth"] = None
+    try:
+        out["news"] = ne.fetch_market_news(limit=7)     # 市场消息面：宏观/政策要闻 + 美股
+    except Exception:  # noqa: BLE001
+        out["news"] = None
     out["verdict"] = market_verdict_of(out)
     return out
 
@@ -340,8 +352,15 @@ def render_text(r):
         L.append("  资金面(市场): —")
     se = m.get("sentiment", {})
     L.append("  情绪面(市场): " + " · ".join(f"{MKT_CN.get(k, k)} {v['score']}({v['label'][:4]})" for k, v in se.items()))
-    ne = len(r["imminent"])
-    L.append(f"  消息面(市场): 未来{ {'daily':7,'weekly':21,'quarterly':90}[r['cadence']] }天 {ne} 项催化剂(财报季密度)；宏观/政策要闻建议人工补扫")
+    nw = m.get("news") or {}
+    ncat = len(r["imminent"])
+    tone = nw.get("cn_tone")
+    L.append(f"  消息面(市场): 政策要闻 {nw.get('policy_count', 0)} 条 · 要闻情绪 {tone if tone is not None else '—'} · 未来窗口 {ncat} 项催化剂")
+    for c in [x for x in nw.get("cn", []) if x.get("is_policy")][:3]:
+        dot = {"利好": "🟢", "利空": "🔴", "中性": "⚪"}[c["direction"]]
+        L.append(f"      🏛️{dot} {c['text'][:52]}")
+    for x in nw.get("us", [])[:2]:
+        L.append(f"      🌐 [{x['source']}] {x['headline'][:52]}")
     L.append(f"  ▶ 市场结论: {m['verdict']['summary']}"
              + (f"；{m['verdict']['caution']}" if m['verdict'].get('caution') else ""))
 
@@ -431,6 +450,13 @@ def render_html(r):
     se = " · ".join(f"{MKT_CN.get(k,k)} {v['score']}({_h.escape(v['label'][:4])})" for k, v in m.get("sentiment", {}).items())
     mac_d = m.get("macro") or {}
     b = m.get("breadth") or {}
+    nw = m.get("news") or {}
+    news_items = ""
+    for c in [x for x in nw.get("cn", []) if x.get("is_policy")][:3]:
+        dot = {"利好": "🟢", "利空": "🔴", "中性": "⚪"}[c["direction"]]
+        news_items += f'<div class="ni">🏛️{dot} {_h.escape(c["text"][:60])}</div>'
+    for x in nw.get("us", [])[:2]:
+        news_items += f'<div class="ni">🌐 [{_h.escape(x["source"])}] {_h.escape(x["headline"][:60])}</div>'
     due = "".join(f"<li>📋 {_h.escape(e['symbol'])} {_h.escape(e.get('name') or '')} · {e.get('review_date')}</li>" for e in r["due"]) or "<li>无</li>"
     imm = "".join(f"<li>🔔 {ev['date']} {_h.escape(ev['symbol'])} {_h.escape(ev.get('detail',''))}</li>" for ev in r["imminent"]) or "<li>无</li>"
     return f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
@@ -450,6 +476,7 @@ h2{{color:var(--head);font-size:1.08rem;border-left:5px solid var(--accent);padd
 @media(max-width:620px){{.faces{{grid-template-columns:1fr}}}}
 ul{{margin:.3em 0;padding-left:1.3em}}li{{margin:.25em 0;font-size:.87rem}}
 .mrow{{font-size:.86rem;margin:3px 0}}.mrow b{{color:var(--accent);display:inline-block;min-width:6.5em}}
+.ni{{font-size:.8rem;color:var(--muted);margin:2px 0 2px 6.5em}}
 footer{{color:var(--muted);font-size:.78rem;margin-top:20px;border-top:1px solid var(--line);padding-top:10px}}</style></head><body><div class="wrap">
 <h1>投资组合定期复盘（三层五面）· {r['cadence'].upper()}</h1><div class="sub">{r['date']} · {_h.escape(r['source'])}</div>
 <h2>🎯 行动清单</h2><div class="act"><ul>{acts}</ul></div>
@@ -458,7 +485,8 @@ footer{{color:var(--muted);font-size:.78rem;margin-top:20px;border-top:1px solid
 <div class="mrow"><b>技术面</b>{it or '—'}</div>
 <div class="mrow"><b>资金面</b>A股涨停 {b.get('limit_up','—')}/跌停 {b.get('limit_down','—')}（{_h.escape(b.get('label','—'))}）· 北向2024-08停披露</div>
 <div class="mrow"><b>情绪面</b>{se or '—'}</div>
-<div class="mrow"><b>消息面</b>未来窗口 {len(r['imminent'])} 项催化剂；宏观/政策要闻建议人工补扫</div>
+<div class="mrow"><b>消息面</b>政策要闻 {nw.get('policy_count',0)} 条 · 要闻情绪 {nw.get('cn_tone') if nw.get('cn_tone') is not None else '—'} · 未来窗口 {len(r['imminent'])} 项催化剂</div>
+{news_items}
 <div class="mrow" style="margin-top:6px"><b>▶ 结论</b>{_h.escape(m['verdict']['summary'])}{('；'+_h.escape(m['verdict']['caution'])) if m['verdict'].get('caution') else ''}</div></div>
 <h2>二、组合层</h2><div class="card">有效独立因子 <b>{f.get('n_eff',0):.2f}/{f.get('n',0)}</b> · PC1 {f.get('pc1_pct',0):.1f}% · {_h.escape(f.get('verdict',''))}<br>因子倾斜 动量 {f.get('port_momentum_z',0):+.2f} · 波动 {f.get('port_vol_z',0):+.2f}</div>
 <h2>三、逐持仓五面诊断</h2>{holds}
