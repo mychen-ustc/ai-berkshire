@@ -554,6 +554,105 @@ footer{{color:var(--muted);font-size:.78rem;margin-top:20px;border-top:1px solid
 </div></body></html>"""
 
 
+def _faces_md(h, us_earn):
+    """五面 → markdown 无序列表（复用 _faces_lines 的文本，转 md 粗体项）。"""
+    out = []
+    for ln in _faces_lines(h, us_earn, None):
+        t = ln.strip()
+        for face in ("基本面", "技术面", "资金面", "情绪面", "消息面"):
+            if t.startswith(face):
+                out.append(f"  - **{face}** {t[len(face):].strip()}")
+                break
+    return out
+
+
+def render_md(r):
+    m, p = r["market"], r["port"]
+    f = p.get("factor") or {}
+    L = [f"# 投资组合定期复盘（三层五面）· {r['cadence'].upper()} · {r['date']}",
+         "",
+         f"> 账本：{r['source']} · 由全套工具链一键聚合 · 复盘为信号聚合、非投资建议；红线/建议须人工拍板；五面皆叠加层不替代基本面。",
+         ""]
+    # 执行摘要 + 行动清单
+    L.append("## 执行摘要")
+    L.append(f"- **市场**：{m['verdict']['summary']}")
+    L.append(f"- **组合**：{len([h for h in r['holdings'] if not h.get('error')])} 只 · 有效因子 {f.get('n_eff', 0):.1f}/{f.get('n', 0)} · PC1 {f.get('pc1_pct', 0):.0f}%")
+    L.append("\n## 🎯 行动清单")
+    L += [f"- {a}" for a in r["actions"]] or ["- ✅ 无紧急事项"]
+    if not r["actions"]:
+        L.append("- ✅ 无紧急事项")
+
+    # 一、市场五面
+    mac_d = m.get("macro") or {}
+    b = m.get("breadth") or {}
+    nw = m.get("news") or {}
+    L.append("\n## 一、市场五面摘要（→ 是否调整敞口）")
+    L.append("| 面 | 读数 |")
+    L.append("|---|---|")
+    L.append(f"| 基本面(宏观) | {mac_d.get('icon', '')}{mac_d.get('regime', '—')}（PMI {(mac_d.get('pmi') or {}).get('make', '—')} · CPI {(mac_d.get('cpi') or {}).get('yoy', '—')}% · M2 {(mac_d.get('m2') or {}).get('m2_yoy', '—')}% · 10Y {mac_d.get('y10y', '—')}%） |")
+    L.append("| 技术面(大盘) | " + (" · ".join(f"{MKT_CN.get(k, k)} {v}" for k, v in m.get("index_tech", {}).items()) or "—") + " |")
+    L.append(f"| 资金面(市场) | A股涨停 {b.get('limit_up', '—')}/跌停 {b.get('limit_down', '—')}（{b.get('label', '—')}）· 北向2024-08停披露 |")
+    L.append("| 情绪面(市场) | " + (" · ".join(f"{MKT_CN.get(k, k)} {v['score']}({v['label'][:4]})" for k, v in m.get("sentiment", {}).items()) or "—") + " |")
+    L.append(f"| 消息面(市场) | 政策要闻 {nw.get('policy_count', 0)} 条 · 要闻情绪 {nw.get('cn_tone', '—')} · 未来窗口 {len(r['imminent'])} 项催化剂 |")
+    for c in [x for x in nw.get("cn", []) if x.get("is_policy")][:3]:
+        dot = {"利好": "🟢", "利空": "🔴", "中性": "⚪"}[c["direction"]]
+        L.append(f"  - 🏛️{dot} {c['text'][:60]}")
+    L.append(f"\n**▶ 市场结论**：{m['verdict']['summary']}" + (f"；{m['verdict']['caution']}" if m['verdict'].get('caution') else ""))
+
+    # 二、组合层
+    L.append("\n## 二、组合层")
+    L.append(f"- 有效独立因子 **{f.get('n_eff', 0):.2f}/{f.get('n', 0)}** · PC1 {f.get('pc1_pct', 0):.1f}% · {f.get('verdict', '')}")
+    L.append(f"- 因子倾斜：动量 {f.get('port_momentum_z', 0):+.2f} · 波动 {f.get('port_vol_z', 0):+.2f}")
+
+    # 三、逐持仓五面
+    L.append("\n## 三、逐持仓五面诊断")
+    for h in sorted([x for x in r["holdings"] if not x.get("error")], key=lambda x: -x.get("weight", 0)):
+        flags = holding_flags(h)
+        tag = "  ".join(f"{lv}{msg}" for lv, msg in flags) if flags else "✓ 正常"
+        L.append(f"\n### {(h.get('name') or h['symbol'])} `{h['symbol']}` · 持有{h.get('weight', 0):.0f}%　▶ {tag}")
+        L += _faces_md(h, r["us_earn"])
+        th = r["thesis"].get(h["symbol"].upper())
+        if th and th.get("red_lines") and any(lv == "🔴" for lv, _ in flags):
+            L.append(f"  - ⚠️ **红线**：{th['red_lines']}")
+
+    # 四、watchlist
+    if r["watch_extras"]:
+        L.append("\n## 四、Watchlist 诊断（非持仓/观察）")
+        for h in r["watch_extras"]:
+            if h.get("error"):
+                continue
+            rs = reversal_signal(h)
+            L.append(f"\n### {(h.get('name') or h['symbol'])} `{h['symbol']}` · {wl.STATE_CN.get(h.get('state', ''), h.get('state', ''))}" + (f"　▶ {rs}" if rs else ""))
+            L += _faces_md(h, r["us_earn"])
+
+    # 五、到期/催化剂
+    L.append(f"\n## 五、到期复审（{len(r['due'])}）/ 临近催化剂（{len(r['imminent'])}）")
+    for e in r["due"]:
+        L.append(f"- 📋 {e['symbol']} {e.get('name') or ''} · 复审日 {e.get('review_date')}")
+    for ev in r["imminent"]:
+        L.append(f"- 🔔 {ev['date']} {ev['symbol']} {ev.get('detail', '')}")
+    if not r["due"] and not r["imminent"]:
+        L.append("- 无")
+
+    # 六、机会雷达
+    rd = r.get("radar")
+    if rd:
+        L.append("\n## 六、市场机会雷达（持仓/watchlist 之外的新线索）")
+        hs = rd.get("sectors", {}).get("sectors", [])
+        if hs:
+            L.append("- **热门板块**(涨停聚合)：" + " · ".join(f"{s['sector']}({s['limit_up_count']})" for s in hs))
+        L.append("- **新标的候选线索**（须基本面研究后方可纳入观察，**非买入信号**）：")
+        for c in rd.get("candidates", {}).get("candidates", [])[:8]:
+            ch = f"{c['change']:+.1f}%" if isinstance(c["change"], (int, float)) else "—"
+            L.append(f"  - {c['signal']} {c['name']}（{c['code']}）{ch} · {c['detail']}")
+
+    # 七、更新建议
+    L.append("\n## 七、组合 & Watchlist 更新建议（须人工确认）")
+    L += [f"- {u}" for u in r["updates"]]
+    L.append("\n---\n*数据源：东财(A/H前复权+主力资金流+龙虎榜+涨停+宏观) · Yahoo(US) · Finnhub/Nasdaq(美股预期) · SEC EDGAR(13F) · 新浪7×24(要闻)。含真实持仓，仅存本地。不构成投资建议。*")
+    return "\n".join(L)
+
+
 def main():
     ap = argparse.ArgumentParser(description="定期复盘编排器（三层五面，P3 心跳，零依赖）")
     ap.add_argument("--from-ledger", default="data/portfolio/transactions.csv")
@@ -562,16 +661,23 @@ def main():
     ap.add_argument("--weekly", action="store_true")
     ap.add_argument("--quarterly", action="store_true")
     ap.add_argument("--html", action="store_true")
+    ap.add_argument("--md", action="store_true", help="导出 Markdown 到 reports/private/reviews/")
     args = ap.parse_args()
     r = run(args)
     print(render_text(r))
+    outdir = os.path.join(ROOT, "reports", "private", "reviews")
     if args.html:
-        outdir = os.path.join(ROOT, "reports", "private", "reviews")
         os.makedirs(outdir, exist_ok=True)
         path = os.path.join(outdir, f"review-{r['cadence']}-{r['date']}.html")
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(render_html(r))
         print(f"\n[review] HTML 已导出 → {path}", file=sys.stderr)
+    if args.md:
+        os.makedirs(outdir, exist_ok=True)
+        path = os.path.join(outdir, f"review-{r['cadence']}-{r['date']}.md")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(render_md(r))
+        print(f"[review] Markdown 已导出 → {path}", file=sys.stderr)
 
 
 if __name__ == "__main__":

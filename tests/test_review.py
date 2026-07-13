@@ -58,6 +58,40 @@ class TestMarketVerdict(unittest.TestCase):
         self.assertIn("广度弱", rv.market_verdict_of(mkt)["summary"])
 
 
+class TestRenderMd(unittest.TestCase):
+    R = {
+        "cadence": "weekly", "date": "2026-07-14", "source": "账本 x.csv",
+        "market": {"verdict": {"summary": "宏观复苏 · 政策要闻1条", "caution": "不追高"},
+                   "macro": {"icon": "🟢", "regime": "复苏", "pmi": {"make": 50.3},
+                             "cpi": {"yoy": 1}, "m2": {"m2_yoy": 8.6}, "y10y": 4.6},
+                   "index_tech": {"US": "上升趋势"}, "breadth": {"limit_up": 29, "limit_down": 172, "label": "偏冷"},
+                   "sentiment": {"US": {"score": 73, "label": "贪婪"}},
+                   "news": {"policy_count": 1, "cn_tone": 0.2, "cn": []}},
+        "port": {"factor": {"n": 8, "n_eff": 4.69, "pc1_pct": 37.4, "verdict": "🟡中度集中",
+                            "port_momentum_z": -0.2, "port_vol_z": -0.3}},
+        "holdings": [{"symbol": "GOOGL", "name": "谷歌", "weight": 15, "market": "US",
+                      "fundamental": "评级乐观·上修·PEG1.44", "tech": "偏多 · MACD多头 · 中位",
+                      "rs_pct": 42, "from_high": -12, "rsi14": 44, "vol_ratio": 0.7,
+                      "flow": "价量中性", "divergence": "量价基本同步", "cmf": 0.17,
+                      "senti": {"score": 60, "label": "贪婪"}}],
+        "watch_extras": [], "due": [], "imminent": [], "us_earn": {},
+        "radar": {"sectors": {"sectors": [{"sector": "化学制药", "limit_up_count": 4}]},
+                  "candidates": {"candidates": [{"code": "688072", "name": "拓荆科技", "signal": "🏛️机构龙虎榜买入",
+                                                 "strength": 3, "detail": "4家机构买入", "change": 1.6}]}},
+        "actions": ["🌡️ 市场：不追高"], "updates": ["维持"], "thesis": {},
+    }
+
+    def test_render_md_structure(self):
+        md = rv.render_md(self.R)
+        self.assertIn("# 投资组合定期复盘", md)
+        self.assertIn("## 一、市场五面摘要", md)
+        self.assertIn("### 谷歌 `GOOGL`", md)
+        self.assertIn("**技术面**", md)
+        self.assertIn("## 六、市场机会雷达", md)
+        self.assertIn("拓荆科技", md)
+        self.assertIn("## 七、组合 & Watchlist 更新建议", md)
+
+
 class TestActions(unittest.TestCase):
     def test_build_actions(self):
         holdings = [{"symbol": "603986", "name": "兆易创新",
