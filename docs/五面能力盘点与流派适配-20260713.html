@@ -66,12 +66,15 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
 <div class="wrap">
 <header class="top">
   <h1>五面能力盘点 × 投资流派适配 × 建设规划</h1>
-  <div class="sub">AI Berkshire 工具箱系统性盘点 · 2026-07-13 · 消息面 / 技术面 / 基本面 / 资金面 / 情绪面 · 24 工具 · 32 skill · 130 测试</div>
+  <div class="sub">AI Berkshire 工具箱系统性盘点 · 2026-07-13 · 消息面 / 技术面 / 基本面 / 资金面 / 情绪面 · 27 工具 · 35 skill · 154 测试</div>
 </header>
 <nav><a href="#radar">① 五面雷达</a><a href="#faces">② 逐面工具箱</a><a href="#schools">③ 流派适配矩阵</a><a href="#plan">④ 建设规划</a><a href="#next">⑤ 优先补建</a></nav>
 
-<div class="verdict" style="margin-top:10px">
-  <b>一句话结论：</b>五面里<b>基本面(L3.5)、技术面(L3) 已扎实</b>，<b>资金面(L2.5) 建了一半</b>，而<b>消息面(L1.5)、情绪面(L1) 是明显短板</b>——目前主要靠 skill 手动 + 代理指标，缺结构化工具。这与本项目"价值投资"定位一致（基本面为王），但要支撑<b>成长/事件驱动/量化/宏观</b>等流派，必须补齐消息面与情绪面，并加一条横切的<b>多因子风险模型</b>。
+<div class="verdict" style="margin-top:10px;background:linear-gradient(90deg,#dbeafe,#dcfce7)">
+  <b>✅ 本轮已补建第一优先三工具：</b><code>news_engine.py</code>(消息面：公告结构化+事件分类+催化剂时间线) · <code>sentiment.py</code>(情绪面：个股/市场恐惧贪婪+VIX+舆情情感) · <code>factor_model.py</code>(横切：PCA 伪分散检测+因子暴露)。消息面 L1.5→<b>L2.5</b>、情绪面 L1→<b>L2.5</b>，两块最弱短板已补上第一层。
+</div>
+<div class="verdict" style="margin-top:8px">
+  <b>一句话结论：</b>五面里<b>基本面(L3.5)、技术面(L3) 已扎实</b>，<b>资金面/消息面/情绪面(均 L2.5) 已建成第一层</b>。本项目"价值投资"定位下基本面为王；本轮补齐消息面/情绪面结构化工具 + 横切的多因子风险模型后，对<b>成长/事件驱动/量化/宏观</b>等流派的适配度显著提升（仍需持股跟踪、一致预期、统一回测等第二优先补深度）。
 </div>
 
 <h2 id="radar">① 五面覆盖雷达（当前 vs 目标）</h2>
@@ -82,8 +85,8 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
       <div class="facebar"><div>基本面</div><div class="trk"><div class="fill" style="width:75%;background:var(--c-fund)"></div></div><div class="lv">L3.5 · 75%</div></div>
       <div class="facebar"><div>技术面</div><div class="trk"><div class="fill" style="width:70%;background:var(--c-tech)"></div></div><div class="lv">L3 · 70%</div></div>
       <div class="facebar"><div>资金面</div><div class="trk"><div class="fill" style="width:45%;background:var(--c-flow)"></div></div><div class="lv">L2.5 · 45%</div></div>
-      <div class="facebar"><div>消息面</div><div class="trk"><div class="fill" style="width:30%;background:var(--c-news)"></div></div><div class="lv">L1.5 · 30%</div></div>
-      <div class="facebar"><div>情绪面</div><div class="trk"><div class="fill" style="width:20%;background:var(--c-senti)"></div></div><div class="lv">L1 · 20%</div></div>
+      <div class="facebar"><div>消息面</div><div class="trk"><div class="fill" style="width:50%;background:var(--c-news)"></div></div><div class="lv">L2.5 · 50% ↑</div></div>
+      <div class="facebar"><div>情绪面</div><div class="trk"><div class="fill" style="width:45%;background:var(--c-senti)"></div></div><div class="lv">L2.5 · 45% ↑</div></div>
       <div class="legend">覆盖率＝该面"完整工具箱应有能力"的已建占比；L＝成熟度(L0 无 → L3 结构化+测试 → L5 可审计)。虚线五边形＝目标(≈90%)。</div>
     </div>
   </div>
@@ -113,18 +116,18 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
     <span class="chip miss">持股/内部人(13F/龙虎榜)</span><span class="chip miss">大股东/高管增减持</span><span class="chip miss">融资融券余额</span><span class="chip miss">ETF/基金流向</span><span class="chip miss">大宗交易</span><span class="chip miss">北向(已停披露)</span>
   </div>
   <div class="fc" style="border-top-color:var(--c-news)">
-    <h3>消息面 <span class="badge">L1.5 · 短板</span></h3>
-    <div class="lab">已建 ✓（多为 skill/手动）</div>
-    <span class="chip has">news-pulse skill</span><span class="chip has">thesis-drift skill</span><span class="chip has">watch 关键词告警</span><span class="chip has">report_audit 准出</span>
+    <h3>消息面 <span class="badge">L2.5 · 已补 ↑</span></h3>
+    <div class="lab">已建 ✓</div>
+    <span class="chip has">🆕 news_engine 公告结构化</span><span class="chip has">🆕 事件分类(13类)</span><span class="chip has">🆕 催化剂时间线</span><span class="chip has">🆕 重大事项标记</span><span class="chip has">🆕 标题情感方向</span><span class="chip has">news-pulse skill</span><span class="chip has">thesis-drift skill</span><span class="chip has">watch 关键词告警</span>
     <div class="lab">缺失 ✗</div>
-    <span class="chip miss">新闻/公告结构化抓取管线</span><span class="chip miss">财报/公告事件解析</span><span class="chip miss">催化剂/事件日历</span><span class="chip miss">监管/政策监控</span><span class="chip miss">电话会/纪要解析</span>
+    <span class="chip miss">催化剂/事件日历(P3-5)</span><span class="chip miss">监管/政策监控</span><span class="chip miss">电话会/纪要解析</span><span class="chip miss">美股/港股公告源(仅A股已接)</span>
   </div>
   <div class="fc" style="border-top-color:var(--c-senti);grid-column:1/-1">
-    <h3>情绪面 <span class="badge">L1 · 最弱</span></h3>
-    <div class="lab">已建 ✓（多为代理/单点）</div>
-    <span class="chip has">xueqiu_scraper 舆情/大V</span><span class="chip has">RSI 超买超卖(代理)</span><span class="chip has">散户vs主力(代理)</span>
+    <h3>情绪面 <span class="badge">L2.5 · 已补 ↑</span></h3>
+    <div class="lab">已建 ✓</div>
+    <span class="chip has">🆕 sentiment 个股恐惧贪婪</span><span class="chip has">🆕 市场情绪(指数技术面)</span><span class="chip has">🆕 VIX 风险计</span><span class="chip has">🆕 舆情情感词典(含否定)</span><span class="chip has">xueqiu_scraper 舆情/大V</span><span class="chip has">RSI 超买超卖</span>
     <div class="lab">缺失 ✗</div>
-    <span class="chip miss">市场情绪指标(换手/涨跌家数/新高新低/涨停)</span><span class="chip miss">舆情情感分析 NLP</span><span class="chip miss">拥挤度</span><span class="chip miss">恐惧贪婪指数</span><span class="chip miss">期权 put/call / skew</span><span class="chip miss">分析师评级变动情绪</span>
+    <span class="chip miss">涨跌家数/新高新低/涨停(市场宽度)</span><span class="chip miss">拥挤度</span><span class="chip miss">期权 put/call / skew</span><span class="chip miss">分析师评级变动情绪</span><span class="chip miss">A/H 公开波指</span>
   </div>
 </div>
 
@@ -185,11 +188,11 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
 
 <h2 id="next">⑤ 优先补建路线（按"解锁流派数 × 当前缺口"排序）</h2>
 <div class="card">
-  <div class="pitem now"><span class="pt">第一优先（补短板 + 解锁多流派）</span> <span class="star">★★★★★</span>
+  <div class="pitem" style="border-left-color:var(--green)"><span class="pt" style="color:var(--green)">✅ 第一优先 —— 本轮已完成</span> <span class="star">★★★★★</span>
     <ul>
-      <li><b>消息面引擎</b> <code>tools/news_engine.py</code>：公告/新闻结构化抓取 + 事件解析 + 催化剂日历。解锁 成长/事件驱动/宏观；补最弱短板之一。</li>
-      <li><b>情绪面工具</b> <code>tools/sentiment.py</code>：市场情绪指标(换手/涨跌家数/新高新低/涨停) + 舆情情感 NLP + 拥挤度。解锁 量化/趋势/宏观；补最弱短板。</li>
-      <li><b>多因子风险模型</b> <code>tools/factor_model.py</code>：风格/行业/国家暴露分解。横切能力，解锁量化因子，且让"伪分散/alpha vs beta"可见。</li>
+      <li><b>✅ 消息面引擎</b> <code>tools/news_engine.py</code>：A股公告结构化 + 13类事件分类 + 催化剂时间线 + 重大事项标记 + 标题情感。（催化剂日历/美港股源留 P3-5/后续）</li>
+      <li><b>✅ 情绪面工具</b> <code>tools/sentiment.py</code>：个股/市场恐惧贪婪(指数技术面 + VIX) + 中文金融舆情情感词典(含否定翻转)。（市场宽度/期权情绪待补）</li>
+      <li><b>✅ 多因子风险模型</b> <code>tools/factor_model.py</code>：相关矩阵 PCA(Jacobi) → 有效独立因子数 + PC1 主导度 + 伪分散判定 + beta/R² + 动量/波动倾斜。已端到端验证 v6 组合(名义10只→有效5.55、PC1 29.6%)。</li>
     </ul>
   </div>
   <div class="pitem next"><span class="pt">第二优先（补深度）</span> <span class="star">★★★★</span>
@@ -220,8 +223,8 @@ const faces=[
  {n:"基本面",v:75,c:"var(--c-fund)"},
  {n:"技术面",v:70,c:"var(--c-tech)"},
  {n:"资金面",v:45,c:"var(--c-flow)"},
- {n:"情绪面",v:20,c:"var(--c-senti)"},
- {n:"消息面",v:30,c:"var(--c-news)"},
+ {n:"情绪面",v:45,c:"var(--c-senti)"},
+ {n:"消息面",v:50,c:"var(--c-news)"},
 ];
 const cx=200,cy=180,R=130,N=faces.length;
 function pt(i,r){const a=(-90+i*360/N)*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}

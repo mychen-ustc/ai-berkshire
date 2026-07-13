@@ -1,0 +1,46 @@
+---
+name: news-engine
+description: "AI Berkshire skill: 消息面引擎：公告结构化 + 事件分类 + 催化剂时间线. Source: skills/news-engine.md."
+---
+
+## Codex adapter note
+
+This skill is generated from `skills/news-engine.md` so Claude Code and Codex users share one canonical workflow.
+
+- Treat `$ARGUMENTS` as the user's request in the current Codex thread.
+- When the source mentions Claude-only surfaces such as Task, Agent, WebSearch, Bash, Read, or Write, use the closest Codex capability available in this session: subagents when available, web search when needed, shell commands for local tools, and normal file edits for workspace files.
+- Use shared project tools from `tools/` in this repository. Prefer running commands from the repository root with paths like `python3 tools/financial_rigor.py ...`; if the current thread starts outside the repo, locate the actual checkout path first instead of assuming a fixed home-directory path.
+- Before starting research, run the `date` command to confirm today's date; treat it as the baseline for "latest" data and state the data cutoff date in the report header. Never assume the current date from training data.
+- Preserve the research quality rules from `AGENTS.md`: cross-check financial data, use exact arithmetic tools for valuation/math, and clearly label uncertainty and source gaps.
+
+# 消息面引擎：公告结构化 + 事件分类 + 催化剂时间线
+
+对 $ARGUMENTS 做公告/新闻的结构化取数、事件分类与催化剂时间线。
+
+## 这个 skill 解决什么
+
+把"人肉翻公告"升级为**结构化取数 + 事件分类 + 时间线**。`news-pulse` 是宽口径新闻扫描；`/news-engine` 用 `tools/news_engine.py`（零依赖）做结构化：A 股公告官方分类 + 关键词事件标签 + 情感方向 + 重大事项标记。它是叠加层——**帮你不漏重大事项、看清催化剂节奏，但证据永远回原文核实，永不替代基本面**。
+
+## 执行流程
+```bash
+python3 tools/news_engine.py timeline 603986 --limit 30        # 催化剂时间线（突出重大/近期）
+python3 tools/news_engine.py announcements 600519 --limit 15   # A股公告结构化 + 分类
+python3 tools/news_engine.py classify "拟回购股份并披露业绩预增，但收到监管问询函"  # 任意标题分类
+```
+
+输出：
+- **事件分类**：业绩/分红送转/回购/增减持/并购重组/再融资/监管处罚/诉讼仲裁/停复牌/管理层/合同订单/质押担保/关联交易；命中并购重组/监管/诉讼/停复牌/再融资标记**「重大事项」**。
+- **情感方向**：每条标题经中文金融词典 → 利好🟢 / 利空🔴 / 中性⚪。
+- **催化剂时间线**：按时间归并，突出重大与近期催化剂，供监控与决策日志引用。
+
+## 与其它工具的闭环
+1. `/news-engine timeline` 拉催化剂 → 2. 重大事项触发 `/earnings-review` 或 `/special-situations` 深读 → 3. `/sentiment text` 给标题情感做交叉印证 → 4. 催化剂/红线写入 `/decision-journal` 与 watchlist（未来接 P3-5 催化剂日历）。
+
+## 原则
+- **分类基于标题关键词**，可能误分/漏分——务必点原文核实，尤其"重大事项"必须读原公告。
+- **情感为词典粗筛**，不懂语境反讽；方向只作快速筛选，不作结论。
+- **仅接入 A 股（东财 anotice）**：美股需 SEC EDGAR、港股需披露易，本版本未接入（诚实缺口，见路线图）。
+- 消息面**滞后于价格**、且常已被市场消化；它是"别漏事+看节奏"的工具，不是超额收益来源。
+
+## 相关
+`news-pulse`(宽口径新闻) · `sentiment`(标题情感) · `special-situations`(事件驱动深研) · `earnings-review`(财报精读) · `decision-journal`(催化剂/红线留痕)
