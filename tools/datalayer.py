@@ -20,6 +20,7 @@ import json
 import os
 import re
 import subprocess
+import time
 from datetime import datetime
 
 VERSION = "datalayer/0.1"
@@ -42,19 +43,28 @@ def _norm_dt(tok):
 # --------------------------------------------------------------------------
 # 网络（curl 直连，绕过系统代理；GBK/UTF-8 自适应）
 # --------------------------------------------------------------------------
-def _curl(url, headers=None, timeout=12, ua=None):
+def _curl(url, headers=None, timeout=12, ua=None, retries=2):
+    """curl 直连，含重试+指数退避（硬化瞬时网络失败；不做缓存，避免陈旧数据）。"""
     cmd = ["/usr/bin/curl", "-s", "--max-time", str(timeout), "--noproxy", "*",
            "-H", f"User-Agent: {ua or 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'}"]
     for h in headers or []:
         cmd += ["-H", h]
     cmd.append(url)
-    r = subprocess.run(cmd, capture_output=True, timeout=timeout + 3)
-    if r.returncode != 0 or not r.stdout:
-        raise ConnectionError(f"请求失败: {url}")
-    try:
-        return r.stdout.decode("utf-8")
-    except UnicodeDecodeError:
-        return r.stdout.decode("gbk", errors="replace")
+    last = "?"
+    for attempt in range(retries + 1):
+        try:
+            r = subprocess.run(cmd, capture_output=True, timeout=timeout + 3)
+            if r.returncode == 0 and r.stdout:
+                try:
+                    return r.stdout.decode("utf-8")
+                except UnicodeDecodeError:
+                    return r.stdout.decode("gbk", errors="replace")
+            last = f"rc={r.returncode}/空响应"
+        except subprocess.TimeoutExpired:
+            last = "超时"
+        if attempt < retries:
+            time.sleep(0.4 * (attempt + 1))          # 0.4s, 0.8s 退避
+    raise ConnectionError(f"请求失败（{retries + 1} 次尝试，{last}）: {url}")
 
 
 # --------------------------------------------------------------------------
