@@ -66,7 +66,7 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
 <div class="wrap">
 <header class="top">
   <h1>五面能力盘点 × 投资流派适配 × 建设规划</h1>
-  <div class="sub">AI Berkshire 工具箱系统性盘点 · 2026-07-13 · 消息面 / 技术面 / 基本面 / 资金面 / 情绪面 · 27 工具 · 35 skill · 154 测试</div>
+  <div class="sub">AI Berkshire 工具箱系统性盘点 · 2026-07-13 · 消息面 / 技术面 / 基本面 / 资金面 / 情绪面 · 30 工具 · 38 skill · 169 测试</div>
 </header>
 <nav><a href="#radar">① 五面雷达</a><a href="#faces">② 逐面工具箱</a><a href="#schools">③ 流派适配矩阵</a><a href="#plan">④ 建设规划</a><a href="#next">⑤ 优先补建</a></nav>
 
@@ -74,7 +74,9 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
   <b>✅ 本轮已补建第一优先三工具：</b><code>news_engine.py</code>(消息面：公告结构化+事件分类+催化剂时间线) · <code>sentiment.py</code>(情绪面：个股/市场恐惧贪婪+VIX+舆情情感) · <code>factor_model.py</code>(横切：PCA 伪分散检测+因子暴露)。消息面 L1.5→<b>L2.5</b>、情绪面 L1→<b>L2.5</b>，两块最弱短板已补上第一层。
 </div>
 <div class="verdict" style="margin-top:8px">
-  <b>一句话结论：</b>五面里<b>基本面(L3.5)、技术面(L3) 已扎实</b>，<b>资金面/消息面/情绪面(均 L2.5) 已建成第一层</b>。本项目"价值投资"定位下基本面为王；本轮补齐消息面/情绪面结构化工具 + 横切的多因子风险模型后，对<b>成长/事件驱动/量化/宏观</b>等流派的适配度显著提升（仍需持股跟踪、一致预期、统一回测等第二优先补深度）。
+  <b>一句话结论：</b>五面里<b>基本面(L3.5→↑)、技术面(L3) 已扎实</b>，<b>资金面已补深度(L3)</b>，消息面/情绪面(L2.5) 已建成第一层。本项目"价值投资"定位下基本面为王；<b>第一优先(消息/情绪/因子模型)+ 第二优先(持股跟踪/一致预期/统一回测)均已落地</b>，对成长/事件驱动/量化/宏观等流派适配度显著提升。</div>
+<div class="verdict" style="margin-top:8px;background:linear-gradient(90deg,#dcfce7,#dbeafe)">
+  <b>✅ 第二优先三工具本轮补齐：</b><code>holdings_tracker.py</code>(资金面：龙虎榜+股东户数一手披露) · <code>consensus.py</code>(基本面：A股一致预期+前瞻EPS/PE/PEG) · <code>backtest.py</code>(横切：点时+含成本统一回测，验证任何信号的历史 edge)。资金面 L2.5→<b>L3</b>、基本面纳入一致预期、技术/因子信号now可回测验证。
 </div>
 
 <h2 id="radar">① 五面覆盖雷达（当前 vs 目标）</h2>
@@ -82,9 +84,9 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
   <div class="grid2">
     <svg id="radar" viewBox="0 0 400 380" role="img" aria-label="五面覆盖雷达图"></svg>
     <div>
-      <div class="facebar"><div>基本面</div><div class="trk"><div class="fill" style="width:75%;background:var(--c-fund)"></div></div><div class="lv">L3.5 · 75%</div></div>
-      <div class="facebar"><div>技术面</div><div class="trk"><div class="fill" style="width:70%;background:var(--c-tech)"></div></div><div class="lv">L3 · 70%</div></div>
-      <div class="facebar"><div>资金面</div><div class="trk"><div class="fill" style="width:45%;background:var(--c-flow)"></div></div><div class="lv">L2.5 · 45%</div></div>
+      <div class="facebar"><div>基本面</div><div class="trk"><div class="fill" style="width:80%;background:var(--c-fund)"></div></div><div class="lv">L3.5 · 80% ↑</div></div>
+      <div class="facebar"><div>技术面</div><div class="trk"><div class="fill" style="width:78%;background:var(--c-tech)"></div></div><div class="lv">L3 · 78% ↑</div></div>
+      <div class="facebar"><div>资金面</div><div class="trk"><div class="fill" style="width:60%;background:var(--c-flow)"></div></div><div class="lv">L3 · 60% ↑</div></div>
       <div class="facebar"><div>消息面</div><div class="trk"><div class="fill" style="width:50%;background:var(--c-news)"></div></div><div class="lv">L2.5 · 50% ↑</div></div>
       <div class="facebar"><div>情绪面</div><div class="trk"><div class="fill" style="width:45%;background:var(--c-senti)"></div></div><div class="lv">L2.5 · 45% ↑</div></div>
       <div class="legend">覆盖率＝该面"完整工具箱应有能力"的已建占比；L＝成熟度(L0 无 → L3 结构化+测试 → L5 可审计)。虚线五边形＝目标(≈90%)。</div>
@@ -95,25 +97,25 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
 <h2 id="faces">② 逐面工具箱盘点（已建 ✓ / 缺失 ✗）</h2>
 <div class="faces">
   <div class="fc" style="border-top-color:var(--c-fund)">
-    <h3>基本面 <span class="badge">L3.5 · 最强</span></h3>
+    <h3>基本面 <span class="badge">L3.5 · 最强 ↑</span></h3>
     <div class="lab">已建 ✓</div>
-    <span class="chip has">financial_rigor 精确计算</span><span class="chip has">dcf DCF/反向/SOTP</span><span class="chip has">forensic 会计验伤</span><span class="chip has">datalayer/ashare 财务</span><span class="chip has">morningstar 公允值</span><span class="chip has">investment-research/team</span><span class="chip has">earnings 财报</span><span class="chip has">management 管理层</span><span class="chip has">quality-screen</span><span class="chip has">industry-research</span><span class="chip has">master-lens 13大师</span><span class="chip has">checklist</span>
+    <span class="chip has">🆕 consensus 一致预期(评级+前瞻EPS/PE/PEG)</span><span class="chip has">financial_rigor 精确计算</span><span class="chip has">dcf DCF/反向/SOTP</span><span class="chip has">forensic 会计验伤</span><span class="chip has">datalayer/ashare 财务</span><span class="chip has">morningstar 公允值</span><span class="chip has">investment-research/team</span><span class="chip has">earnings 财报</span><span class="chip has">management</span><span class="chip has">quality-screen</span><span class="chip has">industry-research</span><span class="chip has">master-lens 13大师</span>
     <div class="lab">缺失 ✗</div>
-    <span class="chip miss">三表联动预测模型</span><span class="chip miss">可比公司 comps</span><span class="chip miss">一致预期/盈利修正</span><span class="chip miss">行业专用估值</span><span class="chip miss">产业链图谱</span>
+    <span class="chip miss">三表联动预测模型</span><span class="chip miss">可比公司 comps</span><span class="chip miss">盈利修正动量序列</span><span class="chip miss">行业专用估值</span><span class="chip miss">产业链图谱</span><span class="chip miss">美股一致预期(需key)</span>
   </div>
   <div class="fc" style="border-top-color:var(--c-tech)">
-    <h3>技术面 <span class="badge">L3 · 较强</span></h3>
+    <h3>技术面 <span class="badge">L3 · 较强 ↑</span></h3>
     <div class="lab">已建 ✓</div>
-    <span class="chip has">technicals：MA/EMA</span><span class="chip has">MACD/RSI</span><span class="chip has">布林/ATR</span><span class="chip has">动量 ROC</span><span class="chip has">相对强弱 RS</span><span class="chip has">均线排列/金叉死叉</span><span class="chip has">支撑阻力</span><span class="chip has">三轴姿态</span><span class="chip has">momentum_backtest 原型</span>
+    <span class="chip has">technicals：MA/MACD/RSI</span><span class="chip has">布林/ATR</span><span class="chip has">动量 ROC</span><span class="chip has">相对强弱 RS</span><span class="chip has">均线排列/金叉死叉</span><span class="chip has">支撑阻力</span><span class="chip has">三轴姿态</span><span class="chip has">🆕 backtest 信号有效性统一回测(点时+含成本)</span>
     <div class="lab">缺失 ✗</div>
-    <span class="chip miss">形态识别(头肩/三角/旗形)</span><span class="chip miss">多周期共振</span><span class="chip miss">信号有效性统一回测</span><span class="chip miss">量能形态库</span>
+    <span class="chip miss">形态识别(头肩/三角/旗形)</span><span class="chip miss">多周期共振</span><span class="chip miss">量能形态库</span><span class="chip miss">退市样本库(消除幸存者偏差)</span>
   </div>
   <div class="fc" style="border-top-color:var(--c-flow)">
-    <h3>资金面 <span class="badge">L2.5 · 半成</span></h3>
+    <h3>资金面 <span class="badge">L3 · 已补深度 ↑</span></h3>
     <div class="lab">已建 ✓</div>
-    <span class="chip has">moneyflow：MFI/OBV/CMF/A-D</span><span class="chip has">量价背离</span><span class="chip has">A/H 主力资金流</span><span class="chip has">超大/大/中/小单</span><span class="chip has">吸筹/派发结构</span>
+    <span class="chip has">moneyflow：MFI/OBV/CMF/A-D</span><span class="chip has">量价背离</span><span class="chip has">A/H 主力资金流(超大/大/中/小单)</span><span class="chip has">吸筹/派发结构</span><span class="chip has">🆕 holdings_tracker 龙虎榜</span><span class="chip has">🆕 股东户数(筹码集中度)</span>
     <div class="lab">缺失 ✗</div>
-    <span class="chip miss">持股/内部人(13F/龙虎榜)</span><span class="chip miss">大股东/高管增减持</span><span class="chip miss">融资融券余额</span><span class="chip miss">ETF/基金流向</span><span class="chip miss">大宗交易</span><span class="chip miss">北向(已停披露)</span>
+    <span class="chip miss">大股东/高管增减持</span><span class="chip miss">融资融券余额</span><span class="chip miss">ETF/基金流向</span><span class="chip miss">大宗交易</span><span class="chip miss">美股13F/Form4(需SEC)</span><span class="chip miss">北向(已停披露)</span>
   </div>
   <div class="fc" style="border-top-color:var(--c-news)">
     <h3>消息面 <span class="badge">L2.5 · 已补 ↑</span></h3>
@@ -167,22 +169,25 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
       <li><b>技术面</b> — L3（technicals 全套指标 + 相对强弱 + 姿态）</li>
       <li><b>决策闭环</b>：决策日志/仓位/卖出纪律 — L3</li>
       <li><b>会计验伤</b> — L3（M-Score/Altman-Z/应计/现金转化）</li>
-      <li><b>资金面</b>：主力资金流 + 价量代理 — L2.5</li>
+      <li><b>资金面</b>：主力资金流 + 价量代理 + 🆕龙虎榜/股东户数 — L3</li>
+      <li><b>🆕 消息面</b>：公告结构化 + 事件分类 + 催化剂时间线 — L2.5</li>
+      <li><b>🆕 情绪面</b>：个股/市场恐惧贪婪 + VIX + 舆情情感 — L2.5</li>
+      <li><b>🆕 因子/回测</b>：多因子PCA伪分散检测 + 点时含成本统一回测 — L3</li>
+      <li><b>🆕 一致预期</b>：A股机构评级 + 前瞻EPS/PE/PEG — L2.5</li>
       <li><b>数据层</b>：A/H/美统一行情+前复权+OHLCV+跨源校验 — L3</li>
     </ul>
     <div class="legend">共性：满足"可运行+可复现+带测试"(≈L3)；普遍缺"自动调度/监控/可审计"(→L4)。</div>
   </div>
   <div class="card" style="border-top:4px solid var(--red)">
-    <h3 style="margin-top:0;color:var(--red)">✗ 待建设（按优先级）</h3>
+    <h3 style="margin-top:0;color:var(--red)">✗ 待建设（第一/二优先已清空，剩第三优先与深度）</h3>
     <ul>
-      <li><b class="pt">消息面引擎</b>（公告/新闻/事件解析 + 催化剂日历）<span class="star">★★★★★</span></li>
-      <li><b class="pt">情绪面工具</b>（市场情绪指标 + 舆情情感 + 拥挤度）<span class="star">★★★★★</span></li>
-      <li><b class="pt">多因子风险模型</b>（横切·解锁量化）<span class="star">★★★★★</span></li>
-      <li><b class="pt">持股/内部人跟踪</b>（13F/龙虎榜/增减持）<span class="star">★★★★</span></li>
-      <li><b class="pt">一致预期跟踪</b>（补基本面/成长）<span class="star">★★★★</span></li>
-      <li><b class="pt">统一回测框架</b>（点时+成本+退市，验证所有信号）<span class="star">★★★★</span></li>
-      <li><b>三表模型 / comps / 行业估值 / 宏观 regime</b> <span class="star">★★★</span></li>
+      <li><b class="pt">三表联动预测模型</b>（喂 DCF，假设自洽）<span class="star">★★★</span></li>
+      <li><b class="pt">可比公司 comps</b>（相对估值交叉验证）<span class="star">★★★</span></li>
+      <li><b class="pt">行业专用估值</b>（银行/保险/地产/SaaS）<span class="star">★★★</span></li>
+      <li><b class="pt">宏观 regime 引擎</b>（解锁宏观流派）<span class="star">★★★</span></li>
+      <li><b>盈利修正动量序列 · 美股一致预期/13F · 退市样本库 · 市场宽度/期权情绪 · 产业链图谱 · ESG</b> <span class="star">★★</span></li>
     </ul>
+    <div class="legend">深度补强项；多为"接入外部带 key 数据源"或"扩数据面"，非核心逻辑缺失。</div>
   </div>
 </div>
 
@@ -195,11 +200,11 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
       <li><b>✅ 多因子风险模型</b> <code>tools/factor_model.py</code>：相关矩阵 PCA(Jacobi) → 有效独立因子数 + PC1 主导度 + 伪分散判定 + beta/R² + 动量/波动倾斜。已端到端验证 v6 组合(名义10只→有效5.55、PC1 29.6%)。</li>
     </ul>
   </div>
-  <div class="pitem next"><span class="pt">第二优先（补深度）</span> <span class="star">★★★★</span>
+  <div class="pitem" style="border-left-color:var(--green)"><span class="pt" style="color:var(--green)">✅ 第二优先 —— 本轮已完成</span> <span class="star">★★★★</span>
     <ul>
-      <li><b>持股/内部人跟踪</b>（13F/龙虎榜/大股东/高管）——把资金面从"逐笔估算"升级到"真实席位"。</li>
-      <li><b>一致预期与盈利修正</b>——价格常由预期修正驱动，补基本面关键缺口。</li>
-      <li><b>统一回测框架</b>（点时/幸存者/成本/退市）——所有技术/资金/因子/事件信号用同一引擎验证才可比。</li>
+      <li><b>✅ 持股/内部人跟踪</b> <code>tools/holdings_tracker.py</code>：A股龙虎榜(机构席位/成交占比/当日涨跌) + 股东户数(筹码集中度)。把资金面从"逐笔估算"补上"一手披露"。（美股13F/Form4 需 SEC，后续）</li>
+      <li><b>✅ 一致预期跟踪</b> <code>tools/consensus.py</code>：A股机构评级分布 + 前瞻 EPS 增速 + 前瞻 PE/PEG + 反向解读。（盈利修正动量序列/美股源 后续）</li>
+      <li><b>✅ 统一回测框架</b> <code>tools/backtest.py</code>：点时(不看未来)+含成本，buyhold/trend/momentum 多策略，对基准超额。已验证：科技动量5y超额 +28pp、A股趋势择时减亏 +4.5pp（均带幸存者偏差警示）。</li>
     </ul>
   </div>
   <div class="pitem later"><span class="pt">第三优先（深化与按需）</span> <span class="star">★★★</span>
@@ -220,9 +225,9 @@ ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
 <script>
 // ---- 五面雷达 ----
 const faces=[
- {n:"基本面",v:75,c:"var(--c-fund)"},
- {n:"技术面",v:70,c:"var(--c-tech)"},
- {n:"资金面",v:45,c:"var(--c-flow)"},
+ {n:"基本面",v:80,c:"var(--c-fund)"},
+ {n:"技术面",v:78,c:"var(--c-tech)"},
+ {n:"资金面",v:60,c:"var(--c-flow)"},
  {n:"情绪面",v:45,c:"var(--c-senti)"},
  {n:"消息面",v:50,c:"var(--c-news)"},
 ];
