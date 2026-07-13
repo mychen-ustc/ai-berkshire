@@ -26,6 +26,7 @@ import technicals as ta  # noqa: E402
 import sentiment as st  # noqa: E402
 import macro_regime as mac  # noqa: E402
 import news_engine as ne  # noqa: E402
+import radar as rad  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MKT_CN = {"A": "A股", "US": "美股", "HK": "港股"}
@@ -257,15 +258,24 @@ def run(args):
     timeline = cal.build_timeline(ev, horizon, _today())
     imminent = [e for e in timeline if e.get("imminent")]
 
+    # 市场机会雷达（持仓/watchlist 之外的新线索；仅周/季，日频跳过以省时）
+    radar_out = None
+    if cadence != "daily":
+        try:
+            ex = list(weights) + [e["symbol"] for e in entries]
+            radar_out = {"candidates": rad.candidates(ex, 10), "sectors": rad.hot_sectors()}
+        except Exception:  # noqa: BLE001
+            radar_out = None
+
     actions = build_actions([h for h in holdings if not h.get("error")], watch_extras, due, imminent, market["verdict"])
-    updates = synthesize_updates(holdings, watch_extras, port, market)
+    updates = synthesize_updates(holdings, watch_extras, port, market, radar_out)
     return {"cadence": cadence, "date": _today(), "source": src, "market": market,
             "port": port, "holdings": holdings, "watch_extras": watch_extras,
-            "due": due, "timeline": timeline, "imminent": imminent,
+            "due": due, "timeline": timeline, "imminent": imminent, "radar": radar_out,
             "actions": actions, "updates": updates, "thesis": thesis, "us_earn": us_earn}
 
 
-def synthesize_updates(holdings, watch_extras, port, market):
+def synthesize_updates(holdings, watch_extras, port, market, radar_out=None):
     """组合 & watchlist 更新建议（自动汇总，须人工拍板）。"""
     ups = []
     if market["verdict"].get("caution"):
@@ -283,6 +293,11 @@ def synthesize_updates(holdings, watch_extras, port, market):
     f = port.get("factor") or {}
     if f.get("pc1_pct", 0) >= 40:
         ups.append(f"集中度：PC1 {f['pc1_pct']:.0f}% 偏高，避免再加与核心高相关的持仓")
+    if radar_out and radar_out.get("candidates", {}).get("candidates"):
+        insts = [c for c in radar_out["candidates"]["candidates"] if c["strength"] >= 3][:4]
+        if insts:
+            names = "、".join(f"{c['name']}({c['code']})" for c in insts)
+            ups.append(f"新标的线索：机构龙虎榜买入 {names} → 对感兴趣者跑 /investment-research 基本面研究再定是否纳入观察（非买入信号）")
     if not ups:
         ups.append("维持当前组合与观察名单，按红线/催化剂被动响应，不主动追高")
     return ups
@@ -294,10 +309,26 @@ def synthesize_updates(holdings, watch_extras, port, market):
 def _faces_lines(h, us_earn, thesis):
     L = []
     L.append(f"    基本面 {h.get('fundamental', '—')}")
-    rs = f" (RS{h['rs_pct']:+.0f}%)" if h.get("rs_pct") is not None else ""
-    L.append(f"    技术面 {h.get('tech', '—')}{rs}")
-    flow = h.get("main_flow") or h.get("flow", "—")
-    L.append(f"    资金面 {flow}")
+    # 技术面：姿态 + RS + 距52周高 + RSI + 量比
+    det = []
+    if h.get("rs_pct") is not None:
+        det.append(f"RS{h['rs_pct']:+.0f}%")
+    if h.get("from_high") is not None:
+        det.append(f"距高{h['from_high']:+.0f}%")
+    if h.get("rsi14") is not None:
+        det.append(f"RSI{h['rsi14']:.0f}")
+    if h.get("vol_ratio") is not None:
+        det.append(f"量比{h['vol_ratio']:.1f}")
+    L.append(f"    技术面 {h.get('tech', '—')}" + (f"（{' · '.join(det)}）" if det else ""))
+    # 资金面：A/H 主力近5/20日 + 价量代理/背离；US CMF
+    if h.get("main_flow"):
+        extra = ""
+        if h.get("main_5d_yi") is not None:
+            extra = f"（近5日 {h['main_5d_yi']:+.1f}亿 / 20日 {h.get('main_20d_yi', 0):+.1f}亿）"
+        L.append(f"    资金面 {h['main_flow']}{extra}")
+    else:
+        cmf = f"（CMF {h['cmf']:+.2f}）" if h.get("cmf") is not None else ""
+        L.append(f"    资金面 {h.get('flow', '—')}{cmf} · {h.get('divergence', '')}")
     s = h.get("senti") or {}
     L.append(f"    情绪面 {s.get('label', '—')}({s.get('score', '—')})")
     # 消息面
@@ -401,8 +432,24 @@ def render_text(r):
     for ev in r["imminent"]:
         L.append(f"  🔔 {ev['date']} {ev['symbol']} {ev.get('detail', '')}")
 
+    # ⑦ 市场机会雷达（持仓/watchlist 之外）
+    rd = r.get("radar")
+    if rd:
+        L.append("\n" + "─" * 72 + "\n【六、市场机会雷达（持仓/watchlist 之外的新线索）】")
+        hs = rd.get("sectors", {}).get("sectors", [])
+        if hs:
+            L.append("  热门板块(涨停聚合): " + " · ".join(f"{s['sector']}({s['limit_up_count']})" for s in hs))
+        cands = rd.get("candidates", {}).get("candidates", [])
+        if cands:
+            L.append("  新标的候选线索（须基本面研究后方可纳入观察，非买入信号）:")
+            for c in cands[:8]:
+                ch = f"{c['change']:+.1f}%" if isinstance(c["change"], (int, float)) else "—"
+                L.append(f"    {c['signal']} {c['name']}({c['code']}) {ch} · {c['detail']}")
+        else:
+            L.append("  （无新线索）")
+
     # ⑥ 更新建议
-    L.append("\n" + "─" * 72 + "\n【六、组合 & Watchlist 更新建议（须人工确认）】")
+    L.append("\n" + "─" * 72 + "\n【七、组合 & Watchlist 更新建议（须人工确认）】")
     for u in r["updates"]:
         L.append(f"  • {u}")
     if r["cadence"] == "quarterly":
@@ -459,6 +506,14 @@ def render_html(r):
         news_items += f'<div class="ni">🌐 [{_h.escape(x["source"])}] {_h.escape(x["headline"][:60])}</div>'
     due = "".join(f"<li>📋 {_h.escape(e['symbol'])} {_h.escape(e.get('name') or '')} · {e.get('review_date')}</li>" for e in r["due"]) or "<li>无</li>"
     imm = "".join(f"<li>🔔 {ev['date']} {_h.escape(ev['symbol'])} {_h.escape(ev.get('detail',''))}</li>" for ev in r["imminent"]) or "<li>无</li>"
+    rd = r.get("radar") or {}
+    hs = (rd.get("sectors") or {}).get("sectors", [])
+    cands = (rd.get("candidates") or {}).get("candidates", [])
+    sect_html = " · ".join(f"{_h.escape(s['sector'])}({s['limit_up_count']})" for s in hs) or "—"
+    cand_html = "".join(
+        f'<li>{_h.escape(c["signal"])} <b>{_h.escape(c["name"])}</b>({c["code"]}) '
+        f'{("%+.1f%%" % c["change"]) if isinstance(c["change"],(int,float)) else "—"} · {_h.escape(c["detail"])}</li>'
+        for c in cands[:8]) or "<li>无新线索</li>"
     return f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>定期复盘 {r['date']}</title><style>
 :root{{--bg:#f6f8fb;--card:#fff;--ink:#152030;--muted:#5b6472;--line:#e4e8ef;--head:#0b2942;--accent:#0e7490;--red:#dc2626;--amber:#d98a00;--green:#16a34a;}}
@@ -492,7 +547,9 @@ footer{{color:var(--muted);font-size:.78rem;margin-top:20px;border-top:1px solid
 <h2>三、逐持仓五面诊断</h2>{holds}
 <h2>四、Watchlist 诊断（非持仓/观察）</h2>{watch or '<div class="card">无</div>'}
 <h2>五、到期复审 / 临近催化剂</h2><div class="card"><ul>{due}{imm}</ul></div>
-<h2>六、组合 & Watchlist 更新建议（须人工确认）</h2><div class="upd"><ul>{ups}</ul></div>
+<h2>六、市场机会雷达（持仓/watchlist 之外的新线索）</h2><div class="card"><div class="mrow"><b>热门板块</b>{sect_html}</div>
+<div style="margin-top:6px;font-size:.84rem;color:var(--muted)">新标的候选线索（须基本面研究后方可纳入观察，<b>非买入信号</b>）：</div><ul>{cand_html}</ul></div>
+<h2>七、组合 & Watchlist 更新建议（须人工确认）</h2><div class="upd"><ul>{ups}</ul></div>
 <footer>三层五面定期复盘(review.py)一键生成 · 复盘为信号聚合非投资建议 · 红线/建议须人工拍板 · 五面皆叠加层 · 含真实持仓仅存本地。</footer>
 </div></body></html>"""
 

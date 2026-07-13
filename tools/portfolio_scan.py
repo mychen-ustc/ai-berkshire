@@ -73,9 +73,14 @@ def scan_holding(sym, bench_cache, deep=False):
     r["tech"] = t["posture"]["one_line"]
     rs = t.get("relative_strength")
     r["rs_pct"] = round(rs["outperform_since_start_pct"], 1) if rs else None
+    r["from_high"] = round(t["range52w"]["from_high_pct"], 1) if t.get("range52w") else None  # 距52周高%
+    r["rsi14"] = round(t["rsi14"], 0) if t.get("rsi14") is not None else None
+    v = t.get("volume") or {}
+    r["vol_ratio"] = round(v["vol_ratio_5v60"], 2) if v.get("vol_ratio_5v60") is not None else None  # 量比
     u = mf.compute_universal(bars)
     r["flow"] = u["posture"]
     r["divergence"] = u["divergence"]
+    r["cmf"] = u.get("cmf20")
     comp, _ = st._components_from_bars(bars)
     sc = st._composite(comp)
     r["senti"] = {"score": round(sc, 1) if sc is not None else None,
@@ -85,6 +90,8 @@ def scan_holding(sym, bench_cache, deep=False):
             ff = dl.fetch_fund_flow(sym, days=60)
             m = mf.analyze_main_flow(ff["rows"])
             r["main_flow"] = m["posture"]
+            r["main_5d_yi"] = round(m["main_5d"] / 1e8, 2)
+            r["main_20d_yi"] = round(sum(x["main"] for x in ff["rows"][-20:]) / 1e8, 2)
         except Exception:  # noqa: BLE001
             pass
     if deep and env["market"] == "A":
