@@ -202,6 +202,8 @@ AI Berkshire 确保：**同样的输入 → 结构一致、深度一致的输出
 | [`/investment-checklist`](skills/investment-checklist.md) | 巴菲特买入前 Checklist | 六关快速筛选，10分钟决定是否值得深入 |
 | [`/sector-rotation`](skills/sector-rotation.md) | 板块轮动 | 动量与相对强弱排名，判断顺周期↔防御的轮动位置 |
 | [`/special-situations`](skills/special-situations.md) | 事件驱动/特殊机会 | 并购套利/分拆/困境反转/私有化/指数调整/回购——与大盘低相关的 alpha |
+| [`/multibagger-hunter`](skills/multibagger-hunter.md) | 十倍股猎手 | 从结构性趋势/热点出发，用十倍股 DNA 挖掘高潜力赢家（venture 式小仓杠铃） |
+| [`/forensic-accounting`](skills/forensic-accounting.md) | 会计取证防雷 | Beneish M-Score/Altman Z/应计比率/现金转化——给财报验伤，避开暴雷 |
 
 ### 📈 持仓管理类
 
@@ -215,6 +217,7 @@ AI Berkshire 确保：**同样的输入 → 结构一致、深度一致的输出
 | [`/performance-attribution`](skills/performance-attribution.md) | 业绩归因 | 收益从哪来：贡献分解 + Brinson 配置/选股效应，区分运气与能力 |
 | [`/watch`](skills/watch.md) | 持仓监控告警 | 从账本+数据层主动巡检：止损/止盈/价位/异动触发 + 催化剂日历（可 /loop 定时） |
 | [`/sell-discipline`](skills/sell-discipline.md) | 卖出纪律 | 何时该走按规则不按情绪：论点证伪/止损/超内在价值/机会成本/换仓 |
+| [`/portfolio-optimizer`](skills/portfolio-optimizer.md) | 组合优化器 | 约束下纪律化权重：逆波动/风险平价 + IPS 单一上限硬约束 |
 
 ### 🧠 思维工具类
 
@@ -222,6 +225,7 @@ AI Berkshire 确保：**同样的输入 → 结构一致、深度一致的输出
 |-------|------|---------|
 | [`/dyp-ask`](skills/dyp-ask.md) | 段永平问答 | 以段永平的方式思考任何问题——商业、投资、人生 |
 | [`/master-lens`](skills/master-lens.md) | 大师镜片（13位） | 用一位/多位投资大师视角审视一只股票，暴露"大师异见"——在四大师之上引入马克斯/达利欧/费雪/格雷厄姆/塔勒布/博格等唱反调的视角 |
+| [`/scuttlebutt`](skills/scuttlebutt.md) | 闲聊法一手调研 | 费雪 scuttlebutt：生成客户/供应商/对手/离职员工访谈清单 + 15 要点，把二手财报升级为信息优势 |
 | [`/financial-data`](skills/financial-data.md) | 财务数据获取与交叉验证规范 | 确保关键数据来自2个独立来源，误差>1%告警 |
 | [`/wechat-article`](skills/wechat-article.md) | 微信公众号文章 | 作者、编辑、读者三Agent协作，产出可发布文章 |
 
