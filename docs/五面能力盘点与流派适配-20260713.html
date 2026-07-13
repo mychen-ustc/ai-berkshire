@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>五面能力盘点与投资流派适配 · 2026-07-13</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--ink:#152030;--muted:#5b6472;--line:#e4e8ef;--head:#0b2942;
+ --accent:#0e7490;--green:#16a34a;--red:#dc2626;--amber:#d98a00;--blue:#2563eb;--purple:#7c3aed;--gray-bg:#eef2f6;
+ --c-fund:#2563eb;--c-tech:#0e7490;--c-flow:#7c3aed;--c-news:#d98a00;--c-senti:#dc2626;}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#161b22;--ink:#e6edf3;--muted:#9aa5b1;--line:#2a3139;--head:#cfe8f5;
+ --accent:#22b8cf;--green:#34d399;--red:#f87171;--amber:#f5c542;--blue:#60a5fa;--purple:#a78bfa;--gray-bg:#1b222b;
+ --c-fund:#60a5fa;--c-tech:#22b8cf;--c-flow:#a78bfa;--c-news:#f5c542;--c-senti:#f87171;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;
+ font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;}
+.wrap{max-width:1040px;margin:0 auto;padding:26px 18px 72px;}
+header.top{border-bottom:3px solid var(--accent);padding-bottom:14px;}
+h1{font-size:1.5rem;color:var(--head);margin:.1em 0 .3em;}
+.sub{color:var(--muted);font-size:.85rem;}
+nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 0;margin:10px 0 4px;z-index:9;font-size:.82rem;}
+nav a{color:var(--accent);text-decoration:none;margin-right:14px;white-space:nowrap;}
+h2{font-size:1.2rem;color:var(--head);margin:1.7em 0 .5em;padding-left:.5em;border-left:5px solid var(--accent);scroll-margin-top:46px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0;}
+.verdict{background:linear-gradient(90deg,#dcfce7,#fef3c7);border-radius:12px;padding:14px 18px;color:#152030;}
+@media(prefers-color-scheme:dark){.verdict{background:linear-gradient(90deg,#0f2e1e,#33280a);color:#e6edf3;}}
+.grid2{display:grid;grid-template-columns:400px 1fr;gap:16px;align-items:center;}
+@media(max-width:820px){.grid2{grid-template-columns:1fr;}}
+.facebar{display:grid;grid-template-columns:66px 1fr 92px;gap:8px;align-items:center;font-size:.85rem;margin:7px 0;}
+.trk{background:var(--gray-bg);border-radius:5px;height:18px;overflow:hidden;}
+.fill{height:100%;border-radius:5px;}
+.lv{font-size:.75rem;color:var(--muted);text-align:right;}
+/* per-face cards */
+.faces{display:grid;grid-template-columns:1fr 1fr;gap:12px;}@media(max-width:760px){.faces{grid-template-columns:1fr;}}
+.fc{border:1px solid var(--line);border-radius:12px;padding:13px 15px;border-top:4px solid;}
+.fc h3{margin:.1em 0 .4em;font-size:1.02rem;color:var(--head);display:flex;justify-content:space-between;align-items:baseline;}
+.badge{font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:99px;background:var(--gray-bg);color:var(--muted);}
+.chip{display:inline-block;font-size:.72rem;padding:2px 7px;border-radius:6px;margin:2px 3px 2px 0;white-space:nowrap;}
+.has{background:#dcfce7;color:#166534;}.miss{background:#fee2e2;color:#991b1b;}
+@media(prefers-color-scheme:dark){.has{background:#0f2e1e;color:#6ee7b7;}.miss{background:#3a1414;color:#fca5a5;}}
+.lab{font-size:.74rem;color:var(--muted);margin:6px 0 2px;font-weight:700;}
+/* heatmap */
+.scroll{overflow-x:auto;}
+table.heat{border-collapse:collapse;width:100%;font-size:.82rem;min-width:640px;}
+table.heat th,table.heat td{padding:7px 6px;text-align:center;border:1px solid var(--line);}
+table.heat th{background:var(--head);color:#fff;}
+table.heat td.name{text-align:left;font-weight:700;color:var(--head);white-space:nowrap;}
+.cell{display:inline-block;width:100%;border-radius:4px;padding:3px 0;font-weight:700;}
+.d3{background:#1d4ed8;color:#fff;}.d2{background:#60a5fa;color:#08214a;}.d1{background:#dbeafe;color:#1e3a8a;}.d0{color:var(--muted);}
+@media(prefers-color-scheme:dark){.d3{background:#3b82f6;}.d2{background:#1e40af;color:#dbeafe;}.d1{background:#1e293b;color:#93c5fd;}}
+.fit{font-weight:800;border-radius:6px;padding:2px 8px;font-size:.78rem;}
+.fit-s{background:#dcfce7;color:#166534;}.fit-m{background:#fef3c7;color:#854d0e;}.fit-w{background:#fee2e2;color:#991b1b;}
+@media(prefers-color-scheme:dark){.fit-s{background:#0f2e1e;color:#6ee7b7;}.fit-m{background:#33280a;color:#f5c542;}.fit-w{background:#3a1414;color:#fca5a5;}}
+/* build plan */
+.pitem{border-left:3px solid var(--line);padding:5px 0 5px 12px;margin:9px 0;font-size:.88rem;}
+.pitem.now{border-left-color:var(--red);}.pitem.next{border-left-color:var(--amber);}.pitem.later{border-left-color:var(--blue);}
+.pt{font-weight:700;color:var(--head);}
+.star{color:var(--amber);letter-spacing:-1px;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}@media(max-width:760px){.two{grid-template-columns:1fr;}}
+.legend{font-size:.76rem;color:var(--muted);margin-top:8px;}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:3px;}
+footer{color:var(--muted);font-size:.78rem;margin-top:24px;border-top:1px solid var(--line);padding-top:12px;}
+ul{margin:.3em 0;padding-left:1.2em;}li{margin:.2em 0;font-size:.87rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>五面能力盘点 × 投资流派适配 × 建设规划</h1>
+  <div class="sub">AI Berkshire 工具箱系统性盘点 · 2026-07-13 · 消息面 / 技术面 / 基本面 / 资金面 / 情绪面 · 24 工具 · 32 skill · 130 测试</div>
+</header>
+<nav><a href="#radar">① 五面雷达</a><a href="#faces">② 逐面工具箱</a><a href="#schools">③ 流派适配矩阵</a><a href="#plan">④ 建设规划</a><a href="#next">⑤ 优先补建</a></nav>
+
+<div class="verdict" style="margin-top:10px">
+  <b>一句话结论：</b>五面里<b>基本面(L3.5)、技术面(L3) 已扎实</b>，<b>资金面(L2.5) 建了一半</b>，而<b>消息面(L1.5)、情绪面(L1) 是明显短板</b>——目前主要靠 skill 手动 + 代理指标，缺结构化工具。这与本项目"价值投资"定位一致（基本面为王），但要支撑<b>成长/事件驱动/量化/宏观</b>等流派，必须补齐消息面与情绪面，并加一条横切的<b>多因子风险模型</b>。
+</div>
+
+<h2 id="radar">① 五面覆盖雷达（当前 vs 目标）</h2>
+<div class="card">
+  <div class="grid2">
+    <svg id="radar" viewBox="0 0 400 380" role="img" aria-label="五面覆盖雷达图"></svg>
+    <div>
+      <div class="facebar"><div>基本面</div><div class="trk"><div class="fill" style="width:75%;background:var(--c-fund)"></div></div><div class="lv">L3.5 · 75%</div></div>
+      <div class="facebar"><div>技术面</div><div class="trk"><div class="fill" style="width:70%;background:var(--c-tech)"></div></div><div class="lv">L3 · 70%</div></div>
+      <div class="facebar"><div>资金面</div><div class="trk"><div class="fill" style="width:45%;background:var(--c-flow)"></div></div><div class="lv">L2.5 · 45%</div></div>
+      <div class="facebar"><div>消息面</div><div class="trk"><div class="fill" style="width:30%;background:var(--c-news)"></div></div><div class="lv">L1.5 · 30%</div></div>
+      <div class="facebar"><div>情绪面</div><div class="trk"><div class="fill" style="width:20%;background:var(--c-senti)"></div></div><div class="lv">L1 · 20%</div></div>
+      <div class="legend">覆盖率＝该面"完整工具箱应有能力"的已建占比；L＝成熟度(L0 无 → L3 结构化+测试 → L5 可审计)。虚线五边形＝目标(≈90%)。</div>
+    </div>
+  </div>
+</div>
+
+<h2 id="faces">② 逐面工具箱盘点（已建 ✓ / 缺失 ✗）</h2>
+<div class="faces">
+  <div class="fc" style="border-top-color:var(--c-fund)">
+    <h3>基本面 <span class="badge">L3.5 · 最强</span></h3>
+    <div class="lab">已建 ✓</div>
+    <span class="chip has">financial_rigor 精确计算</span><span class="chip has">dcf DCF/反向/SOTP</span><span class="chip has">forensic 会计验伤</span><span class="chip has">datalayer/ashare 财务</span><span class="chip has">morningstar 公允值</span><span class="chip has">investment-research/team</span><span class="chip has">earnings 财报</span><span class="chip has">management 管理层</span><span class="chip has">quality-screen</span><span class="chip has">industry-research</span><span class="chip has">master-lens 13大师</span><span class="chip has">checklist</span>
+    <div class="lab">缺失 ✗</div>
+    <span class="chip miss">三表联动预测模型</span><span class="chip miss">可比公司 comps</span><span class="chip miss">一致预期/盈利修正</span><span class="chip miss">行业专用估值</span><span class="chip miss">产业链图谱</span>
+  </div>
+  <div class="fc" style="border-top-color:var(--c-tech)">
+    <h3>技术面 <span class="badge">L3 · 较强</span></h3>
+    <div class="lab">已建 ✓</div>
+    <span class="chip has">technicals：MA/EMA</span><span class="chip has">MACD/RSI</span><span class="chip has">布林/ATR</span><span class="chip has">动量 ROC</span><span class="chip has">相对强弱 RS</span><span class="chip has">均线排列/金叉死叉</span><span class="chip has">支撑阻力</span><span class="chip has">三轴姿态</span><span class="chip has">momentum_backtest 原型</span>
+    <div class="lab">缺失 ✗</div>
+    <span class="chip miss">形态识别(头肩/三角/旗形)</span><span class="chip miss">多周期共振</span><span class="chip miss">信号有效性统一回测</span><span class="chip miss">量能形态库</span>
+  </div>
+  <div class="fc" style="border-top-color:var(--c-flow)">
+    <h3>资金面 <span class="badge">L2.5 · 半成</span></h3>
+    <div class="lab">已建 ✓</div>
+    <span class="chip has">moneyflow：MFI/OBV/CMF/A-D</span><span class="chip has">量价背离</span><span class="chip has">A/H 主力资金流</span><span class="chip has">超大/大/中/小单</span><span class="chip has">吸筹/派发结构</span>
+    <div class="lab">缺失 ✗</div>
+    <span class="chip miss">持股/内部人(13F/龙虎榜)</span><span class="chip miss">大股东/高管增减持</span><span class="chip miss">融资融券余额</span><span class="chip miss">ETF/基金流向</span><span class="chip miss">大宗交易</span><span class="chip miss">北向(已停披露)</span>
+  </div>
+  <div class="fc" style="border-top-color:var(--c-news)">
+    <h3>消息面 <span class="badge">L1.5 · 短板</span></h3>
+    <div class="lab">已建 ✓（多为 skill/手动）</div>
+    <span class="chip has">news-pulse skill</span><span class="chip has">thesis-drift skill</span><span class="chip has">watch 关键词告警</span><span class="chip has">report_audit 准出</span>
+    <div class="lab">缺失 ✗</div>
+    <span class="chip miss">新闻/公告结构化抓取管线</span><span class="chip miss">财报/公告事件解析</span><span class="chip miss">催化剂/事件日历</span><span class="chip miss">监管/政策监控</span><span class="chip miss">电话会/纪要解析</span>
+  </div>
+  <div class="fc" style="border-top-color:var(--c-senti);grid-column:1/-1">
+    <h3>情绪面 <span class="badge">L1 · 最弱</span></h3>
+    <div class="lab">已建 ✓（多为代理/单点）</div>
+    <span class="chip has">xueqiu_scraper 舆情/大V</span><span class="chip has">RSI 超买超卖(代理)</span><span class="chip has">散户vs主力(代理)</span>
+    <div class="lab">缺失 ✗</div>
+    <span class="chip miss">市场情绪指标(换手/涨跌家数/新高新低/涨停)</span><span class="chip miss">舆情情感分析 NLP</span><span class="chip miss">拥挤度</span><span class="chip miss">恐惧贪婪指数</span><span class="chip miss">期权 put/call / skew</span><span class="chip miss">分析师评级变动情绪</span>
+  </div>
+</div>
+
+<h2 id="schools">③ 投资流派 × 五面 需求热力矩阵</h2>
+<div class="card scroll">
+<table class="heat">
+<thead><tr><th style="text-align:left">投资流派（代表人物）</th><th>基本面</th><th>技术面</th><th>资金面</th><th>消息面</th><th>情绪面</th><th>本系统适配</th></tr></thead>
+<tbody>
+<tr><td class="name">价值投资<br><small>巴菲特·芒格·段永平·李录</small></td><td><span class="cell d3">强</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d0">—</span></td><td><span class="fit fit-s">强·核心</span></td></tr>
+<tr><td class="name">成长投资<br><small>费雪·彼得·林奇</small></td><td><span class="cell d3">强</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d2">中</span></td><td><span class="cell d2">中</span></td><td><span class="fit fit-m">中</span></td></tr>
+<tr><td class="name">深度价值/困境反转<br><small>格雷厄姆·卡拉曼</small></td><td><span class="cell d3">强</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d2">中</span></td><td><span class="cell d0">—</span></td><td><span class="fit fit-s">较强</span></td></tr>
+<tr><td class="name">量化/因子投资<br><small>AQR·文艺复兴</small></td><td><span class="cell d2">中</span></td><td><span class="cell d3">强</span></td><td><span class="cell d2">中</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d2">中</span></td><td><span class="fit fit-w">弱·缺因子/回测</span></td></tr>
+<tr><td class="name">宏观对冲<br><small>达利欧·索罗斯</small></td><td><span class="cell d1">弱</span></td><td><span class="cell d2">中</span></td><td><span class="cell d2">中</span></td><td><span class="cell d3">强</span></td><td><span class="cell d2">中</span></td><td><span class="fit fit-w">弱·缺宏观</span></td></tr>
+<tr><td class="name">事件驱动/套利<br><small>特殊机会</small></td><td><span class="cell d2">中</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d2">中</span></td><td><span class="cell d3">强</span></td><td><span class="cell d1">弱</span></td><td><span class="fit fit-m">中</span></td></tr>
+<tr><td class="name">技术/趋势交易<br><small>CTA·趋势跟踪</small></td><td><span class="cell d0">—</span></td><td><span class="cell d3">强</span></td><td><span class="cell d2">中</span></td><td><span class="cell d1">弱</span></td><td><span class="cell d2">中</span></td><td><span class="fit fit-m">中</span></td></tr>
+</tbody></table>
+<div class="legend"><span class="dot" style="background:#1d4ed8"></span>强依赖 <span class="dot" style="background:#60a5fa"></span>中依赖 <span class="dot" style="background:#dbeafe"></span>弱依赖 · "适配"＝本系统覆盖该流派所需各面的综合程度。</div>
+</div>
+<div class="card">
+  <b>矩阵读法：</b>
+  <ul>
+    <li><b>价值/深度价值</b>只重基本面 → 本系统<b>强适配</b>（这是设计初衷）。</li>
+    <li><b>成长/事件驱动</b>额外吃消息面(催化剂)与情绪面(认知差) → 当前<b>中</b>，补消息面后可升强。</li>
+    <li><b>量化因子</b>需要因子模型 + 统一回测 + 技术/资金信号 → <b>弱</b>，最大缺口是因子模型。</li>
+    <li><b>宏观对冲</b>需要 regime + 跨资产 + 消息面 → <b>弱</b>，缺宏观引擎。</li>
+    <li>结论：<b>补"消息面 + 情绪面 + 因子模型"三块，能一次性把成长/事件/量化/宏观四个流派从"弱/中"抬到"中/强"。</b></li>
+  </ul>
+</div>
+
+<h2 id="plan">④ 能力建设规划：已具备 vs 待建设</h2>
+<div class="two">
+  <div class="card" style="border-top:4px solid var(--green)">
+    <h3 style="margin-top:0;color:var(--green)">✓ 已具备（附成熟度）</h3>
+    <ul>
+      <li><b>基本面研究与估值</b> — L3.5（research/team/earnings/dcf/forensic/master-lens）</li>
+      <li><b>组合底座</b>：账本/风险/业绩/归因 — L3（ledger/portfolio_risk/performance/attribution）</li>
+      <li><b>技术面</b> — L3（technicals 全套指标 + 相对强弱 + 姿态）</li>
+      <li><b>决策闭环</b>：决策日志/仓位/卖出纪律 — L3</li>
+      <li><b>会计验伤</b> — L3（M-Score/Altman-Z/应计/现金转化）</li>
+      <li><b>资金面</b>：主力资金流 + 价量代理 — L2.5</li>
+      <li><b>数据层</b>：A/H/美统一行情+前复权+OHLCV+跨源校验 — L3</li>
+    </ul>
+    <div class="legend">共性：满足"可运行+可复现+带测试"(≈L3)；普遍缺"自动调度/监控/可审计"(→L4)。</div>
+  </div>
+  <div class="card" style="border-top:4px solid var(--red)">
+    <h3 style="margin-top:0;color:var(--red)">✗ 待建设（按优先级）</h3>
+    <ul>
+      <li><b class="pt">消息面引擎</b>（公告/新闻/事件解析 + 催化剂日历）<span class="star">★★★★★</span></li>
+      <li><b class="pt">情绪面工具</b>（市场情绪指标 + 舆情情感 + 拥挤度）<span class="star">★★★★★</span></li>
+      <li><b class="pt">多因子风险模型</b>（横切·解锁量化）<span class="star">★★★★★</span></li>
+      <li><b class="pt">持股/内部人跟踪</b>（13F/龙虎榜/增减持）<span class="star">★★★★</span></li>
+      <li><b class="pt">一致预期跟踪</b>（补基本面/成长）<span class="star">★★★★</span></li>
+      <li><b class="pt">统一回测框架</b>（点时+成本+退市，验证所有信号）<span class="star">★★★★</span></li>
+      <li><b>三表模型 / comps / 行业估值 / 宏观 regime</b> <span class="star">★★★</span></li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="next">⑤ 优先补建路线（按"解锁流派数 × 当前缺口"排序）</h2>
+<div class="card">
+  <div class="pitem now"><span class="pt">第一优先（补短板 + 解锁多流派）</span> <span class="star">★★★★★</span>
+    <ul>
+      <li><b>消息面引擎</b> <code>tools/news_engine.py</code>：公告/新闻结构化抓取 + 事件解析 + 催化剂日历。解锁 成长/事件驱动/宏观；补最弱短板之一。</li>
+      <li><b>情绪面工具</b> <code>tools/sentiment.py</code>：市场情绪指标(换手/涨跌家数/新高新低/涨停) + 舆情情感 NLP + 拥挤度。解锁 量化/趋势/宏观；补最弱短板。</li>
+      <li><b>多因子风险模型</b> <code>tools/factor_model.py</code>：风格/行业/国家暴露分解。横切能力，解锁量化因子，且让"伪分散/alpha vs beta"可见。</li>
+    </ul>
+  </div>
+  <div class="pitem next"><span class="pt">第二优先（补深度）</span> <span class="star">★★★★</span>
+    <ul>
+      <li><b>持股/内部人跟踪</b>（13F/龙虎榜/大股东/高管）——把资金面从"逐笔估算"升级到"真实席位"。</li>
+      <li><b>一致预期与盈利修正</b>——价格常由预期修正驱动，补基本面关键缺口。</li>
+      <li><b>统一回测框架</b>（点时/幸存者/成本/退市）——所有技术/资金/因子/事件信号用同一引擎验证才可比。</li>
+    </ul>
+  </div>
+  <div class="pitem later"><span class="pt">第三优先（深化与按需）</span> <span class="star">★★★</span>
+    <ul>
+      <li>三表联动模型 · 可比公司 comps · 行业专用估值 · 宏观 regime 引擎 · 产业链图谱 · ESG。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="verdict">
+  <b>诚实边界：</b>① 覆盖率/成熟度为主观工程评估，非精确度量。② 情绪面/消息面即使补齐，仍<b>滞后且噪声大</b>，且与本系统"基本面为王"的价值投资定位是<b>叠加层</b>关系——它们辅助择时、验证认知差，<b>永不替代基本面与估值</b>。③ 各流派"适配度"是相对判断：本系统天然强于价值/深度价值，弱于量化/宏观——这是<b>刻意的取舍</b>，不是缺陷；是否补齐取决于你是否要跨流派。
+</div>
+
+<footer>
+  AI Berkshire 工具箱系统性盘点 · 2026-07-13 · 基于 24 工具 / 32 skill / 130 测试现状。图表为工程规划参考，不构成投资建议。
+</footer>
+</div>
+<script>
+// ---- 五面雷达 ----
+const faces=[
+ {n:"基本面",v:75,c:"var(--c-fund)"},
+ {n:"技术面",v:70,c:"var(--c-tech)"},
+ {n:"资金面",v:45,c:"var(--c-flow)"},
+ {n:"情绪面",v:20,c:"var(--c-senti)"},
+ {n:"消息面",v:30,c:"var(--c-news)"},
+];
+const cx=200,cy=180,R=130,N=faces.length;
+function pt(i,r){const a=(-90+i*360/N)*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
+let svg="";
+// 网格同心五边形
+[0.25,0.5,0.75,1].forEach(f=>{
+  let p=faces.map((_,i)=>pt(i,R*f).map(x=>x.toFixed(1)).join(",")).join(" ");
+  svg+=`<polygon points="${p}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+});
+// 轴线 + 标签
+faces.forEach((f,i)=>{
+  const [x,y]=pt(i,R);
+  svg+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+  const [lx,ly]=pt(i,R+24);
+  let anchor=Math.abs(lx-cx)<8?"middle":(lx>cx?"start":"end");
+  svg+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" text-anchor="${anchor}" font-size="13" font-weight="700" fill="${f.c}">${f.n}</text>`;
+});
+// 目标多边形(90%)
+let tp=faces.map((_,i)=>pt(i,R*0.9).map(x=>x.toFixed(1)).join(",")).join(" ");
+svg+=`<polygon points="${tp}" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.85"/>`;
+// 当前多边形
+let cp=faces.map((f,i)=>pt(i,R*f.v/100).map(x=>x.toFixed(1)).join(",")).join(" ");
+svg+=`<polygon points="${cp}" fill="var(--accent)" fill-opacity="0.22" stroke="var(--accent)" stroke-width="2.5"/>`;
+// 顶点 + 数值
+faces.forEach((f,i)=>{
+  const [x,y]=pt(i,R*f.v/100);
+  svg+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${f.c}"/>`;
+  svg+=`<text x="${x.toFixed(1)}" y="${(y-9).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${f.v}%</text>`;
+});
+// 图例
+svg+=`<text x="${cx}" y="352" text-anchor="middle" font-size="11" fill="var(--muted)">实线＝当前覆盖　虚线＝目标≈90%</text>`;
+document.getElementById("radar").innerHTML=svg;
+</script>
+</body>
+</html>

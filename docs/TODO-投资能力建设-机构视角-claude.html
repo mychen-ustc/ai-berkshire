@@ -23,7 +23,9 @@ h1{font-size:1.85rem;color:var(--head);margin:.1em 0 .3em;}
 .sub{color:var(--muted);font-size:.9rem;}
 .tagline{margin-top:14px;padding:14px 18px;background:linear-gradient(90deg,var(--blue-bg),var(--amber-bg));border-radius:10px;font-size:.95rem;}
 .tagline b{color:var(--head);}
-h2{font-size:1.28rem;color:var(--head);margin:2em 0 .6em;padding-left:.55em;border-left:5px solid var(--accent);}
+nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:9px 0;margin:8px 0 4px;z-index:20;font-size:.8rem;}
+nav a{color:var(--accent);text-decoration:none;margin-right:12px;white-space:nowrap;line-height:2;}
+h2{font-size:1.28rem;color:var(--head);margin:1.9em 0 .6em;padding-left:.55em;border-left:5px solid var(--accent);scroll-margin-top:52px;}
 h3{font-size:1.04rem;color:var(--accent2);margin:1.3em 0 .5em;}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.04);}
 p{margin:.5em 0;} strong{color:var(--head);} small{color:var(--muted);}
@@ -34,211 +36,210 @@ th{background:var(--gray-bg);color:var(--head);font-weight:700;}
 code{background:var(--gray-bg);padding:.1em .4em;border-radius:5px;font-size:.86em;}
 .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;}
 .tablewrap table{margin:0;} .tablewrap th{white-space:nowrap;}
-
-/* maturity gap bars */
 .mbars{display:grid;gap:6px;}
-.mrow{display:grid;grid-template-columns:130px 1fr 62px;align-items:center;gap:10px;font-size:.84rem;}
+.mrow{display:grid;grid-template-columns:150px 1fr 96px;align-items:center;gap:10px;font-size:.83rem;}
 .mname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .mtrack{position:relative;background:var(--gray-bg);border-radius:6px;height:18px;overflow:hidden;}
 .mfill{height:100%;border-radius:6px;}
-.mtarget{position:absolute;top:-2px;bottom:-2px;left:80%;width:2px;background:var(--green);opacity:.9;}
-.mlvl{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right;}
+.mtarget{position:absolute;top:-2px;bottom:-2px;left:80%;width:2px;background:var(--green);opacity:.95;}
+.mlvl{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right;font-size:.78rem;}
 .f-red{background:var(--red);}.f-amber{background:var(--amber);}.f-blue{background:var(--blue);}.f-green{background:var(--green);}
-
 .legend{font-size:.8rem;color:var(--muted);margin:10px 0;}
 .legend span{margin-right:14px;} .dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-right:4px;}
-
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}@media(max-width:760px){.two{grid-template-columns:1fr;}}
 .two .card{margin:0;border-top:4px solid;}
 .b-base{border-top-color:var(--blue)!important;}.b-alpha{border-top-color:var(--amber)!important;}
-
-.road{display:flex;flex-wrap:wrap;margin-top:10px;}
-.step{flex:1;min-width:150px;padding:0 8px 10px;}
-.step .num{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:.85rem;}
-.step .ttl{font-weight:700;font-size:.88rem;} .step .bd{font-size:.8rem;color:var(--muted);}
-
 .newbadge{display:inline-block;background:var(--amber);color:#3a2a00;font-size:.68rem;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:8px;vertical-align:middle;}
 .hl{border:1px solid var(--amber);background:linear-gradient(135deg,var(--amber-bg),var(--card));}
 .final{background:linear-gradient(135deg,var(--blue-bg),var(--amber-bg));border-radius:14px;padding:20px 24px;margin-top:16px;}
 .final b{color:var(--head);}
+.snap{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0;}
+@media(max-width:640px){.snap{grid-template-columns:repeat(2,1fr);}}
+.snap .box{background:var(--gray-bg);border-radius:10px;padding:12px;text-align:center;}
+.snap .n{font-size:1.7rem;font-weight:800;color:var(--accent);line-height:1.1;}
+.snap .l{font-size:.78rem;color:var(--muted);}
+.st{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:99px;margin-left:6px;vertical-align:middle;}
+.done{background:var(--green-bg);color:var(--green);}.part{background:var(--amber-bg);color:var(--amber);}.todo{background:var(--gray-bg);color:var(--muted);}
+.pitem{border-left:3px solid var(--line);padding:6px 0 6px 12px;margin:9px 0;}
+.pitem.p5{border-left-color:var(--red);}.pitem.p4{border-left-color:var(--amber);}.pitem.p3{border-left-color:var(--blue);}
+.pt{font-weight:700;color:var(--head);}
+.star{color:var(--amber);font-size:.82rem;letter-spacing:-1px;}
 footer{color:var(--muted);font-size:.8rem;margin-top:28px;border-top:1px solid var(--line);padding-top:12px;}
-svg{width:100%;height:auto;display:block;}
-@media print{body{background:#fff;}.card,.final,.hl{box-shadow:none;}}
+@media print{body{background:#fff;}.card,.final,.hl{box-shadow:none;}nav{display:none;}}
 </style>
 </head>
 <body>
 <div class="wrap">
-
 <header class="top">
-  <h1>投资能力建设路线图（专业机构视角 · Claude 版）</h1>
-  <div class="sub">AI Berkshire · 2026-07-10 · 从"个人研究工具箱"升级为可复现、可审计、可持续改进的机构级投资决策系统</div>
-  <div class="tagline">
-    下一阶段的关键不是<b>"能分析更多东西"</b>，而是让每一个数据、判断、仓位、结果都能回答——<b>依据是什么、当时知道什么、承担多少风险、最终哪里对了/错了。</b>
-  </div>
+  <h1>投资能力建设路线图 · 机构视角（Claude 版）</h1>
+  <div class="sub">把 AI Berkshire 从"个人研究工具箱"升级为可复现、可审计、可持续改进的机构级投资决策系统 · 初版 2026-07-10 · <b>重大更新 2026-07-13</b>（补记 P0–P2 已落地、重估成熟度、系统盘点空缺、新增 P3 制度化与 P4 顶级能力补全）</div>
+  <div class="tagline">一句话原则：下一阶段的关键不是"能分析更多东西"，而是让每一个数据、判断、仓位、结果都能回答——<b>依据是什么、当时知道什么、承担多少风险、最终哪里对了/错了。</b></div>
 </header>
 
-<div class="card">
-  <h3 style="margin-top:0">三条前提</h3>
-  <p><strong>① 能力 ≠ 有一个 skill。</strong>出过报告 ≠ 有稳定数据管线；跑通一次 ≠ 可复现/可监控/可审计。用成熟度 L0–L5 度量，不用"强/弱"。</p>
-  <p><strong>② 底座普适，Alpha 是选择。</strong>账本/风险/归因/合规是任何机构的底座；十倍股/宏观轮动/特殊机会是策略选择，取决于投资授权。</p>
-  <p><strong>③ 先能不亏钱地运转，再谈赚大钱。</strong>没有事实源和风险闭环，任何 Alpha 都无法被信任、评价、复用。</p>
-</div>
+<nav>
+  <a href="#snap">现状快照</a><a href="#maturity">成熟度</a><a href="#p0">P0底座✅</a><a href="#p1">P1闭环✅</a><a href="#p2">P2 Alpha✅</a>
+  <a href="#p3">🆕P3制度化</a><a href="#p4">🆕P4顶级能力</a><a href="#ai">AI治理</a><a href="#rhythm">运营节奏</a><a href="#milestone">里程碑</a><a href="#final">最终判断</a>
+</nav>
 
-<h2>一、能力地图：一条主流程 + 贯穿的控制线</h2>
+<h2 id="snap">现状快照：已建成什么（2026-07-13）</h2>
 <div class="card">
-  <svg viewBox="0 0 960 190" role="img" aria-label="主流程与控制线">
-    <g font-size="13" font-weight="600" text-anchor="middle">
-      <rect x="6" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="62" y="36" fill="var(--ink)">投资授权</text>
-      <rect x="126" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="182" y="36" fill="var(--ink)">机会发现</text>
-      <rect x="246" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="302" y="36" fill="var(--ink)">研究预测</text>
-      <rect x="366" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="422" y="36" fill="var(--ink)">估值决策</text>
-      <rect x="486" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="542" y="36" fill="var(--ink)">组合构建</text>
-      <rect x="606" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="662" y="36" fill="var(--ink)">交易执行</text>
-      <rect x="726" y="14" width="112" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="782" y="36" fill="var(--ink)">持续监控</text>
-      <rect x="846" y="14" width="108" height="34" rx="7" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="900" y="36" fill="var(--ink)">归因复盘</text>
-    </g>
-    <path d="M900 52 L900 66 L62 66 L62 52" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"/>
-    <text x="480" y="80" fill="var(--muted)" font-size="11" text-anchor="middle">↑ 规则迭代（闭环）</text>
-    <g font-size="12" text-anchor="middle">
-      <text x="480" y="104" fill="var(--head)" font-weight="700" font-size="13">↓ 贯穿全程的控制线 ↓</text>
-      <rect x="6" y="114" width="150" height="26" rx="6" fill="var(--gray-bg)"/><text x="81" y="131" fill="var(--ink)">数据治理</text>
-      <rect x="166" y="114" width="150" height="26" rx="6" fill="var(--gray-bg)"/><text x="241" y="131" fill="var(--ink)">风险管理</text>
-      <rect x="326" y="114" width="160" height="26" rx="6" fill="var(--gray-bg)"/><text x="406" y="131" fill="var(--ink)">合规与信息边界</text>
-      <rect x="496" y="114" width="160" height="26" rx="6" fill="var(--gray-bg)"/><text x="576" y="131" fill="var(--ink)">模型治理与测试</text>
-      <rect x="666" y="114" width="150" height="26" rx="6" fill="var(--gray-bg)"/><text x="741" y="131" fill="var(--ink)">审计与知识管理</text>
-      <rect x="826" y="114" width="128" height="26" rx="6" fill="var(--amber-bg)" stroke="var(--amber)"/><text x="890" y="131" fill="var(--ink)" font-weight="700">AI 治理</text>
-    </g>
-    <text x="480" y="164" text-anchor="middle" font-size="11" fill="var(--muted)">风险/数据/合规不是"研究完再加"的步骤，而是从取数到绩效展示都必须遵守的横向约束</text>
-  </svg>
-</div>
-
-<h2>二、成熟度差距（L0–L5，绿线=目标 L4）</h2>
-<div class="card">
-  <div class="mbars">
-    <div class="mrow"><div class="mname">1 投资授权治理</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L4</div></div>
-    <div class="mrow"><div class="mname">2 机会发现</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
-    <div class="mrow"><div class="mname">3 尽调研究</div><div class="mtrack"><div class="mfill f-blue" style="width:60%"></div><div class="mtarget"></div></div><div class="mlvl">L3→L4</div></div>
-    <div class="mrow"><div class="mname">4 估值建模</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
-    <div class="mrow"><div class="mname">5 决策与仓位</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
-    <div class="mrow"><div class="mname">6 组合构建</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
-    <div class="mrow"><div class="mname">7 风险管理</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L4</div></div>
-    <div class="mrow"><div class="mname">8 交易执行</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L3</div></div>
-    <div class="mrow"><div class="mname">9 监控跟踪</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
-    <div class="mrow"><div class="mname">10 业绩归因</div><div class="mtrack"><div class="mfill f-red" style="width:12%"></div><div class="mtarget"></div></div><div class="mlvl">L0-1→L4</div></div>
-    <div class="mrow"><div class="mname">11 宏观配置</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L3</div></div>
-    <div class="mrow"><div class="mname">12 数据基建</div><div class="mtrack"><div class="mfill f-amber" style="width:40%"></div><div class="mtarget"></div></div><div class="mlvl">L2→L4</div></div>
-    <div class="mrow"><div class="mname">13 合规模型治理</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L4</div></div>
-    <div class="mrow"><div class="mname">14 知识管理</div><div class="mtrack"><div class="mfill f-red" style="width:30%"></div><div class="mtarget"></div></div><div class="mlvl">L1-2→L4</div></div>
-    <div class="mrow"><div class="mname">15 AI 系统治理</div><div class="mtrack"><div class="mfill f-red" style="width:20%"></div><div class="mtarget"></div></div><div class="mlvl">L1→L4</div></div>
-    <div class="mrow"><div class="mname">16 资管运营</div><div class="mtrack"><div class="mfill f-red" style="width:3%"></div><div class="mtarget"></div></div><div class="mlvl">L0→条件</div></div>
+  <div class="snap">
+    <div class="box"><div class="n">24</div><div class="l">工具 tools/（零依赖）</div></div>
+    <div class="box"><div class="n">32</div><div class="l">skill（研究/决策/监控）</div></div>
+    <div class="box"><div class="n">130</div><div class="l">测试全绿 ✅</div></div>
+    <div class="box"><div class="n">L3</div><div class="l">底座工具链成熟度</div></div>
   </div>
+  <p style="font-size:.9rem"><b>实质跃迁：</b>已从初版的"结构化研究工作流"跨越到"有底座工具链"——<code>ledger</code>(事实源) · <code>datalayer</code>(A/H/美统一行情+前复权+OHLCV+主力资金流+跨源校验) · <code>portfolio_risk</code> · <code>performance</code>(TWR/MWR) · <code>attribution</code>(Brinson+Brier) · <code>dcf</code> · <code>position_sizing</code> · <code>forensic</code> · <code>technicals</code>/<code>moneyflow</code> 均为可运行、带测试、可交叉验证的工具。</p>
+  <div class="note"><b>但离 L4/L5 还有明确距离：</b>几乎所有工具都是"手动调用、单次运行"，尚无自动调度、持续监控、模型登记、权限、可重放审计。<b>工具在仓库里，还不是一台"自己会跑的机器"</b>——这正是 P3 要解决的。且顶级机构若干核心能力域仍完全缺失（P4）。</div>
+</div>
+
+<h2 id="maturity">成熟度盘点（L0–L5，2026-07-13 重评）</h2>
+<div class="card">
+  <p style="font-size:.88rem">L0 不存在 · L1 人工文档 · L2 可重复(有工具) · L3 结构化(输入输出明确+测试+交叉验证) · L4 生产化(自动/监控/权限/版本/调度) · L5 可审计(可重放/独立验证)。绿色竖线＝目标 L4。</p>
+  <div class="mbars" id="mbars"></div>
   <div class="legend" style="margin-top:12px">
-    <span><span class="dot" style="background:var(--red)"></span>L0-1 缺/人工</span>
-    <span><span class="dot" style="background:var(--amber)"></span>L2 可重复</span>
-    <span><span class="dot" style="background:var(--blue)"></span>L3 结构化</span>
-    <span><span class="dot" style="background:var(--green)"></span>L4+ 生产/可审计</span>
-    <span>｜ 绿竖线 = 目标 L4</span>
+    <span><span class="dot" style="background:var(--red)"></span>L0–1</span>
+    <span><span class="dot" style="background:var(--amber)"></span>L2</span>
+    <span><span class="dot" style="background:var(--blue)"></span>L3</span>
+    <span><span class="dot" style="background:var(--green)"></span>L4+</span>
+    <span>｜ 竖线＝目标 L4</span>
   </div>
-  <div class="note">最成熟的是"结构化公司研究工作流"（L3），但<strong>尚未经过基准测试、长期预测校准和独立审计，不宜自称"世界级"</strong>。机会发现<strong>不是空白</strong>（有 funnel/screener/watchlist/召回池原型），缺的是<strong>统一、点时、可评估、可稳定调度</strong>的生产级管线。</div>
+  <div class="note"><b>诚实结论：</b>底座工具已成形（多数 L3），但还不是"运转的机构"（L4）。多数域满足"范围/输入/输出/可复现/可测试/会失败"（≈L3），普遍缺"可追溯/可监控/可复盘"（=L4，由 P3 补齐）。</div>
 </div>
 
-<h2>三、底座 vs Alpha</h2>
-<div class="two">
-  <div class="card b-base"><h3 style="margin-top:0;color:var(--blue)">机构底座（普适 · 先建）</h3>
-    <p style="font-size:.9rem">IPS、账本、数据、估值、风险、归因、合规、测试、监控。<br>解决"能否稳定、正确、可追责地管理投资决策"。</p></div>
-  <div class="card b-alpha"><h3 style="margin-top:0;color:var(--amber)">Alpha 模块（策略选择 · 后建）</h3>
-    <p style="font-size:.9rem">行业漏斗、新兴赢家、因子、宏观、事件驱动、渠道验证。<br>是"靠什么获取超额收益"——取决于投资授权，非人人必备。</p></div>
+<h2 id="p0">五、P0 —— 机构底座最小闭环 <span class="st done">✅ 大部分已建</span></h2>
+<div class="card">
+<table><thead><tr><th>项</th><th>状态</th><th>已建 / 仍待</th></tr></thead><tbody>
+<tr><td>P0-1 投资授权 IPS</td><td><span class="st done">✅雏形</span></td><td><code>config/investment-policy.json</code> 被 risk/optimizer/sizing 强制读取；待正式化基准/审批/复审</td></tr>
+<tr><td>P0-2 账本 + 主数据</td><td><span class="st part">🟡部分</span></td><td><code>ledger.py</code> 重建持仓/现金/成本/盈亏；待 security master + 公司行动引擎（P3-1）</td></tr>
+<tr><td>P0-3 统一数据层</td><td><span class="st done">✅</span></td><td><code>datalayer.py</code> A/H/美路由+前复权+OHLCV+主力资金流+跨源校验+快照；待点时财务库（P3-1）</td></tr>
+<tr><td>P0-4 测试与模型治理</td><td><span class="st part">🟡部分</span></td><td>130 测试；浮点 bug 已修并固化；待模型登记册（P3-2）</td></tr>
+<tr><td>P0-5 风险与业绩 MVP</td><td><span class="st done">✅</span></td><td><code>portfolio_risk</code>(波动/回撤/beta/相关性/HHI) + <code>performance</code>(TWR/MWR)；待 VaR/流动性（P4-3）</td></tr>
+</tbody></table>
 </div>
 
-<h2>四、P0 · 机构底座（最小可用闭环）</h2>
-<div class="tablewrap"><table>
-  <thead><tr><th>项</th><th>内容</th><th>完成定义 / 关键点</th><th>影响·量</th></tr></thead>
-  <tbody>
-    <tr><td><b>P0-1</b><br>IPS</td><td>投资授权 + 机器可读 <code>investment-policy.yaml</code></td><td>所有仓位/风险/卖出引用同一约束；不再硬编码阈值</td><td>★★★★★<br>小中</td></tr>
-    <tr><td><b>P0-2</b><br>事实源</td><td>security master + 交易账本 + 组合主账</td><td>任意历史日可重建持仓/现金/净值；只此一个事实源</td><td>★★★★★<br>大</td></tr>
-    <tr><td><b>P0-3</b><br>数据层</td><td>统一行情/财报/FX/公司行动 + <b>point-in-time</b></td><td>同快照→同输出；缺失/过期不被静默使用；防前视偏差</td><td>★★★★★<br>大</td></tr>
-    <tr><td><b>P0-4</b><br>治理</td><td>测试/golden fixture + 模型登记 + <b>✅ 已修复 calc 浮点 bug</b></td><td>0.1+0.2 已输出精确 0.3；仍待补自动回归测试固化 golden case</td><td>★★★★★<br>中</td></tr>
-    <tr><td><b>P0-5</b><br>风险业绩</td><td><code>portfolio_risk.py</code> + <code>performance.py</code></td><td>波动/回撤/beta/HHI/暴露/相关性；TWR/MWR；VaR 仅补充</td><td>★★★★★<br>中大</td></tr>
-  </tbody>
-</table></div>
-<div class="note">✅ <strong>已修复 bug（commit c05cc0e）</strong>：<code>financial_rigor.py calc --expr "0.1 + 0.2"</code> 原输出"精确值 0.30000000000000004"（calc 先浮点求值再转 Decimal）——已改为 <code>ast.parse</code> + 全程 Decimal 求值器，现输出 0.3，并以 AST 白名单堵死 eval 注入。核心 verify-* 路径一直用 exact() 包裹，未受此 bug 影响。</div>
-
-<h2>五、P1 闭环 · P2 Alpha 实验室</h2>
-<div class="card" style="font-size:.9rem">
-  <p><strong>P1（研究—决策—组合—监控—复盘）：</strong>决策日志 <code>/decision-journal</code>（不可回填）· 估值框架 <code>dcf.py</code>（DCF/反向/SOTP/行业模板）· 完整风险压力测试 · 业绩归因与决策校准 <code>/performance-attribution</code>（Brier score + 错误模式库，工作量"大"）· 统一 Watchlist 状态机 + 自动监控 · 仓位 <code>position_sizing.py</code> + 卖出纪律 <code>/sell-discipline</code> · 会计取证/治理筛查。</p>
-  <p><strong>P2（Alpha，须点时+样本外+含成本验证）：</strong><code>/emerging-winners</code>（"新兴赢家"替代"十倍股猎手"，带独立风险预算的卫星策略）· <code>/factor-screen</code> · <code>/macro-regime</code> · <code>/sector-rotation</code> · <code>/special-situations</code> · <code>/scuttlebutt</code> · 分市场（港股老千股防雷 / A股可转债 / 美股做空报告）。</p>
+<h2 id="p1">六、P1 —— 研究·决策·组合·监控·复盘闭环 <span class="st done">✅ 已建</span></h2>
+<div class="card">
+<table><thead><tr><th>项</th><th>状态</th><th>说明</th></tr></thead><tbody>
+<tr><td>P1-1 决策日志</td><td><span class="st done">✅</span></td><td><code>decision_journal.py</code>：论文/价格/情景/证伪条件/复审日；不可回填</td></tr>
+<tr><td>P1-2 估值框架</td><td><span class="st done">✅</span></td><td><code>dcf.py</code>：多阶段/反向 DCF/SOTP；行业模板与三表见 P4-5/7</td></tr>
+<tr><td>P1-3 完整风险压力</td><td><span class="st part">🟡</span></td><td>风险画像已建；因子/流动性/反向压力见 P4-1/3</td></tr>
+<tr><td>P1-4 业绩归因与校准</td><td><span class="st done">✅</span></td><td><code>attribution.py</code>：Brinson + Brier；错误模式库见 P3-7</td></tr>
+<tr><td>P1-5 Watchlist + 监控</td><td><span class="st part">🟡</span></td><td><code>watch.py</code> 告警；统一状态机+日历见 P3-4/5</td></tr>
+<tr><td>P1-6 仓位与卖出纪律</td><td><span class="st done">✅</span></td><td><code>position_sizing.py</code>(凯利+IPS上限) + <code>sell_discipline.py</code></td></tr>
+<tr><td>P1-7 会计异常筛查</td><td><span class="st done">✅</span></td><td><code>forensic.py</code>：M-Score/Altman-Z/应计/现金转化（只标线索）</td></tr>
+<tr><td>P1-8 技术面与资金面</td><td><span class="st done">✅新建</span></td><td><code>technicals.py</code> + <code>moneyflow.py</code>：叠加层，不产生"买什么"，只辅助"是否/何时"，永不推翻基本面</td></tr>
+</tbody></table>
 </div>
 
-<h2>六、AI 系统特有治理 <span class="newbadge">差异化</span></h2>
+<h2 id="p2">七、P2 —— Alpha 实验室 <span class="st done">✅ 原型已建</span></h2>
+<div class="card">
+<table><thead><tr><th>项</th><th>状态</th><th>说明</th></tr></thead><tbody>
+<tr><td>P2-1 新兴赢家</td><td><span class="st done">✅</span></td><td><code>multibagger-hunter</code>：DNA 清单+杠铃小仓卫星，KPI 是提高组合期望</td></tr>
+<tr><td>P2-2 多因子筛选</td><td><span class="st part">🟡</span></td><td><code>stock_screener</code>/<code>momentum_backtest</code> 原型；完整因子库见 P4-1</td></tr>
+<tr><td>P2-3 宏观 regime</td><td><span class="st part">🟡</span></td><td>macro-analyst 专题；regime 工具见 P4-9</td></tr>
+<tr><td>P2-4 行业轮动/主题</td><td><span class="st done">✅</span></td><td><code>sector_rotation.py</code> + industry-research/funnel</td></tr>
+<tr><td>P2-5 事件驱动</td><td><span class="st done">✅</span></td><td><code>special_situations.py</code>：并购/分拆/回购/指数调整，逐类建模概率与下行</td></tr>
+<tr><td>P2-6 一手验证</td><td><span class="st done">✅</span></td><td><code>scuttlebutt</code>：区分事实/观点/推断，先过 MNPI 检查</td></tr>
+<tr><td>P2-7 分市场/另类</td><td><span class="st part">🟡</span></td><td>制度差异散见各 skill；老千股防雷/13F/可转债专项见 P4-8/16</td></tr>
+</tbody></table>
+</div>
+
+<h2 id="p3">八、🆕 P3 —— 制度化与生产化（把 L3 工具链升到 L4/L5）</h2>
 <div class="card hl">
-  <p style="font-size:.9rem">这是 AI 驱动的投资系统，有人类机构没有的失效面。项目现有加固（联网预检、report_audit 准出、"联网失败禁止伪装"、客观原则）是雏形，应成体系升到 L4。</p>
-  <div class="tablewrap"><table>
-    <thead><tr><th>AI 特有风险</th><th>表现</th><th>治理动作</th></tr></thead>
-    <tbody>
-      <tr><td>幻觉/编造</td><td>编造数据/来源/数字</td><td>双源交叉 + report_audit 强制抽检 + 来源可核</td></tr>
-      <tr><td><b>断网伪装</b></td><td>联网失败却用训练知识冒充（最危险，issue #58）</td><td>WebSearch 预检升级为<b>硬门禁</b>：无联网证据即拒绝出结论</td></tr>
-      <tr><td>过度依赖 LLM 判断</td><td>把"AI 说好公司"当结论</td><td>强制分离<b>"AI 说了什么" vs "数据证明了什么"</b></td></tr>
-      <tr><td>版本漂移</td><td>skill 改版→输出静默变，无法复现</td><td>模型登记 + 固定样本回归 + 报告标注 skill 版本</td></tr>
-      <tr><td>不可复现</td><td>同问题两次跑结果不同</td><td>量化走确定性工具，LLM 只做解释判断</td></tr>
-      <tr><td>谄媚/确认偏误</td><td>迎合预设立场</td><td>master-lens 异见庭强制唱反调，纳入决策日志</td></tr>
-    </tbody>
-  </table></div>
+  <p><b>工具已经有了，但还不是"运转的机构"。</b>P3 不是加新工具，而是把散落的工具包成一台<b>自己会跑、可监控、可追溯、可重放</b>的机器——<b>当前性价比最高的一步</b>。已投入的能力只有制度化后才真正可信赖、可复用。</p>
+  <div class="pitem p5"><span class="pt">P3-1 统一事实源持久化</span> <span class="star">★★★★★</span><br><small>security master（内部ID↔各市场代码/行业/上市退市）+ 点时财务库（带 available_at，防前视）+ 公司行动引擎（拆股/分红/配股/并购自动调整）。所有工具只读这一个事实源。</small></div>
+  <div class="pitem p4"><span class="pt">P3-2 模型登记册 + 数据血缘 + 复现日志</span> <span class="star">★★★★</span><br><small>每工具/skill 登记版本/用途/输入契约/限制/审批/最近验证；结论→来源→转换→版本→决策人可追溯；报告标注 skill 版本与数据快照。</small></div>
+  <div class="pitem p4"><span class="pt">P3-3 调度与运营节奏自动化（机构的心跳）</span> <span class="star">★★★★</span><br><small>把每日/每周/财报季/每季/每年节奏做成调度任务；告警引擎去重/优先级/静默/重试/过期拦截，避免告警疲劳。</small></div>
+  <div class="pitem p4"><span class="pt">P3-4 统一 Watchlist 状态机</span> <span class="star">★★★★</span><br><small>合并所有 watchlist/召回池/持仓为一个入口；状态：发现→初筛→深研→候选→持有→退出→归档；每标的有负责人/论文版本/催化剂/红线/复审日。</small></div>
+  <div class="pitem p3"><span class="pt">P3-5 事件/催化剂日历</span> <span class="star">★★★</span><br><small>财报/分红/解禁/回购/监管/论文 KPI 日历，驱动监控与复盘；与 special_situations 共享事件源。</small></div>
+  <div class="pitem p4"><span class="pt">P3-6 统一回测框架（点时+幸存者+成本+退市样本）</span> <span class="star">★★★★</span><br><small>把 momentum_backtest 原型升级为通用引擎；所有 Alpha 策略跑这一个引擎，口径一致才可比。</small></div>
+  <div class="pitem p4"><span class="pt">P3-7 错误模式库 + 决策校准闭环</span> <span class="star">★★★★</span><br><small>把 decision_journal + attribution 的 Brier/区间覆盖/红线命中沉淀为可检索错误模式库；季度复盘淘汰无效规则。</small></div>
+  <div class="pitem p5"><span class="pt">P3-8 AI 治理硬门禁（report_audit 升级）</span> <span class="star">★★★★★</span><br><small>断网即拒绝出结论；来源可点击可核；版本/数据截止日强制标注；每份报告幻觉抽检（详见 AI 治理节）。</small></div>
 </div>
 
-<h2>七、投研运营节奏（机构的心跳） <span class="newbadge">差异化</span></h2>
+<h2 id="p4">九、🆕 P4 —— 顶级机构能力补全（当前完全缺失的能力域）</h2>
 <div class="card">
-<div class="tablewrap"><table>
-  <thead><tr><th>周期</th><th>动作</th><th>依赖能力</th></tr></thead>
-  <tbody>
-    <tr><td>每日</td><td>盘前：新闻扫描、红线检查、异动归因</td><td>自动监控、告警</td></tr>
-    <tr><td>每周</td><td>持仓健康巡检、候选初筛、数据新鲜度检查</td><td>watchlist 状态机、数据治理</td></tr>
-    <tr><td>财报季</td><td>逐个持仓财报精读、论文 KPI 更新、估值刷新</td><td>决策日志、估值框架</td></tr>
-    <tr><td><b>每季</b></td><td><b>组合层复盘：归因 + 决策校准(Brier) + 风险预算 + 淘汰无效规则</b></td><td>归因、风险、KPI</td></tr>
-    <tr><td>每年</td><td>IPS 复审、能力成熟度重评、错误模式库总结</td><td>IPS、成熟度盘点</td></tr>
-  </tbody>
-</table></div>
-<div class="note">没有节奏，"能力"只是躺在仓库里的 skill；有节奏，它才是一个运转的机构。</div>
+  <p>顶级机构（自下而上如 Capital / Baillie Gifford，系统化如 AQR / Two Sigma，平台如 BlackRock Aladdin）<b>普遍具备、而本系统尚无</b>的能力。按"对基本面价值投资的边际价值"排序：</p>
+  <div class="pitem p5"><span class="pt">P4-1 多因子风险模型（Barra 式暴露分解）</span> <span class="star">★★★★★</span> <span class="newbadge">最高优先</span><br><small>把组合/个股收益波动分解到风格因子（价值/质量/成长/动量/规模/低波）+行业+国家+货币；输出主动风险(tracking error)分解、因子拥挤度。<b>为什么关键：</b>现在只有总波动/相关性，看不出"名义分散实则押同一因子"（伪分散），也分不清超额是 alpha 还是 beta。→ <code>tools/factor_model.py</code></small></div>
+  <div class="pitem p5"><span class="pt">P4-2 约束优化器升级（均值方差/风险平价/风险预算 + 全约束）</span> <span class="star">★★★★★</span><br><small>从当前逆波动升级：目标可选（最小方差/风险平价/风险预算/最大分散化）；约束涵盖行业/因子/单一/流动性/换手/现金；有效前沿；交易成本感知。真实调仓要在多重硬约束下求解。</small></div>
+  <div class="pitem p5"><span class="pt">P4-3 尾部与流动性风险 + 专用压力引擎</span> <span class="star">★★★★★</span><br><small>VaR/CVaR（历史+参数+蒙特卡洛）；流动性风险（ADV/清算天数/冲击成本）；压力引擎（历史情景重放 2008/2015/2020/2022 + 假设情景 + 反向压力）。VaR 只作补充，不替代回撤/流动性/尾部情景。</small></div>
+  <div class="pitem p4"><span class="pt">P4-4 一致预期与盈利修正跟踪</span> <span class="star">★★★★</span> <span class="newbadge">研究关键</span><br><small>营收/EPS/目标价一致预期、盈利修正动量、beat/miss 历史、分析师分歧度。<b>价格常由"预期修正方向"驱动</b>——现在能算 DCF，却看不到市场预期往哪改、你和 consensus 差多少。</small></div>
+  <div class="pitem p4"><span class="pt">P4-5 三表联动财务预测模型（driver-based）</span> <span class="star">★★★★</span><br><small>收入驱动→利润表→资产负债表→现金流表勾稽，情景化，喂给 DCF。现在 DCF 只吃假设、无前端建模，假设难自洽（高增长却不消耗营运资本）。</small></div>
+  <div class="pitem p4"><span class="pt">P4-6 相对估值 / 可比公司引擎</span> <span class="star">★★★★</span><br><small>EV/EBITDA、P/E、P/S、PEG 横截面；历史估值分位；行业中位；由市价反推隐含增长。与 DCF 互为交叉验证。</small></div>
+  <div class="pitem p4"><span class="pt">P4-8 持股与内部人变动跟踪</span> <span class="star">★★★★</span><br><small>13F（美股机构）、龙虎榜（A股席位）、大股东增减持、高管交易、股东户数、ETF/基金流向。补 moneyflow 的诚实缺口：真实席位/内部人动向看一手披露。</small></div>
+  <div class="pitem p3"><span class="pt">P4-7 行业专用估值模型</span> <span class="star">★★★</span><br><small>银行（拨备/NIM/资本充足）、保险（EV/NBV）、地产（NAV/RNAV）、资源（储量/成本曲线）、SaaS（LTV/CAC/Rule of 40）、未盈利成长（单位经济/现金跑道）。先做覆盖持仓最多的 2–3 个行业。</small></div>
+  <div class="pitem p3"><span class="pt">P4-9 宏观 regime 引擎（工具级）</span> <span class="star">★★★</span><br><small>增长/通胀/流动性/信用/利率/汇率/政策状态机；明确只影响哪些决策（现金区间/行业暴露），不乱改自下而上估值。</small></div>
+  <div class="pitem p3"><span class="pt">P4-10~16 其余能力域</span> <span class="star">★★★</span><br><small>P4-10 资产配置 SAA/TAA + 跨资产（条件性）· P4-11 再平衡引擎（税务/成本感知）· P4-12 TCA + 轻量 OMS · P4-13 产业链图谱（客户-供应商网络）· P4-14 ESG · P4-15 另类数据管线 · P4-16 情景与概率引擎（牛熊基/蒙特卡洛/贝叶斯）。</small></div>
+  <div class="note"><b>P5（条件性）真实资管运营：</b>OMS/EMS、托管、清算、NAV、客户/监管报告——仅当管理第三方资金时升为 P0，并前置属地合规评估。</div>
 </div>
 
-<h2>八、反模式清单（这类系统最常见的死法） <span class="newbadge">差异化</span></h2>
+<h2 id="ai">十、🆕 AI 系统特有治理（差异化控制线）</h2>
 <div class="card">
-<div class="tablewrap"><table>
-  <thead><tr><th>反模式</th><th>表现</th><th>对策</th></tr></thead>
-  <tbody>
-    <tr><td>过拟合/数据窥探</td><td>回测漂亮实盘失效</td><td>训练/验证/样本外分离 + 含成本验证</td></tr>
-    <tr><td>虚假精确</td><td>估计值报成"精确"小数</td><td>会失败原则：数据不足即停/降级</td></tr>
-    <tr><td>告警疲劳</td><td>告警太多→全忽略</td><td>去重/优先级/静默期</td></tr>
-    <tr><td>论文漂移</td><td>事实变了悄悄改说辞不认错</td><td>决策日志不可回填 + thesis-drift</td></tr>
-    <tr><td>抱团/伪分散</td><td>名义分散实押同一因子</td><td>相关性与因子暴露</td></tr>
-    <tr><td>叙事拟合</td><td>先有结论再找数据</td><td>客观原则 + 异见庭 + 空方强制</td></tr>
-  </tbody>
-</table></div>
+<p style="font-size:.9rem">AI 驱动的投资系统有人类机构没有的失效面，必须专门治理。现有加固（联网预检、report_audit、financial_rigor、"联网失败禁止伪装"、客观/正反两面、master-lens 异见庭）是雏形，应升级到 L4（P3-8）。</p>
+<div class="tablewrap"><table><thead><tr><th>AI 特有风险</th><th>表现</th><th>治理动作</th></tr></thead><tbody>
+<tr><td>幻觉/编造</td><td>编造数据/来源/财务数字</td><td>双源交叉（datalayer）+ report_audit → 每份报告强制抽检、来源可核</td></tr>
+<tr><td><b>断网伪装</b></td><td>联网失败却用训练知识冒充实时（最危险）</td><td>WebSearch 预检 →升级为<b>硬门禁</b>：无联网证据即拒绝出结论</td></tr>
+<tr><td>过度依赖 LLM 判断</td><td>把"AI 说好公司"当结论</td><td>强制分离"AI 说了什么"vs"数据证明了什么"</td></tr>
+<tr><td>skill 版本漂移</td><td>改一版输出静默变化，无法复现</td><td>纳入模型登记（P3-2）+ 固定样本回归；报告标注版本</td></tr>
+<tr><td>不可复现</td><td>同问题两次结果不同</td><td>关键量化走确定性工具，LLM 只做解释判断</td></tr>
+<tr><td>谄媚/确认偏误</td><td>迎合用户预设立场</td><td>不预设立场 + master-lens 异见庭强制唱反调，纳入决策日志</td></tr>
+</tbody></table></div>
+<div class="note"><b>完成定义：</b>任何一份 AI 产出都能回答"这段是联网核实的事实还是模型推断？用哪个 skill 版本、哪个数据快照？"——达不到就降级标注，不伪装确定性。</div>
 </div>
 
-<h2>九、里程碑 M0–M5</h2>
+<h2 id="rhythm">十一、投研运营节奏（机构的心跳）</h2>
 <div class="card">
-  <div class="road">
-    <div class="step"><div class="num">0</div><div class="ttl">定规则</div><div class="bd">IPS/基准/风险预算/数据边界 → 任一建议能判断是否合 mandate</div></div>
-    <div class="step"><div class="num">1</div><div class="ttl">建事实源</div><div class="bd">主数据+账本+点时数据 → 任意日持仓净值可重放</div></div>
-    <div class="step"><div class="num">2</div><div class="ttl">闭环 MVP</div><div class="bd">业绩+风险+决策日志 → 一笔投资可从决策追到结果</div></div>
-    <div class="step"><div class="num">3</div><div class="ttl">可持续运行</div><div class="bd">watchlist+日历+告警+归因校准 → 稳定运行记录</div></div>
-    <div class="step"><div class="num">4</div><div class="ttl">扩展 Alpha</div><div class="bd">新兴赢家/因子/宏观 → 通过样本外含成本验证</div></div>
-    <div class="step"><div class="num">5</div><div class="ttl">真实资管</div><div class="bd">交易/托管/NAV/合规 → 按属地完成独立评估</div></div>
-  </div>
-  <div class="note"><strong>对直觉排序的关键修正</strong>：先建 IPS/账本/数据/风险预算，再做仓位工具；数据基建前置 P0；合规/IPS 升为 P0 控制线；业绩归因工作量按"大"估；十倍股猎手 → 带风险预算的"新兴赢家"卫星策略；卖出纪律归决策/风险闭环。</div>
+<div class="tablewrap"><table><thead><tr><th>周期</th><th>动作</th><th>依赖能力</th></tr></thead><tbody>
+<tr><td><b>每日</b></td><td>盘前持仓/watchlist 新闻扫描、红线触发、异动归因、技术/资金异动</td><td>自动监控、告警</td></tr>
+<tr><td><b>每周</b></td><td>持仓健康度巡检、新候选初筛、数据新鲜度检查</td><td>watchlist 状态机、数据治理</td></tr>
+<tr><td><b>财报季</b></td><td>逐持仓财报精读、论文 KPI 更新、估值刷新、一致预期对照</td><td>决策日志、估值、consensus</td></tr>
+<tr><td><b>每季</b></td><td>组合层复盘：归因 + Brier 校准 + 风险预算利用 + 淘汰无效规则</td><td>归因、风险、错误模式库</td></tr>
+<tr><td><b>每年</b></td><td>IPS 复审、成熟度重评、错误模式库总结</td><td>IPS、成熟度盘点</td></tr>
+</tbody></table></div>
+<p style="font-size:.85rem;color:var(--muted)">没有节奏，"能力"只是躺在仓库里的 skill；有节奏（+P3-3 调度自动化），它才是一个运转的机构。</p>
 </div>
 
-<h2>十、最终判断</h2>
+<h2 id="milestone">十二、里程碑与依赖</h2>
+<div class="card">
+<div class="tablewrap"><table><thead><tr><th>里程碑</th><th>目标</th><th>状态</th></tr></thead><tbody>
+<tr><td>M0 定规则</td><td>IPS/基准/风险预算/审批边界</td><td><span class="st part">🟡 IPS 雏形，待正式化</span></td></tr>
+<tr><td>M1 建事实源</td><td>security master + 账本 + 点时数据</td><td><span class="st part">🟡 账本+行情已建，待 security master/PIT</span></td></tr>
+<tr><td>M2 闭环 MVP</td><td>业绩/风险/决策日志/论文版本</td><td><span class="st done">✅ 工具层已建（L3）</span></td></tr>
+<tr><td>M3 可持续运行</td><td>统一 watchlist/日历/告警/调度</td><td><span class="st part">🟡 组件已建，待统一+自动化（P3）</span></td></tr>
+<tr><td>M4 扩展 Alpha</td><td>因子/新兴赢家/宏观 + 统一回测</td><td><span class="st part">🟡 原型已建，待因子模型+统一回测</span></td></tr>
+<tr><td>M5 顶级机构工具库</td><td>因子风险/一致预期/三表/comps/尾部</td><td><span class="st todo">⬜ 待建（P4）</span></td></tr>
+<tr><td>M6 真实资管运营</td><td>交易/托管/NAV/合规/客户报告</td><td><span class="st todo">⬜ 条件性</span></td></tr>
+</tbody></table></div>
+</div>
+
+<h2 id="final">十三、最终判断（2026-07-13）</h2>
+<div class="note" style="margin-top:0">完整的反模式清单、Definition of Done、能力建设 KPI 三节见配套 <code>.md</code> 文档（十二/十三/十四节）。</div>
 <div class="final">
-  <p>AI Berkshire 已形成覆盖面广、可重复运行的<b>公司研究工作流</b>，也有机会发现原型。它现在最需要的不是横向增加更多"大师/主题 skill"，而是三次升级：</p>
-  <p>① <b>从报告 → 记录系统</b>（统一事实源）　② <b>从能运行 → 可信赖</b>（点时数据/测试/模型治理/AI 治理/审计）　③ <b>从研究个股 → 管理闭环</b>（组合风险、业绩、监控、归因校准）</p>
-  <p style="margin-top:12px;font-size:1.05rem"><b>它现在擅长"确认一家好公司值不值得买"；下一步要让它对每一个数据、判断、仓位、结果都能回答——依据是什么、当时知道什么、承担多少风险、最终哪里对了/错了。</b>前者是不亏钱的研究能力，后者才是一个可信赖、可进化的投资机构。</p>
+  <p>初版的三次升级——报告→记录系统、能运行→可信赖、研究个股→管理闭环——<b>工具层已基本落地</b>（账本/数据/风险/业绩/归因/估值/仓位/验伤/技术面/资金面，130 测试全绿，L3）。</p>
+  <p><b>1. 底座工具已成形（L3），但还不是运转的机构（L4）。</b> 最高性价比不是继续加工具，而是 <b>P3 制度化</b>——事实源持久化、模型登记与血缘、调度与告警、统一 watchlist、统一回测、错误模式库、AI 硬门禁。</p>
+  <p><b>2. 朝顶级机构工具库，仍缺核心能力域（P4）。</b> 按边际价值：<b>多因子风险模型 &gt; 约束优化器/尾部与流动性风险 &gt; 一致预期/三表模型/可比公司 &gt; 持股跟踪</b>。它们是机构与散户工具的分水岭——能回答"超额是 alpha 还是 beta""风险压在哪个因子上""预期在往哪改"。</p>
+  <p><b>3. 顺序：先制度化（P3），再补顶级能力（P4）。</b> 没有事实源持久化与统一回测，因子模型/尾部风险的输出也无法被信任和评价。</p>
+  <p style="margin-top:14px"><b>它现在擅长"确认一家好公司值不值得买"，并已能记录、算风险、做业绩归因、加技术/资金面择时。下一步要让它成为一台自己会跑、可审计的机器（P3），并具备顶级机构的因子风险、预期跟踪、约束优化能力（P4）——那才是一个可信赖、可进化、机构级的投研工具库。</b></p>
 </div>
 
 <footer>
-  本文档为能力建设与工程排期参考，不构成投资建议或法律/合规意见。现状盘点与成熟度评分基于 2026-07 仓库实际 skills/tools（financial_rigor calc 浮点 bug 已修复，commit c05cc0e）。职业操守参考 CFA Asset Manager Code 与 GIPS Standards，不替代属地法律意见。
+  本文档为能力建设与工程排期参考，不构成投资建议或法律/合规意见。仓库现状盘点基于 2026-07-13。职业操守/风险/记录/绩效呈现可参考 CFA Asset Manager Code 与 GIPS Standards，但不替代属地法律意见与注册要求。
 </footer>
-
 </div>
+<script>
+// 成熟度：[域, 当前 L(0-5), 目标 L]
+const M=[
+ ["投资授权与治理",2.5,4],["机会发现",2,4],["尽调研究",3,4],["估值建模",3,4],
+ ["决策与仓位",3,4],["组合构建",3,4],["风险管理",2.5,4],["交易执行",1,3],
+ ["监控与跟踪",2.5,4],["业绩与归因",3,4],["宏观与配置",1.5,3],["数据基础设施",3,4],
+ ["合规与模型治理",1.5,4],["知识管理",2,4],["AI 系统治理",2,4],["资管运营",0,0],
+];
+function cls(l){return l<2?"f-red":l<3?"f-amber":l<4?"f-blue":"f-green";}
+document.getElementById("mbars").innerHTML=M.map(([n,l,t])=>`
+ <div class="mrow"><div class="mname">${n}</div>
+  <div class="mtrack"><div class="mfill ${cls(l)}" style="width:${l/5*100}%"></div><div class="mtarget"></div></div>
+  <div class="mlvl">L${l%1?l.toFixed(1):l} → L${t}</div></div>`).join("");
+</script>
 </body>
 </html>
