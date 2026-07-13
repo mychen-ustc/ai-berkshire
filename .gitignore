@@ -38,3 +38,8 @@ data/portfolio/decisions.jsonl
 
 # 组合体检等含真实持仓/规模的私密报告，只存本地
 reports/private/
+
+# ===== API 密钥：永不入库 =====
+config/secrets.local.json
+.env
+*.key

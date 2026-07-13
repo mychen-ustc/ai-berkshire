@@ -42,9 +42,9 @@ def _norm_dt(tok):
 # --------------------------------------------------------------------------
 # 网络（curl 直连，绕过系统代理；GBK/UTF-8 自适应）
 # --------------------------------------------------------------------------
-def _curl(url, headers=None, timeout=12):
+def _curl(url, headers=None, timeout=12, ua=None):
     cmd = ["/usr/bin/curl", "-s", "--max-time", str(timeout), "--noproxy", "*",
-           "-H", "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"]
+           "-H", f"User-Agent: {ua or 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'}"]
     for h in headers or []:
         cmd += ["-H", h]
     cmd.append(url)
