@@ -203,6 +203,71 @@ def parse_yahoo_history(text):
     return pts
 
 
+def _at(arr, i):
+    """安全取数组第 i 个并转 float，越界/None 返回 None。"""
+    x = arr[i] if arr and i < len(arr) else None
+    return float(x) if x is not None else None
+
+
+def parse_em_kline_ohlcv(text):
+    """东财 kline JSON → (name, [dict(date,open,high,low,close,volume,amount)])。
+    注意东财行序为 date,open,close,high,low,vol,amount —— close 在 high/low 之前。"""
+    d = json.loads(text)
+    data = d.get("data") or {}
+    bars = []
+    for row in data.get("klines") or []:
+        c = row.split(",")
+        if len(c) >= 6:
+            bars.append({"date": c[0], "open": float(c[1]), "close": float(c[2]),
+                         "high": float(c[3]), "low": float(c[4]), "volume": float(c[5]),
+                         "amount": float(c[6]) if len(c) > 6 else None})
+    return data.get("name"), bars
+
+
+def parse_yahoo_ohlcv(text):
+    """Yahoo chart JSON → [dict(date,open,high,low,close,volume)]（split 调整、未复权股息）。"""
+    d = json.loads(text)
+    r = d["chart"]["result"][0]
+    ts = r.get("timestamp") or []
+    q = r.get("indicators", {}).get("quote", [{}])[0]
+    o, h, l, cl, v = (q.get(k) or [] for k in ("open", "high", "low", "close", "volume"))
+    bars = []
+    for i, t in enumerate(ts):
+        c = _at(cl, i)
+        if c is None:
+            continue
+        bars.append({"date": datetime.utcfromtimestamp(t).strftime("%Y-%m-%d"),
+                     "open": _at(o, i), "high": _at(h, i), "low": _at(l, i),
+                     "close": c, "volume": _at(v, i)})
+    return bars
+
+
+def parse_em_fflow(text):
+    """东财个股资金流 daykline → (name, [dict])。单位：元。主力=超大单+大单。
+    行序: date,主力,小单,中单,大单,超大单,主力%,小单%,中单%,大单%,超大单%,收盘,涨跌%,...。"""
+    d = json.loads(text)
+    data = d.get("data") or {}
+    rows = []
+    for row in data.get("klines") or []:
+        c = row.split(",")
+        if len(c) >= 13:
+            rows.append({"date": c[0], "main": float(c[1]), "small": float(c[2]),
+                         "medium": float(c[3]), "large": float(c[4]), "xlarge": float(c[5]),
+                         "main_pct": float(c[6]), "small_pct": float(c[7]),
+                         "medium_pct": float(c[8]), "large_pct": float(c[9]),
+                         "xlarge_pct": float(c[10]), "close": float(c[11]),
+                         "change_pct": float(c[12])})
+    return data.get("name"), rows
+
+
+def _secid(info):
+    """符号信息 → 东财 secid（沪 1.、深/北 0.、港 116.）。"""
+    if info["market"] == "HK":
+        return f"116.{re.sub(r'[^0-9]', '', info['tencent'])[-5:]}"
+    pfx, code = info["tencent"][:2], info["tencent"][2:]
+    return f"{1 if pfx == 'sh' else 0}.{code}"
+
+
 # --------------------------------------------------------------------------
 # 交叉校验 & 质量门禁（纯函数）
 # --------------------------------------------------------------------------
@@ -322,6 +387,56 @@ def fetch_history(symbol, freq="weekly", period="5y"):
             "field": "price_history", "freq": freq, "period": period, "adjust": adjust,
             "currency": info["currency"], "source": source, "source_url": url,
             "fetched_at": fetched_at, "version": VERSION, "n": len(points), "points": points}
+
+
+def fetch_ohlcv(symbol, freq="daily", period="1y"):
+    """取 OHLCV 历史（含量）。A/H 用东财 kline(前复权)，US 用 Yahoo(split 调整)。
+    技术面/资金面用。volume 单位：A/H=手，US=股（比率/累计类指标不受单位影响）。"""
+    info = detect(symbol)
+    fetched_at = datetime.now().astimezone().isoformat(timespec="seconds")
+    ppy = {"daily": 252, "weekly": 52, "monthly": 12}[freq]
+    years = {"1y": 1, "2y": 2, "5y": 5, "10y": 10, "max": 30}.get(period, 1)
+    if info["market"] in ("A", "HK"):
+        klt = {"daily": 101, "weekly": 102, "monthly": 103}[freq]
+        lmt = int(ppy * years) + 10
+        url = ("https://push2his.eastmoney.com/api/qt/stock/kline/get?"
+               f"secid={_secid(info)}&fields1=f1,f2,f3&fields2=f51,f52,f53,f54,f55,f56,f57"
+               f"&klt={klt}&fqt=1&end=20500101&lmt={lmt}")
+        name, bars = parse_em_kline_ohlcv(_curl(url))
+        source, adjust, vol_unit = "eastmoney", "前复权(fqt=1)", "手"
+    else:
+        interval = {"daily": "1d", "weekly": "1wk", "monthly": "1mo"}[freq]
+        url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{info['yahoo']}"
+               f"?interval={interval}&range={period}&events=div,split")
+        bars = parse_yahoo_ohlcv(_curl(url))
+        name, source, adjust, vol_unit = info["symbol"], "yahoo_finance", "split-adjusted", "股"
+    return {"symbol": info["symbol"], "market": info["market"], "name": name,
+            "field": "ohlcv", "freq": freq, "period": period, "adjust": adjust,
+            "currency": info["currency"], "vol_unit": vol_unit, "source": source,
+            "source_url": url, "fetched_at": fetched_at, "version": VERSION,
+            "n": len(bars), "bars": bars}
+
+
+def fetch_fund_flow(symbol, days=60):
+    """个股主力资金流（东财 daykline，仅 A/H 股；单位元）。主力净额=超大单+大单。
+    美股无「主力」概念，请用 moneyflow 的价量代理指标(MFI/OBV/CMF)。"""
+    info = detect(symbol)
+    if info["market"] not in ("A", "HK"):
+        raise ValueError(f"主力资金流仅 A/H 股（东财按逐笔单量分类），{info['symbol']} 为 "
+                         f"{info['market']} 股；美股请用价量代理(MFI/OBV/CMF)")
+    url = ("https://push2his.eastmoney.com/api/qt/stock/fflow/daykline/get?"
+           f"lmt={int(days)}&klt=101&fields1=f1,f2,f3,f7"
+           "&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f62,f63,f64,f65"
+           f"&secid={_secid(info)}")
+    name, rows = parse_em_fflow(_curl(url))
+    return {"symbol": info["symbol"], "market": info["market"], "name": name,
+            "field": "fund_flow", "unit": "CNY" if info["market"] == "A" else "HKD",
+            "source": "eastmoney", "source_url": url,
+            "fetched_at": fetched_at_now(), "version": VERSION, "n": len(rows), "rows": rows}
+
+
+def fetched_at_now():
+    return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
 # --------------------------------------------------------------------------

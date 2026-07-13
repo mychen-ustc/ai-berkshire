@@ -1,0 +1,60 @@
+---
+name: technical-analysis
+description: "AI Berkshire skill: 技术面分析：择时与风控的叠加层. Source: skills/technical-analysis.md."
+---
+
+## Codex adapter note
+
+This skill is generated from `skills/technical-analysis.md` so Claude Code and Codex users share one canonical workflow.
+
+- Treat `$ARGUMENTS` as the user's request in the current Codex thread.
+- When the source mentions Claude-only surfaces such as Task, Agent, WebSearch, Bash, Read, or Write, use the closest Codex capability available in this session: subagents when available, web search when needed, shell commands for local tools, and normal file edits for workspace files.
+- Use shared project tools from `tools/` in this repository. Prefer running commands from the repository root with paths like `python3 tools/financial_rigor.py ...`; if the current thread starts outside the repo, locate the actual checkout path first instead of assuming a fixed home-directory path.
+- Before starting research, run the `date` command to confirm today's date; treat it as the baseline for "latest" data and state the data cutoff date in the report header. Never assume the current date from training data.
+- Preserve the research quality rules from `AGENTS.md`: cross-check financial data, use exact arithmetic tools for valuation/math, and clearly label uncertainty and source gaps.
+
+# 技术面分析：择时与风控的叠加层
+
+对 $ARGUMENTS 给出客观的技术面读数（趋势/动量/波动/量能/相对强弱/关键价位）。
+
+## 定位（最重要）
+
+价值投资里，技术面**不产生"买什么"的结论，只辅助"是否/何时"**。芒格说过"我从没见过靠画图表致富的人"——本 skill 认同这个警惕：技术面在本体系里只有三个合法用途：
+
+1. **择时**：避免在明确下跌趋势中接飞刀（好公司也可能"再便宜一半"）；用相对强弱确认市场是否已认同你的论点。
+2. **量价确认**：突破是否放量、新高是否有量能配合（否则是背离）。
+3. **风控**：跌破关键均线/ATR 作为复核仓位的触发器（不是机械止损）。
+
+技术面**永远不能推翻基本面结论**，只能给出"现在是不是好时机/要不要复核"的提示。
+
+## 执行流程
+```bash
+python3 tools/technicals.py analyze 600519 --period 2y          # A股(自动取沪深300为RS基准)
+python3 tools/technicals.py analyze AAPL --benchmark SPY --json # 美股
+python3 tools/technicals.py analyze 0700.HK                     # 港股(自动取盈富2800)
+python3 tools/technicals.py analyze --csv data/x.csv            # 离线 OHLCV
+```
+
+输出：
+- **趋势**：SMA20/50/200 多空排列、金叉/死叉、是否站上年线。
+- **动量**：RSI(14) 超买超卖、MACD 金叉死叉与柱状、ROC 1/3/6/12 月动量。
+- **波动**：ATR(14) 及占现价%、布林带(20,2σ) 上下轨/%B/带宽。
+- **量能**：量比(5/60日)、放量/缩量。
+- **相对强弱**：对基准的超额（>0 跑赢），近端 RS 变化——判断市场是否在为你的论点投票。
+- **关键价位**：52周高低距离、近端支撑/阻力（波段高低点）。
+- **技术姿态**：趋势×动能×位置 三轴一句话（启发式标签，非预测）。
+
+## 与其它工具/skill 的闭环
+1. `/investment-research` 或 `/investment-team` 先出**基本面论点与估值**（决定"买什么、值多少"）。
+2. `/technical-analysis` 看**当前技术姿态**——是逆势接飞刀还是顺势介入？相对强弱是否确认？
+3. `/money-flow` 看**资金是否在流入**（技术面与资金面互为印证）。
+4. `tools/position_sizing.py` 结合赔率定仓；跌破关键位时 `/sell-discipline` 复核。
+
+## 原则
+- **客观读数优先**：先给数据，标签只是解读；不预设看多看空。
+- 技术信号**有滞后与假信号**，尤其震荡市；单一指标不作数，多指标共振才有参考价值。
+- 新股/流动性差的标的：均线与波段位不可靠，工具会因数据不足返回 None，不臆造。
+- 前复权口径（A/H 东财 fqt=1、US Yahoo split 调整）；不同复权口径的均线数值不可跨口径比较。
+
+## 相关
+`money-flow`（资金面·互为印证） · `investment-research`（基本面·先行） · `sell-discipline`（跌破关键位复核） · `master-lens`（芒格对技术面的警惕）
