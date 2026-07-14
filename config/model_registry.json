@@ -503,5 +503,29 @@
     "validated_on": "2026-07-14",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "lineage",
+    "name": "数据血缘与复现日志",
+    "tool": "tools/lineage.py",
+    "category": "治理",
+    "method": "对(工具版本+输入+参数)做确定性SHA256签名,追溯输出↔输入,校验可复现性",
+    "assumptions": [
+      "输入source/as_of如实录入"
+    ],
+    "limitations": [
+      "血缘质量取决于录入完整度",
+      "签名不含时间(仅版本+输入+参数)"
+    ],
+    "data_sources": [
+      "各工具输出+datalayer as_of戳"
+    ],
+    "tests": [
+      "tests/test_lineage.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
   }
 ]
