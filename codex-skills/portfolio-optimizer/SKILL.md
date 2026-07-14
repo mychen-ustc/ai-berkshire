@@ -24,10 +24,13 @@ This skill is generated from `skills/portfolio-optimizer.md` so Claude Code and 
 ## 执行流程
 ```bash
 python3 tools/portfolio_optimizer.py optimize --from-datalayer "600519,0700.HK,AAPL,VOO" \
-    --method inverse-vol --period 5y   # 上限默认读 config/investment-policy.json
+    --method risk-parity --period 5y   # 上限默认读 config/investment-policy.json
 ```
-- **逆波动**：波动越低权重越高，让各标的风险贡献更均衡（低波资产不再被埋没）。
-- **等权**：`--method equal`，朴素基准。
+四种方法（均含 IPS 单一上限硬约束）：
+- **逆波动 `inverse-vol`**：波动越低权重越高（忽略相关性的风险平价近似）。
+- **风险平价 `risk-parity`**：等风险贡献(ERC)——用协方差矩阵 + 平方根阻尼迭代，让每只对组合风险的贡献相等（考虑相关性，比逆波动更严谨）。
+- **最小方差 `min-variance`**：w ∝ Σ⁻¹·1（纯 stdlib Gauss-Jordan 求逆），长仓截零归一——集中于低波/低相关，理论组合波动最小。
+- **等权 `equal`**：朴素基准。
 - **IPS 上限**：超限者封顶，超出部分按比例再分配（迭代收敛）；`--cap` 可覆盖。
 - 输出各标的年化波动、原始权重、上限后权重、HHI/有效持仓数。
 

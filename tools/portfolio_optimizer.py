@@ -59,6 +59,60 @@ def ann_vol_from_prices(prices, ppy=52):
     return statistics.pstdev(rets) * math.sqrt(ppy) if len(rets) > 1 else 0.0
 
 
+# --------------------------------------------------------------------------
+# 协方差 + 矩阵求逆 + 最小方差 / 风险平价（纯函数，零依赖）
+# --------------------------------------------------------------------------
+def cov_matrix(rets, syms, n):
+    means = {s: sum(rets[s][:n]) / n for s in syms}
+    return [[sum((rets[a][k] - means[a]) * (rets[b][k] - means[b]) for k in range(n)) / n
+             for b in syms] for a in syms]
+
+
+def mat_inverse(A):
+    """Gauss-Jordan 求逆（纯 stdlib）。奇异则抛错。"""
+    n = len(A)
+    M = [[float(A[i][j]) for j in range(n)] + [1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
+    for col in range(n):
+        piv = max(range(col, n), key=lambda r: abs(M[r][col]))
+        if abs(M[piv][col]) < 1e-14:
+            raise ValueError("协方差矩阵近奇异，无法求逆（标的高度共线/周期不足）")
+        M[col], M[piv] = M[piv], M[col]
+        d = M[col][col]
+        M[col] = [x / d for x in M[col]]
+        for r in range(n):
+            if r != col:
+                f = M[r][col]
+                M[r] = [a - f * b for a, b in zip(M[r], M[col])]
+    return [row[n:] for row in M]
+
+
+def min_variance_weights(cov):
+    """w ∝ Σ⁻¹·1，长仓：负权重截零后归一（长仓近似）。"""
+    n = len(cov)
+    inv = mat_inverse(cov)
+    raw = [sum(inv[i][j] for j in range(n)) for i in range(n)]
+    clipped = [max(0.0, x) for x in raw]
+    s = sum(clipped)
+    return [x / s for x in clipped] if s > 0 else [1.0 / n] * n
+
+
+def risk_parity_weights(cov, iters=10000, tol=1e-12):
+    """等风险贡献(ERC)：平方根阻尼不动点 w_i ← w_i·√(b_i/RC_i)（稳定收敛，b_i=1/n）。"""
+    n = len(cov)
+    w = [1.0 / n] * n
+    b = 1.0 / n
+    for _ in range(iters):
+        mrc = [sum(cov[i][j] * w[j] for j in range(n)) for i in range(n)]  # 边际风险贡献
+        rc = [w[i] * mrc[i] for i in range(n)]                            # 风险贡献
+        nw = [w[i] * math.sqrt(b / rc[i]) if rc[i] > 1e-18 else w[i] for i in range(n)]
+        s = sum(nw)
+        nw = [x / s for x in nw]
+        if max(abs(nw[i] - w[i]) for i in range(n)) < tol:
+            return nw
+        w = nw
+    return w
+
+
 def _ips_cap(path=POLICY):
     if not os.path.exists(path):
         return None
@@ -77,7 +131,17 @@ def optimize(args):
     vols = {s: ann_vol_from_prices(cols[s]) for s in cols if len(cols[s]) > 2}
     if not vols:
         raise SystemExit("可用历史不足以计算波动")
-    base = inverse_vol_weights(vols) if args.method == "inverse-vol" else equal_weights(list(vols))
+    syms_v = list(vols)
+    if args.method in ("min-variance", "risk-parity"):
+        rets = {s: [cols[s][i] / cols[s][i - 1] - 1 for i in range(1, len(cols[s]))] for s in syms_v}
+        n = min(len(rets[s]) for s in syms_v)
+        cov = cov_matrix(rets, syms_v, n)
+        wl = min_variance_weights(cov) if args.method == "min-variance" else risk_parity_weights(cov)
+        base = {s: wl[i] for i, s in enumerate(syms_v)}
+    elif args.method == "inverse-vol":
+        base = inverse_vol_weights(vols)
+    else:
+        base = equal_weights(syms_v)
     cap = args.cap if args.cap is not None else _ips_cap(args.policy)
     final = enforce_caps(base, cap) if cap else base
     print("=" * 62)
@@ -97,7 +161,7 @@ def main():
     sub = ap.add_subparsers(dest="cmd")
     o = sub.add_parser("optimize", help="给出建议权重")
     o.add_argument("--from-datalayer", required=True, help='"600519,0700.HK,AAPL,VOO"')
-    o.add_argument("--method", choices=["inverse-vol", "equal"], default="inverse-vol")
+    o.add_argument("--method", choices=["inverse-vol", "equal", "min-variance", "risk-parity"], default="inverse-vol")
     o.add_argument("--period", default="5y", choices=["1y", "2y", "5y", "10y", "max"])
     o.add_argument("--cap", type=float, help="单一上限(0-1)，默认读 IPS")
     o.add_argument("--policy", default=POLICY)
