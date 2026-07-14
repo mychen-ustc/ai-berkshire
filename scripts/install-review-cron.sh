@@ -17,8 +17,9 @@ PY="$(command -v python3 || echo /usr/bin/python3)"
 LOG="$ROOT/logs/review-cron.log"
 TAG="# ai-berkshire-review"   # 用于幂等识别
 
-WEEKLY="0 8 * * 1 cd '$ROOT' && '$PY' tools/review.py --from-ledger data/portfolio/transactions.csv --weekly --html >> '$LOG' 2>&1 $TAG"
-QUARTERLY="30 8 1 1,4,7,10 * cd '$ROOT' && '$PY' tools/review.py --from-ledger data/portfolio/transactions.csv --quarterly --html >> '$LOG' 2>&1 $TAG"
+DAILY="30 7 * * 1-5 cd '$ROOT' && '$PY' tools/market_review.py --md --html >> '$LOG' 2>&1 $TAG"
+WEEKLY="0 8 * * 1 cd '$ROOT' && '$PY' tools/review.py --from-ledger data/portfolio/transactions.csv --weekly --md --html >> '$LOG' 2>&1 $TAG"
+QUARTERLY="30 8 1 1,4,7,10 * cd '$ROOT' && '$PY' tools/review.py --from-ledger data/portfolio/transactions.csv --quarterly --md --html >> '$LOG' 2>&1 $TAG"
 
 current="$(crontab -l 2>/dev/null || true)"
 cleaned="$(printf '%s\n' "$current" | grep -v "$TAG" || true)"
@@ -29,12 +30,13 @@ if [[ "${1:-}" == "--remove" ]]; then
   exit 0
 fi
 
-mkdir -p "$ROOT/logs" "$ROOT/reports/private/reviews"
-{ printf '%s\n' "$cleaned"; echo "$WEEKLY"; echo "$QUARTERLY"; } | grep -v '^$' | crontab -
+mkdir -p "$ROOT/logs" "$ROOT/reports/private/reviews" "$ROOT/reports/private/market"
+{ printf '%s\n' "$cleaned"; echo "$DAILY"; echo "$WEEKLY"; echo "$QUARTERLY"; } | grep -v '^$' | crontab -
 echo "✅ 已安装复盘 cron："
-echo "   · 每周一 08:00  周复盘（--weekly --html）"
-echo "   · 每季首日 08:30 季度复盘（--quarterly --html）"
-echo "   · 日志 → $LOG ; 报告 → reports/private/reviews/"
+echo "   · 工作日 07:30  每日市场全景盘点（market_review --md --html）"
+echo "   · 每周一 08:00  组合周复盘（review --weekly --md --html）"
+echo "   · 每季首日 08:30 季度复盘（review --quarterly --md --html）"
+echo "   · 日志 → $LOG ; 报告 → reports/private/{reviews,market}/"
 echo ""
 echo "查看：crontab -l    卸载：bash scripts/install-review-cron.sh --remove"
 echo "⚠️ macOS 若 cron 不触发：为 /usr/sbin/cron 开启「完全磁盘访问权限」，或改用 launchd。"
