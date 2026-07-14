@@ -527,5 +527,77 @@
     "validated_on": "2026-07-14",
     "revalidate_every_days": 365,
     "owner": "MartinChen"
+  },
+  {
+    "id": "tca",
+    "name": "交易成本分析",
+    "tool": "tools/tca.py",
+    "category": "组合构建",
+    "method": "佣金+半价差+平方根冲击成本分解,执行落差,拆单天数",
+    "assumptions": [
+      "冲击系数/价差估计"
+    ],
+    "limitations": [
+      "真实成本依赖流动性/时段,小额单冲击可忽略"
+    ],
+    "data_sources": [
+      "调用方订单/ADV"
+    ],
+    "tests": [
+      "tests/test_tca.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "asset_allocation",
+    "name": "资产配置SAA/TAA",
+    "tool": "tools/asset_allocation.py",
+    "category": "组合构建",
+    "method": "风险档→SAA战略中枢,美林时钟regime→TAA战术倾斜(有上限),再平衡带",
+    "assumptions": [
+      "regime倾斜幅度克制"
+    ],
+    "limitations": [
+      "regime事后描述非预测",
+      "仅资产类别权重非择券"
+    ],
+    "data_sources": [
+      "macro_regime + 调用方风险档"
+    ],
+    "tests": [
+      "tests/test_asset_allocation.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "industry_chain",
+    "name": "产业链图谱",
+    "tool": "tools/industry_chain.py",
+    "category": "估值",
+    "method": "上下游/替代关系图,卖铲人发现(上游深度),传导路径BFS",
+    "assumptions": [
+      "关系图定性正确"
+    ],
+    "limitations": [
+      "结构图无景气数据",
+      "人工整理非全产业库",
+      "卖铲子不等于稳赚需估值"
+    ],
+    "data_sources": [
+      "config/industry_chain.json人工整理"
+    ],
+    "tests": [
+      "tests/test_industry_chain.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
   }
 ]
