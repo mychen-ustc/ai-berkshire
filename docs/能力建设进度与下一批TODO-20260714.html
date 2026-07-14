@@ -57,8 +57,8 @@ tr:hover td{background:var(--card2)}
 <div class="prog-row"><span class="lb">P4 顶级能力补全</span><div class="prog-bg"><div class="prog-fl" style="width:72%;background:var(--gld)">~72%</div></div></div>
 </div>
 <div class="grid2">
-<div class="stat"><div class="big pos" style="color:var(--grn)">22</div><div class="sub">本轮新增/升级工具</div></div>
-<div class="stat"><div class="big" style="color:var(--blu)">309</div><div class="sub">回归测试全绿(零依赖)</div></div>
+<div class="stat"><div class="big pos" style="color:var(--grn)">28</div><div class="sub">本轮新增/升级工具</div></div>
+<div class="stat"><div class="big" style="color:var(--blu)">354</div><div class="sub">回归测试全绿(零依赖)</div></div>
 </div>
 
 <h2>② 本轮已落地（P3制度化 + P4顶级能力）</h2>
@@ -103,27 +103,17 @@ tr:hover td{background:var(--card2)}
 
 <div class="tier" style="border-color:var(--grn)">
 <h3 style="color:var(--grn)">✅ 已完成（本日）</h3>
-<div class="item"><b>Tier 1 数据地基</b>：T1-1 点时财务库(无前视) · T1-2 公司行动引擎(复权/接续) · T1-3 退市样本库(防幸存者) —— 引擎全部就位。</div>
-<div class="item"><b>T2-1 基本面因子库</b>：价值/成长/动量/低波 命名因子横截面暴露(实测"组合在押成长+动量")。</div>
-</div>
-
-<div class="tier t1">
-<h3>🥇 进行中 / 下一步 <span class="sub">（用户指定序）</span></h3>
-<div class="item"><b>T2-3 回测严谨化</b> <span class="star">★★★★☆</span> ⬅️ 下一步<br>把 backtest 接入 Tier 1 三库：点时基本面(可检验估值信号) + 退市样本(防幸存者) + 公司行动(正确复权)。<br><span class="sub">解锁：所有 Alpha 策略跑同一个"口径一致、无前视、含退市"的统一检验台。这是"引擎已建"→"引擎在用"的关键一跳。</span></div>
-<div class="item"><b>T2-4 数据血缘 + 复现日志</b> <span class="star">★★★☆☆</span><br>model_registry 已登记模型，补"某数字由哪版工具 + 哪批数据算出"的血缘，支持结论可重放/可审计。</div>
-</div>
-
-<div class="tier t2">
-<h3>🥈 Tier 3 · 广度补全 <span class="sub">（本轮纳入）</span></h3>
-<div class="item"><b>T3-1 交易成本分析 TCA</b> <span class="star">★★★☆☆</span> — 冲击成本/执行质量/滑点归因（rebalance 已有线性成本）</div>
-<div class="item"><b>T3-2 资产配置 SAA/TAA + 跨资产</b> <span class="star">★★★☆☆</span> — 股/债/商品/现金战略战术配置（当前纯股票长仓）</div>
-<div class="item"><b>T3-3 产业链图谱</b> <span class="star">★★★☆☆</span> — 上下游/供需/替代，支持"卖铲子"式机会发现</div>
+<div class="item"><b>Tier 1 数据地基</b>：T1-1 点时财务库(无前视) · T1-2 公司行动引擎(复权/接续) · T1-3 退市样本库(防幸存者)。</div>
+<div class="item"><b>T2-1 基本面因子库</b>：价值/成长/动量/低波 命名因子暴露(实测"组合在押成长+动量")。</div>
+<div class="item"><b>T2-3 回测严谨化</b>：backtest_rigorous 接入三库，量化幸存者/前视/复权偏差(实测漏雷曼→虚高55%)。</div>
+<div class="item"><b>T2-4 数据血缘</b>：lineage 可复现签名(版本+输入+参数 SHA256)，结论可追溯/可重放。</div>
+<div class="item"><b>Tier 3 广度</b>：T3-1 TCA(平方根冲击/执行落差) · T3-2 资产配置 SAA/TAA · T3-3 产业链图谱(卖铲子/传导路径)。</div>
 </div>
 
 <div class="tier t3">
-<h3>⏸️ 暂缓 / 更后 <span class="sub">（按用户指定）</span></h3>
-<div class="item"><b>T2-2 运营监控与健康检查</b>（暂缓）— cron 失败告警/数据新鲜度/dead-man's-switch/运行看板，待上述完成后回补。<br>
-<b>T3-4 三表模型完整度校验</b> · <b>T3-5 ESG/另类数据</b> — 更后，按需。</div>
+<h3>⏸️ 下一个自然候选 / 更后</h3>
+<div class="item"><b>T2-2 运营监控与健康检查</b>（用户指定暂缓）— cron 失败告警/数据新鲜度/dead-man's-switch/运行看板。T2-3/T2-4/Tier3 已完成，此项为下一个自然候选。</div>
+<div class="item"><b>T3-4 三表模型完整度校验</b> · <b>T3-5 ESG/另类数据</b> — 更后，按需。</div>
 </div>
 
 <div class="tier t4">
