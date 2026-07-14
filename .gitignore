@@ -49,3 +49,7 @@ config/secrets.local.json
 
 # 个人研究流水线（watchlist 状态机的真实内容，只存本地）
 data/watchlist.pipeline.json
+
+# 事实源：标的主数据 + 点时快照库（含个人研究标的池与累积数据，只存本地）
+data/security_master.json
+data/pit_store.json
