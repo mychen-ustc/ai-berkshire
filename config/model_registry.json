@@ -382,5 +382,32 @@
     "validated_on": "2026-07-14",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "factor_library",
+    "name": "基本面因子库",
+    "tool": "tools/factor_library.py",
+    "category": "风险",
+    "method": "命名因子(价值/成长/动量/低波)横截面 winsorize+z-score 标准化,组合暴露=Σ权重×z",
+    "assumptions": [
+      "横截面相对值有意义",
+      "前瞻EPS/PE可靠"
+    ],
+    "limitations": [
+      "质量(ROE)/规模(市值)需点时基本面库未接入",
+      "ETF/非美股价值成长会缺失",
+      "小样本z分不稳"
+    ],
+    "data_sources": [
+      "us_consensus(价值/成长)",
+      "datalayer(动量/低波)"
+    ],
+    "tests": [
+      "tests/test_factor_library.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
   }
 ]
