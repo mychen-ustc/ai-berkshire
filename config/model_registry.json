@@ -480,5 +480,28 @@
     "validated_on": "2026-07-14",
     "revalidate_every_days": 365,
     "owner": "MartinChen"
+  },
+  {
+    "id": "backtest_rigorous",
+    "name": "回测严谨化层",
+    "tool": "tools/backtest_rigorous.py",
+    "category": "治理",
+    "method": "接入Tier1三库:幸存者修正/点时基本面信号/公司行动复权,量化偏差",
+    "assumptions": [
+      "Tier1库数据完整"
+    ],
+    "limitations": [
+      "严谨性取决于库完整度,覆盖不全时无偏差=没数据"
+    ],
+    "data_sources": [
+      "delisting/pit_financials/corporate_actions"
+    ],
+    "tests": [
+      "tests/test_backtest_rigorous.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
   }
 ]
