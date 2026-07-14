@@ -45,20 +45,20 @@ tr:hover td{background:var(--card2)}
 <h1>机构级投资能力建设 · 进度与下一批 TODO</h1>
 <div class="sub">2026-07-14 · 基于主路线图(2026-07-13)的进度更新 · 回答"建到哪了、接下来做什么"</div>
 
-<div class="lead">工具层已基本建成（<b>P0/P1/P2 ~100%，P3 ~80%，P4 ~65%</b>），但系统瓶颈已从"缺工具"转移到<b>"缺数据地基深度"</b>。<br>
-接下来最高性价比的不是再加工具，而是补三块地基——<span class="hl">点时财务库、公司行动引擎、退市样本库</span>——因为回测严谨性、因子库、历史估值可信度全卡在这里。</div>
+<div class="lead"><span class="hl">✅ 更新(同日)：Tier 1 三块数据地基 + T2-1 基本面因子库已全部落地。</span><br>
+瓶颈从"缺数据地基引擎"再次前移——<b>引擎已就位，下一步是让引擎真正驱动回测(T2-3) + 结论可追溯(T2-4)</b>，再补广度(Tier 3)。数据地基的引擎已建(点时/复权/退市查询语义正确)，但数据靠手工/增量补录。</div>
 
 <h2>① 分层完成度</h2>
 <div class="prog box">
 <div class="prog-row"><span class="lb">P0 机构底座</span><div class="prog-bg"><div class="prog-fl" style="width:100%;background:var(--grn)">100%</div></div></div>
 <div class="prog-row"><span class="lb">P1 研究-决策闭环</span><div class="prog-bg"><div class="prog-fl" style="width:100%;background:var(--grn)">100%</div></div></div>
 <div class="prog-row"><span class="lb">P2 Alpha实验室</span><div class="prog-bg"><div class="prog-fl" style="width:90%;background:var(--grn)">~90%</div></div></div>
-<div class="prog-row"><span class="lb">P3 制度化生产化</span><div class="prog-bg"><div class="prog-fl" style="width:80%;background:var(--gld)">~80%</div></div></div>
-<div class="prog-row"><span class="lb">P4 顶级能力补全</span><div class="prog-bg"><div class="prog-fl" style="width:65%;background:var(--gld)">~65%</div></div></div>
+<div class="prog-row"><span class="lb">P3 制度化生产化</span><div class="prog-bg"><div class="prog-fl" style="width:85%;background:var(--gld)">~85%</div></div></div>
+<div class="prog-row"><span class="lb">P4 顶级能力补全</span><div class="prog-bg"><div class="prog-fl" style="width:72%;background:var(--gld)">~72%</div></div></div>
 </div>
 <div class="grid2">
-<div class="stat"><div class="big pos" style="color:var(--grn)">18</div><div class="sub">本轮新增/升级工具</div></div>
-<div class="stat"><div class="big" style="color:var(--blu)">279</div><div class="sub">回归测试全绿(零依赖)</div></div>
+<div class="stat"><div class="big pos" style="color:var(--grn)">22</div><div class="sub">本轮新增/升级工具</div></div>
+<div class="stat"><div class="big" style="color:var(--blu)">309</div><div class="sub">回归测试全绿(零依赖)</div></div>
 </div>
 
 <h2>② 本轮已落地（P3制度化 + P4顶级能力）</h2>
@@ -79,48 +79,51 @@ tr:hover td{background:var(--card2)}
 <tr><td>P4-1a 因子/伪分散</td><td>factor_model.py — PCA有效赌注(缺基本面因子库)</td><td><span class="tag part">🟡 部分</span></td></tr>
 <tr><td>P3-6a 统一回测</td><td>backtest.py — 点时价格+成本(缺退市/点时基本面)</td><td><span class="tag part">🟡 部分</span></td></tr>
 <tr><td>P3-3a 调度自动化</td><td>cron 日/周/季复盘(缺监控/健康检查)</td><td><span class="tag part">🟡 部分</span></td></tr>
+<tr style="background:rgba(63,185,80,.08)"><td>T2-1 基本面因子库</td><td>factor_library.py — 价值/成长/动量/低波 命名因子暴露</td><td><span class="tag done">✅ 新完成</span></td></tr>
+<tr style="background:rgba(63,185,80,.08)"><td>T1-1 点时财务库</td><td>pit_financials.py — available_at 无前视查询</td><td><span class="tag done">✅ 新完成</span></td></tr>
+<tr style="background:rgba(63,185,80,.08)"><td>T1-2 公司行动引擎</td><td>corporate_actions.py — 拆股/分红/更名 复权+接续</td><td><span class="tag done">✅ 新完成</span></td></tr>
+<tr style="background:rgba(63,185,80,.08)"><td>T1-3 退市样本库</td><td>delisting.py — 当时在市池 + 幸存者体检</td><td><span class="tag done">✅ 新完成</span></td></tr>
 </table>
 
 <h2>③ 成熟度重评（L0–L5）</h2>
 <table class="heat">
 <tr><th>能力域</th><th>7-13</th><th>现在</th><th>说明</th></tr>
-<tr><td>数据层</td><td style="background:#9e6a03">L3</td><td style="background:#9e6a03">L3</td><td style="text-align:left" class="sub">点时财务库/公司行动仍缺→卡L3</td></tr>
+<tr><td>数据层</td><td style="background:#9e6a03">L3</td><td style="background:#2ea043">L3.5</td><td style="text-align:left" class="sub">点时/复权/退市引擎已建,数据靠手工补录</td></tr>
 <tr><td>组合风险</td><td style="background:#9e6a03">L3</td><td style="background:#238636">L4</td><td style="text-align:left" class="sub">+尾部/因子/压力+测试</td></tr>
 <tr><td>组合构建</td><td style="background:#7d4e00">L2</td><td style="background:#238636">L4</td><td style="text-align:left" class="sub">+风险平价/最小方差/再平衡</td></tr>
 <tr><td>估值</td><td style="background:#9e6a03">L3</td><td style="background:#2ea043">L3.5</td><td style="text-align:left" class="sub">缺点时历史估值</td></tr>
 <tr><td>基本面研究</td><td style="background:#9e6a03">L3</td><td style="background:#238636">L4</td><td style="text-align:left" class="sub">+一致预期/13F/宏观多源印证</td></tr>
 <tr><td>治理</td><td style="background:#7d4e00">L2</td><td style="background:#238636">L4</td><td style="text-align:left" class="sub">+模型登记/错误库/硬门禁/校准</td></tr>
-<tr><td>因子/系统化</td><td style="background:#8b3a1e">L1</td><td style="background:#7d4e00">L2.5</td><td style="text-align:left" class="sub">PCA有了,基本面因子库缺</td></tr>
+<tr><td>因子/系统化</td><td style="background:#8b3a1e">L1</td><td style="background:#9e6a03">L3</td><td style="text-align:left" class="sub">PCA + 基本面命名因子库均已建</td></tr>
 <tr><td>运营/自动化</td><td style="background:#8b3a1e">L1</td><td style="background:#7d4e00">L2.5</td><td style="text-align:left" class="sub">cron有了,监控/可重放缺</td></tr>
 </table>
 <div class="sub">诚实结论：多数域已到 <b>L4</b>（结构化工具+测试+交叉验证+治理）。距 L5（自动运转、可监控、可重放的"活机构"）仍差<b>数据地基</b>与<b>运营监控</b>两块。</div>
 
 <h2>④ 下一批 TODO（按性价比排序）</h2>
 
+<div class="tier" style="border-color:var(--grn)">
+<h3 style="color:var(--grn)">✅ 已完成（本日）</h3>
+<div class="item"><b>Tier 1 数据地基</b>：T1-1 点时财务库(无前视) · T1-2 公司行动引擎(复权/接续) · T1-3 退市样本库(防幸存者) —— 引擎全部就位。</div>
+<div class="item"><b>T2-1 基本面因子库</b>：价值/成长/动量/低波 命名因子横截面暴露(实测"组合在押成长+动量")。</div>
+</div>
+
 <div class="tier t1">
-<h3>🥇 Tier 1 · 数据地基深度 <span class="sub">（当前唯一的结构性瓶颈）</span></h3>
-<div class="sub">为什么最优先：回测严谨性、因子库、历史估值三件事全部依赖它。工具再多，喂"当下快照"就永远做不了可信的历史研究。</div>
-<div class="item"><b>T1-1 点时财务库（point-in-time，带 available_at）</b> <span class="star">★★★★★</span><br>存每期财报及其可获得日期，回测/因子/估值只用"当时已知"数据，杜绝前视偏差。<br><span class="sub">解锁：backtest 检验估值信号 · factor 算历史暴露 · comps 回溯历史分位</span></div>
-<div class="item"><b>T1-2 公司行动引擎（拆股/分红/并购/更名/退市）</b> <span class="star">★★★★★</span><br>security_master 已有 PIT 快照，缺公司行动的自动复权与代码接续。<br><span class="sub">解锁：跨公司行动的准确历史收益、股数/成本基准正确调整</span></div>
-<div class="item"><b>T1-3 退市/失败样本库</b> <span class="star">★★★★☆</span><br>backtest 已诚实标注"幸存者偏差"——股票池只含活着的标的，结果偏乐观。<br><span class="sub">解锁：真回测(含退市) · Alpha 策略真实存活率</span></div>
+<h3>🥇 进行中 / 下一步 <span class="sub">（用户指定序）</span></h3>
+<div class="item"><b>T2-3 回测严谨化</b> <span class="star">★★★★☆</span> ⬅️ 下一步<br>把 backtest 接入 Tier 1 三库：点时基本面(可检验估值信号) + 退市样本(防幸存者) + 公司行动(正确复权)。<br><span class="sub">解锁：所有 Alpha 策略跑同一个"口径一致、无前视、含退市"的统一检验台。这是"引擎已建"→"引擎在用"的关键一跳。</span></div>
+<div class="item"><b>T2-4 数据血缘 + 复现日志</b> <span class="star">★★★☆☆</span><br>model_registry 已登记模型，补"某数字由哪版工具 + 哪批数据算出"的血缘，支持结论可重放/可审计。</div>
 </div>
 
 <div class="tier t2">
-<h3>🥈 Tier 2 · 因子库 + 运营监控 <span class="sub">（把 L4 推向 L5）</span></h3>
-<div class="item"><b>T2-1 基本面因子库（Barra式：价值/质量/成长/规模/动量/波动）</b> <span class="star">★★★★★ 研究关键</span><br>factor_model 目前只有 PCA 统计因子(PC1无经济含义)；补横截面基本面因子暴露。<br><span class="sub">解锁：带命名因子的伪分散检测("你其实在押价值+小盘") · 风险归因 · 因子中性化选股</span></div>
-<div class="item"><b>T2-2 运营监控与健康检查（机构的心跳监测）</b> <span class="star">★★★★☆</span><br>cron 会跑，但没有：任务失败告警、数据新鲜度检查、dead-man's-switch、运行看板。<br><span class="sub">解锁：从"会跑的脚本"升级为"出问题会喊你"的可信赖系统</span></div>
-<div class="item"><b>T2-3 回测严谨化（并入 T1 数据）</b> <span class="star">★★★★☆</span><br>backtest 接入点时基本面+退市样本+真实成本，成为所有 Alpha 策略统一检验台。</div>
-<div class="item"><b>T2-4 数据血缘 + 复现日志</b> <span class="star">★★★☆☆</span><br>model_registry 已登记模型，补"某数字由哪版工具+哪批数据算出"的血缘，支持结论可重放。</div>
+<h3>🥈 Tier 3 · 广度补全 <span class="sub">（本轮纳入）</span></h3>
+<div class="item"><b>T3-1 交易成本分析 TCA</b> <span class="star">★★★☆☆</span> — 冲击成本/执行质量/滑点归因（rebalance 已有线性成本）</div>
+<div class="item"><b>T3-2 资产配置 SAA/TAA + 跨资产</b> <span class="star">★★★☆☆</span> — 股/债/商品/现金战略战术配置（当前纯股票长仓）</div>
+<div class="item"><b>T3-3 产业链图谱</b> <span class="star">★★★☆☆</span> — 上下游/供需/替代，支持"卖铲子"式机会发现</div>
 </div>
 
 <div class="tier t3">
-<h3>🥉 Tier 3 · 广度补全 <span class="sub">（按需，非瓶颈）</span></h3>
-<div class="item">
-<b>T3-1 交易成本分析 TCA</b> <span class="star">★★★☆☆</span> — 补冲击成本/执行质量/滑点归因（rebalance 已有线性成本）<br>
-<b>T3-2 资产配置 SAA/TAA + 跨资产</b> <span class="star">★★★☆☆</span> — 股/债/商品/现金战略战术配置（当前纯股票长仓）<br>
-<b>T3-3 产业链图谱</b> <span class="star">★★★☆☆</span> — 上下游/供需/替代，支持"卖铲子"式机会发现<br>
-<b>T3-4 三表模型完整度校验</b> <span class="star">★★★☆☆</span> — driver-based 联动 + 勾稽校验<br>
-<b>T3-5 ESG / 另类数据管线</b> <span class="star">★★☆☆☆</span> — 条件性，视策略需要</div>
+<h3>⏸️ 暂缓 / 更后 <span class="sub">（按用户指定）</span></h3>
+<div class="item"><b>T2-2 运营监控与健康检查</b>（暂缓）— cron 失败告警/数据新鲜度/dead-man's-switch/运行看板，待上述完成后回补。<br>
+<b>T3-4 三表模型完整度校验</b> · <b>T3-5 ESG/另类数据</b> — 更后，按需。</div>
 </div>
 
 <div class="tier t4">
@@ -128,15 +131,15 @@ tr:hover td{background:var(--card2)}
 <div class="item">P5 真实资管运营：OMS/EMS、托管、清算、NAV、客户/监管报告——<b>管客户钱才升 P0</b>，并前置属地合规评估。</div>
 </div>
 
-<h2>⑤ 建议</h2>
+<h2>⑤ 执行序（用户指定）</h2>
 <div class="warn">
-<b>下一步做 Tier 1（数据地基）。</b>三个理由：<br>
-① 它是唯一卡住多条线的瓶颈——backtest、因子库、历史估值都在等它；<br>
-② 投入产出比最高——一次做实数据地基，三个下游能力同时解锁真实性；<br>
-③ 符合"底座优先"——L4 的工具喂 L2 的数据，等于给跑车加劣质油。<br><br>
-若更想先看到"研究力"提升，则优先 <b>T2-1 基本面因子库</b>（立刻让伪分散检测/选股/风险归因带上经济含义的因子标签）。
+Tier 1 数据地基 + T2-1 因子库已完成，接下来依次：<br>
+<b>① T2-3 回测严谨化</b> — 把三块地基真正接入 backtest（无前视/含退市/正确复权），"引擎已建"→"引擎在用"的关键一跳；<br>
+<b>② T2-4 数据血缘</b> — 每个结论可追溯到工具版本 + 数据批次，可重放/可审计；<br>
+<b>③ Tier 3 广度</b>：TCA → 资产配置 SAA/TAA → 产业链图谱。<br>
+（T2-2 运营监控暂缓，待上述完成后回补。）
 </div>
-<div class="box" style="border-color:var(--gld)">💡 <b>一个诚实判断</b>：系统已过"缺工具"阶段。现在多加一个工具的边际价值，远低于把<b>数据地基</b>和<b>运营监控</b>补实——那才是"工具库"和"运转的机构"的分水岭。</div>
+<div class="box" style="border-color:var(--gld)">💡 <b>一个诚实判断</b>：数据地基的<b>引擎</b>已就位，但价值只有在<b>接入回测(T2-3)</b>后才真正兑现——否则就是"建好了防前视的库，回测却还在用老口径"。T2-3 是本阶段性价比最高的一步。</div>
 
 <div class="foot">基于 ai-berkshire 主路线图 TODO-投资能力建设-机构视角-claude.md(2026-07-13)。本快照聚焦进度与下一批 TODO，完整能力地图见主文档。</div>
 </body></html>
