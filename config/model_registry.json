@@ -1,0 +1,386 @@
+[
+  {
+    "id": "financial_rigor",
+    "name": "财务精确计算",
+    "tool": "tools/financial_rigor.py",
+    "category": "计算基座",
+    "method": "Decimal 全程精确求值(PE/ROE/增速/复合)",
+    "assumptions": [
+      "输入财务数据准确",
+      "口径一致(GAAP/非GAAP不混用)"
+    ],
+    "limitations": [
+      "不判断数据真伪，只保证不引入浮点误差",
+      "不做勾稽校验"
+    ],
+    "data_sources": [
+      "调用方提供"
+    ],
+    "tests": [
+      "tests/test_financial_rigor.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-06-01",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "portfolio_risk",
+    "name": "组合风险诊断",
+    "tool": "tools/portfolio_risk.py",
+    "category": "风险",
+    "method": "年化波动/相关矩阵/最大回撤/集中度(HHI)，周频对数收益",
+    "assumptions": [
+      "历史波动近似未来",
+      "收益近似平稳",
+      "汇率折算到 base 币种"
+    ],
+    "limitations": [
+      "回撤依赖样本窗口长度(短窗低估)",
+      "相关性在危机中会跳升",
+      "不含尾部"
+    ],
+    "data_sources": [
+      "东财/腾讯/Yahoo 前复权 kline"
+    ],
+    "tests": [
+      "tests/test_portfolio_risk.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-01",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "tail_risk",
+    "name": "尾部与压力测试",
+    "tool": "tools/tail_risk.py",
+    "category": "风险",
+    "method": "VaR/CVaR(历史+参数法, Acklam 逆正态)/beta 映射压力/流动性天数",
+    "assumptions": [
+      "历史分布或正态近似",
+      "beta 稳定",
+      "参与率(ADV) 20%"
+    ],
+    "limitations": [
+      "VaR 不含未见过的黑天鹅",
+      "参数法假设正态低估厚尾",
+      "压力情景为假设非预测"
+    ],
+    "data_sources": [
+      "portfolio_risk 收益矩阵"
+    ],
+    "tests": [
+      "tests/test_tail_risk.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-13",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "portfolio_optimizer",
+    "name": "组合优化器",
+    "tool": "tools/portfolio_optimizer.py",
+    "category": "组合构建",
+    "method": "逆波动/风险平价(ERC平方根阻尼)/最小方差(Σ⁻¹1)/等权 + IPS上限",
+    "assumptions": [
+      "协方差可估且稳定",
+      "无收益预测(只管风险)",
+      "长仓(min-var 负权截零)"
+    ],
+    "limitations": [
+      "不预测收益",
+      "min-var 对协方差估计误差敏感",
+      "样本外协方差会漂移"
+    ],
+    "data_sources": [
+      "datalayer 历史收益"
+    ],
+    "tests": [
+      "tests/test_optimizer_math.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "rebalance",
+    "name": "再平衡引擎",
+    "tool": "tools/rebalance.py",
+    "category": "组合构建",
+    "method": "现状账本+目标权重→买卖股数/换汇缺口/成本估计/CSV",
+    "assumptions": [
+      "实时报价可得",
+      "线性成本(bps)",
+      "缺席目标=清仓"
+    ],
+    "limitations": [
+      "报价折算股数会滑动",
+      "未含冲击成本",
+      "跨币种需人工补FX行"
+    ],
+    "data_sources": [
+      "ledger 账本 + datalayer 报价"
+    ],
+    "tests": [
+      "tests/test_rebalance.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "position_sizing",
+    "name": "仓位定量",
+    "tool": "tools/position_sizing.py",
+    "category": "组合构建",
+    "method": "凯利/赔率赔率比 + 上限约束",
+    "assumptions": [
+      "赔率与胜率估计可靠",
+      "用分数凯利(半凯利)防高估"
+    ],
+    "limitations": [
+      "凯利对胜率估计极敏感(高估→过度下注)",
+      "单期模型不含路径风险"
+    ],
+    "data_sources": [
+      "调用方赔率假设"
+    ],
+    "tests": [
+      "tests/test_position_sizing.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-01",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "factor_model",
+    "name": "因子/伪分散检测",
+    "tool": "tools/factor_model.py",
+    "category": "风险",
+    "method": "收益相关矩阵 PCA(Jacobi 特征分解)，主成分暴露识别伪分散",
+    "assumptions": [
+      "线性相关捕捉共同驱动",
+      "样本足够估计协方差"
+    ],
+    "limitations": [
+      "PCA 成分无经济含义标签(需人工解读)",
+      "非线性依赖捕捉不到"
+    ],
+    "data_sources": [
+      "datalayer 历史收益"
+    ],
+    "tests": [
+      "tests/test_factor_model.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-05",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "decision_journal",
+    "name": "决策校准(Brier)",
+    "tool": "tools/decision_journal.py",
+    "category": "治理",
+    "method": "记录 P(论点成立)，resolve 后 Brier 分数 + 分桶校准 + 按信心分层",
+    "assumptions": [
+      "命中定义=达到基准目标价",
+      "样本独立"
+    ],
+    "limitations": [
+      "小样本 Brier 噪声大(需≥20)",
+      "命中/未中二值化损失信息"
+    ],
+    "data_sources": [
+      "data/portfolio/decisions.jsonl"
+    ],
+    "tests": [
+      "tests/test_decision_journal.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-01",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "attribution",
+    "name": "业绩归因",
+    "tool": "tools/attribution.py",
+    "category": "治理",
+    "method": "贡献分解(w×r) + Brinson(配置/选股/交互效应)",
+    "assumptions": [
+      "基准与分组口径一致",
+      "区间收益可得"
+    ],
+    "limitations": [
+      "Brinson 单期，多期需几何链接(未实现)",
+      "分组主观影响归因"
+    ],
+    "data_sources": [
+      "datalayer 区间收益 + 分组CSV"
+    ],
+    "tests": [
+      "tests/test_attribution.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-01",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "comps",
+    "name": "可比公司估值",
+    "tool": "tools/comps.py",
+    "category": "估值",
+    "method": "横截面 PE/PB/PS/EV倍数中位数 + 分位数",
+    "assumptions": [
+      "可比集可比(同业务/阶段/资本结构)",
+      "会计口径可比"
+    ],
+    "limitations": [
+      "负PE需剔除或标注",
+      "相对估值传染泡沫(全行业高估时误判便宜)"
+    ],
+    "data_sources": [
+      "腾讯/东财 倍数"
+    ],
+    "tests": [
+      "tests/test_comps.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-08",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "statement_model",
+    "name": "三表建模",
+    "tool": "tools/statement_model.py",
+    "category": "估值",
+    "method": "利润表/资产负债表/现金流预测 + DCF",
+    "assumptions": [
+      "增长/利润率/资本开支假设",
+      "永续增长<折现率"
+    ],
+    "limitations": [
+      "DCF 对终值与折现率极敏感",
+      "假设即结论(需情景分析佐证)"
+    ],
+    "data_sources": [
+      "调用方假设 + 历史财报"
+    ],
+    "tests": [
+      "tests/test_statement_model.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-08",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "scenario",
+    "name": "情景/敏感性分析",
+    "tool": "tools/scenario.py",
+    "category": "估值",
+    "method": "多情景加权 + 单变量敏感性",
+    "assumptions": [
+      "情景概率主观赋值",
+      "变量间独立(单变量扫描)"
+    ],
+    "limitations": [
+      "概率主观",
+      "忽略变量联动"
+    ],
+    "data_sources": [
+      "调用方假设"
+    ],
+    "tests": [
+      "tests/test_scenario.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-08",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "macro_regime",
+    "name": "宏观 Regime",
+    "tool": "tools/macro_regime.py",
+    "category": "宏观",
+    "method": "PMI/CPI/M2/利率 判别宏观状态(扩张/滞胀/衰退/复苏)",
+    "assumptions": [
+      "指标领先/同步关系稳定",
+      "阈值划分合理"
+    ],
+    "limitations": [
+      "Regime 转折点事后才清晰",
+      "阈值划分主观",
+      "不预测拐点"
+    ],
+    "data_sources": [
+      "东财宏观 + Yahoo ^TNX/VIX"
+    ],
+    "tests": [
+      "tests/test_macro_regime.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-09",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "security_master",
+    "name": "证券主数据 + PIT",
+    "tool": "tools/security_master.py",
+    "category": "事实源",
+    "method": "内部ID + 时点(PIT)快照，pit_latest 剔除 as_of>日期防前视",
+    "assumptions": [
+      "快照 as_of 日期准确",
+      "同一标的 market+symbol 唯一"
+    ],
+    "limitations": [
+      "退市/更名需手工维护快照",
+      "不自动纠错源数据"
+    ],
+    "data_sources": [
+      "datalayer detect/quote"
+    ],
+    "tests": [
+      "tests/test_security_master.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-13",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "report_audit",
+    "name": "报告数据抽检 + 硬门禁",
+    "tool": "tools/report_audit.py",
+    "category": "治理",
+    "method": "抽15%数据点双源核验 + 门禁(来源覆盖/主观词/估计标注/幻觉抽检)",
+    "assumptions": [
+      "报告为 Markdown",
+      "数字附近有来源标注"
+    ],
+    "limitations": [
+      "正则提取覆盖不全(复杂表格漏检)",
+      "门禁是启发式非语义理解"
+    ],
+    "data_sources": [
+      "报告文本 + 人工/网络核验值"
+    ],
+    "tests": [
+      "tests/test_report_gate.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
+  }
+]

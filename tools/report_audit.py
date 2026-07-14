@@ -399,6 +399,163 @@ def render_verdict(results: list, report_name: str = "") -> dict:
 
 
 # ---------------------------------------------------------------------------
+# AI 硬门禁：发布前的结构性防线（在"数据抽检"之前先过这一关）
+#   1) 来源可核    — 量化断言附近须有来源标注；无源的具体数字=幻觉风险
+#   2) 主观词拒答  — CLAUDE.md 禁用"我认为/显然/毫无疑问"等主观表述
+#   3) 估计须标注  — 预测/估算值须标"估计"，不得冒充事实
+#   4) 交叉验证    — 关键数据应有 ≥2 来源
+# 门禁是启发式(正则)非语义理解——它降低幻觉与无据断言的概率，不替代人工与数据抽检。
+# ---------------------------------------------------------------------------
+
+# 主观表述黑名单（CLAUDE.md 明令禁止）。"绝对"用具体搭配以避开"绝对值/绝对规模"等技术词。
+_SUBJECTIVE = ["我认为", "我觉得", "我相信", "显然", "毫无疑问", "众所周知",
+               "肯定会", "一定会", "必然会", "绝对会", "绝对能", "绝对不", "绝对是", "绝对安全"]
+
+# 来源标记：出现这些词/结构，视为该行/邻近有来源支撑
+_SOURCE_MARKERS = [
+    "来源", "数据来源", "source", "根据", "据", "引自", "出自", "披露", "财报", "年报", "季报",
+    "招股书", "公告", "macrotrends", "stockanalysis", "aastocks", "eastmoney", "东财", "东方财富",
+    "腾讯", "yahoo", "finnhub", "edgar", "wind", "彭博", "bloomberg", "reuters", "路透",
+    "cninfo", "巨潮", "sec", "10-k", "10-q", "20-f", "http",
+]
+
+# 前瞻/估算语境词：出现则该数字应被视为"估计"，须有估计标注。
+# 只保留"真前瞻"词——历史年份(FY2025/2026Q1)是已发生事实不算前瞻，故不含裸年份。
+_FORWARD_CTX = ["预计", "预测", "假设", "目标价", "展望", "guidance",
+                "指引", "有望", "或将", "预期", "远期", "隐含", "测算"]
+# 显式远期估计年记法：2027E / 2026e（带 E 后缀才是估计年）
+_FORWARD_YEAR_RE = re.compile(r'20\d{2}\s*[eE]\b')
+_ESTIMATE_TAGS = ["估计", "估算", "预计", "预测", "假设", "约", "~", "e)", "（e", "(e", "est"]
+
+
+def _has_marker(text, markers):
+    low = text.lower()
+    return any(m.lower() in low for m in markers)
+
+
+def gate_report(md_text: str) -> dict:
+    """报告发布前硬门禁。返回结构化判决：来源覆盖率、主观词、未标注估计、交叉验证。纯函数。"""
+    lines = md_text.split("\n")
+    in_code = False
+
+    subjective_hits = []           # (lineno, word, text)
+    unsourced_claims = []          # 有量化数字但邻近无来源
+    unlabeled_estimates = []       # 前瞻语境的数字但未标"估计"
+    quant_lines = 0
+    sourced_lines = 0
+
+    # 数字模式：具体的量化断言（百分比/亿/倍/美元额），排除纯列表序号/年份
+    num_re = re.compile(r'([\d,，\.]+)\s*(%|亿|万亿|[xX倍]|[BMT])|[$¥￥]\s*[\d,，\.]+')
+
+    for lineno, raw in enumerate(lines, start=1):
+        stripped = raw.strip()
+        if stripped.startswith("```"):
+            in_code = not in_code
+            continue
+        if in_code or not stripped or re.match(r'^#{1,6}\s', stripped):
+            continue
+        # 表格分隔行跳过
+        if re.match(r'^\|[\-\s\|:]+\|$', stripped):
+            continue
+
+        # 1) 主观词（跳过引用块——大师语录里的"我觉得"是被引用的，非分析者本人口吻）
+        if not stripped.startswith(">"):
+            for w in _SUBJECTIVE:
+                if w in stripped:
+                    subjective_hits.append((lineno, w, stripped[:80]))
+
+        # 2/4) 量化断言 → 来源覆盖
+        has_num = bool(num_re.search(stripped))
+        # 过滤纯年份行（如 "2026Q1"）——不是量化断言
+        only_year = re.fullmatch(r'[\s\|\-]*20\d{2}\s*(Q[1-4])?[\s\|\-]*', stripped)
+        if has_num and not only_year:
+            quant_lines += 1
+            # 来源可以在本行、上一行、下一行（表格常把"来源"放脚注）
+            window = stripped
+            if lineno - 2 >= 0:
+                window += " " + lines[lineno - 2]
+            if lineno < len(lines):
+                window += " " + lines[lineno]
+            if _has_marker(window, _SOURCE_MARKERS):
+                sourced_lines += 1
+            else:
+                unsourced_claims.append((lineno, stripped[:80]))
+
+            # 3) 前瞻语境但未标注估计（真前瞻词 或 显式 YYYYE 记法）
+            is_forward = _has_marker(stripped, _FORWARD_CTX) or bool(_FORWARD_YEAR_RE.search(stripped))
+            if is_forward and not _has_marker(stripped, _ESTIMATE_TAGS):
+                # 排除历史年份陈述（含"实现/录得/去年"等已发生词）
+                if not _has_marker(stripped, ["实现", "录得", "去年", "上季", "同比", "环比", "已"]):
+                    unlabeled_estimates.append((lineno, stripped[:80]))
+
+    coverage = (sourced_lines / quant_lines) if quant_lines else 1.0
+
+    # 交叉验证信号：全文出现"两来源/交叉验证/复核"或多个不同来源名
+    distinct_sources = set()
+    low = md_text.lower()
+    for m in _SOURCE_MARKERS:
+        if m.lower() in low and m not in ("来源", "数据来源", "source", "根据", "据"):
+            distinct_sources.add(m)
+    cross_verified = len(distinct_sources) >= 2 or _has_marker(md_text, ["交叉验证", "两个来源", "双源", "两来源", "互相印证"])
+
+    # 判决规则
+    reasons = []
+    if subjective_hits:
+        reasons.append(f"含 {len(subjective_hits)} 处主观表述（CLAUDE.md 禁用）")
+    if coverage < 0.6 and quant_lines >= 5:
+        reasons.append(f"量化断言来源覆盖率仅 {coverage:.0%}（<60%），存在无据数字")
+    if len(unlabeled_estimates) > 3:
+        reasons.append(f"{len(unlabeled_estimates)} 处前瞻数字未标注「估计」")
+    if not cross_verified and quant_lines >= 10:
+        reasons.append("未见交叉验证/多来源（关键数据应 ≥2 来源）")
+
+    verdict = "PASS" if not reasons else "FAIL"
+    return {
+        "verdict": verdict, "reasons": reasons,
+        "quant_lines": quant_lines, "sourced_lines": sourced_lines, "coverage": round(coverage, 3),
+        "subjective_hits": subjective_hits, "unsourced_claims": unsourced_claims,
+        "unlabeled_estimates": unlabeled_estimates,
+        "distinct_sources": sorted(distinct_sources), "cross_verified": cross_verified,
+    }
+
+
+def render_gate(res: dict, report_name: str = "") -> None:
+    BOLD, RED, GREEN, YELLOW, RESET = '\033[1m', '\033[91m', '\033[92m', '\033[93m', '\033[0m'
+    print("=" * 70)
+    print(f"{BOLD}AI 硬门禁 — 报告发布前结构性防线{RESET}")
+    if report_name:
+        print(f"报告：{report_name}")
+    print("=" * 70)
+    cov = res["coverage"]
+    cov_c = GREEN if cov >= 0.6 else RED
+    print(f"  量化断言 {res['quant_lines']} 行  ·  有来源 {res['sourced_lines']} 行  ·  "
+          f"来源覆盖率 {cov_c}{cov:.0%}{RESET}")
+    print(f"  交叉验证：{(GREEN+'✓ 多来源') if res['cross_verified'] else (YELLOW+'⚠ 未见多来源')}{RESET}"
+          + (f"（{', '.join(res['distinct_sources'])}）" if res['distinct_sources'] else ""))
+    if res["subjective_hits"]:
+        print(f"\n  {RED}❌ 主观表述（{len(res['subjective_hits'])}）：{RESET}")
+        for ln, w, t in res["subjective_hits"][:10]:
+            print(f"     第{ln}行「{w}」: {t}")
+    if res["unsourced_claims"]:
+        print(f"\n  {YELLOW}⚠️  无来源标注的量化断言（{len(res['unsourced_claims'])}，抽样）：{RESET}")
+        for ln, t in res["unsourced_claims"][:8]:
+            print(f"     第{ln}行: {t}")
+    if res["unlabeled_estimates"]:
+        print(f"\n  {YELLOW}⚠️  前瞻数字未标「估计」（{len(res['unlabeled_estimates'])}，抽样）：{RESET}")
+        for ln, t in res["unlabeled_estimates"][:8]:
+            print(f"     第{ln}行: {t}")
+    print()
+    if res["verdict"] == "PASS":
+        print(f"{BOLD}{GREEN}【门禁通过】结构性检查通过，可进入数据抽检(extract/verdict)。{RESET}")
+    else:
+        print(f"{BOLD}{RED}【门禁打回】需修正后重审：{RESET}")
+        for r in res["reasons"]:
+            print(f"  ❌ {r}")
+    print("=" * 70)
+    print(f"  {YELLOW}注：门禁是启发式而非语义理解，通过不代表内容正确——仍须数据抽检 + 人工复核。{RESET}")
+
+
+# ---------------------------------------------------------------------------
 # CLI Entry Point
 # ---------------------------------------------------------------------------
 
@@ -445,6 +602,11 @@ def main():
     vrd.add_argument('--results', required=True, help='JSON 数组，含 fetched_value 等字段')
     vrd.add_argument('--report', default='', help='报告名称（可选，用于显示）')
     vrd.add_argument('--output-json', action='store_true', help='将判决结果以 JSON 输出到 stdout')
+
+    # gate — 发布前硬门禁（来源覆盖/主观词/估计标注/交叉验证）
+    gt = sub.add_parser('gate', help='AI 硬门禁：发布前结构性防线（先于数据抽检）')
+    gt.add_argument('--report', required=True, help='报告文件路径（Markdown）')
+    gt.add_argument('--output-json', action='store_true')
 
     args = parser.parse_args()
 
@@ -513,6 +675,19 @@ def main():
 
         # 非零退出码表示打回，方便 CI/脚本判断
         sys.exit(0 if outcome['verdict'] == 'PASS' else 1)
+
+    elif args.command == 'gate':
+        if not os.path.exists(args.report):
+            print(f'❌ 文件不存在: {args.report}', file=sys.stderr)
+            sys.exit(1)
+        with open(args.report, 'r', encoding='utf-8') as f:
+            text = f.read()
+        res = gate_report(text)
+        if args.output_json:
+            print(json.dumps(res, ensure_ascii=False, indent=2))
+        else:
+            render_gate(res, report_name=args.report)
+        sys.exit(0 if res['verdict'] == 'PASS' else 1)
 
     else:
         parser.print_help()
