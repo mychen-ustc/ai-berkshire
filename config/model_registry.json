@@ -409,5 +409,76 @@
     "validated_on": "2026-07-14",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "pit_financials",
+    "name": "点时财务库",
+    "tool": "tools/pit_financials.py",
+    "category": "事实源",
+    "method": "存财报+available_at披露日,查询只返回当时已披露(无前视)",
+    "assumptions": [
+      "available_at准确=披露日非期末"
+    ],
+    "limitations": [
+      "手工/增量补录非全市场",
+      "修订取最新披露"
+    ],
+    "data_sources": [
+      "手工录入/财报"
+    ],
+    "tests": [
+      "tests/test_data_foundation.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "corporate_actions",
+    "name": "公司行动引擎",
+    "tool": "tools/corporate_actions.py",
+    "category": "事实源",
+    "method": "拆股/分红/更名复权因子+代码接续+持仓调整",
+    "assumptions": [
+      "行动数据完整"
+    ],
+    "limitations": [
+      "分红复权需当时价格",
+      "手工补录"
+    ],
+    "data_sources": [
+      "手工录入"
+    ],
+    "tests": [
+      "tests/test_data_foundation.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "delisting",
+    "name": "退市样本库",
+    "tool": "tools/delisting.py",
+    "category": "事实源",
+    "method": "退市/破产样本+当时在市池,防幸存者偏差",
+    "assumptions": [
+      "退市日/终值收益准确"
+    ],
+    "limitations": [
+      "手工补录非全市场退市库,覆盖不全体检偏乐观"
+    ],
+    "data_sources": [
+      "手工录入"
+    ],
+    "tests": [
+      "tests/test_data_foundation.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-14",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
   }
 ]
