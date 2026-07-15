@@ -777,5 +777,31 @@
     "validated_on": "2026-07-15",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "factor_risk",
+    "name": "因子风险分解",
+    "tool": "tools/factor_risk.py",
+    "category": "风险",
+    "method": "横截面OLS估因子收益+因子协方差+特异方差,组合方差分解为因子风险vs特异+每因子贡献",
+    "assumptions": [
+      "N>K(股票数>因子数)",
+      "暴露稳定"
+    ],
+    "limitations": [
+      "单期暴露/暴露漂移失真",
+      "需≥10全覆盖美股",
+      "协方差随窗口漂移"
+    ],
+    "data_sources": [
+      "factor_library暴露 + datalayer收益"
+    ],
+    "tests": [
+      "tests/test_factor_risk.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-15",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
   }
 ]
