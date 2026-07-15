@@ -677,5 +677,32 @@
     "validated_on": "2026-07-15",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "dividends",
+    "name": "分红入账",
+    "tool": "tools/dividends.py",
+    "category": "事实源",
+    "method": "回放账本×真实分红(Yahoo events=div)按时点持股→DIV交易,可扣预扣税",
+    "assumptions": [
+      "除息日持股即应得",
+      "Yahoo分红数据准确"
+    ],
+    "limitations": [
+      "仅美股(A/港未接)",
+      "默认税前毛股息",
+      "默认现金不DRIP",
+      "派息延迟未建模"
+    ],
+    "data_sources": [
+      "Yahoo events=div + ledger回放"
+    ],
+    "tests": [
+      "tests/test_dividends.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-15",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
   }
 ]
