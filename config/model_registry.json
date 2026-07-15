@@ -278,7 +278,7 @@
       "tests/test_statement_model.py"
     ],
     "status": "validated",
-    "validated_on": "2026-07-08",
+    "validated_on": "2026-07-15",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
   },

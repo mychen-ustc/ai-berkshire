@@ -38,6 +38,22 @@ WATCHING = ("discovered", "screening", "researching", "candidate")   # T2 的"�
 # --------------------------------------------------------------------------
 # 纯函数（可测）
 # --------------------------------------------------------------------------
+ISSUER_TICKER = {   # 13F issuer 名 → ticker(用于与持仓去重;13F无ticker)
+    "ALPHABET": "GOOGL", "APPLE": "AAPL", "MICROSOFT": "MSFT", "NVIDIA": "NVDA",
+    "AMERICAN EXPRESS": "AXP", "COCA": "KO", "COSTCO": "COST", "NASDAQ": "NDAQ",
+    "META PLATFORMS": "META", "AMAZON": "AMZN", "BERKSHIRE": "BRK.B",
+}
+
+
+def canon_symbol(sym):
+    """把 13F issuer 名归一到 ticker(便于与持仓去重);其余原样大写。纯函数。"""
+    u = (sym or "").upper()
+    for name, tk in ISSUER_TICKER.items():
+        if name in u:
+            return tk
+    return u
+
+
 def dedup_pool(records):
     """候选池按 symbol 去重(保留最早 added)。纯函数。"""
     seen = {}
@@ -55,7 +71,9 @@ def tier_view(pool, wl_entries, holdings):
     t2 = sorted(e["symbol"] for e in wl_entries if e.get("state") in WATCHING
                 and e["symbol"].upper() not in held)
     t2u = {s.upper() for s in t2}
-    t1_recs = sorted((r for r in pool if r["symbol"].upper() not in held and r["symbol"].upper() not in t2u),
+    # 去重用 canon(把 13F issuer 名归一到 ticker,避免已持仓的 Alphabet 当新线索)
+    t1_recs = sorted((r for r in pool if canon_symbol(r["symbol"]) not in held
+                      and canon_symbol(r["symbol"]) not in t2u and r["symbol"].upper() not in t2u),
                      key=lambda x: (-x.get("strength", 1)))
     t1 = [r["symbol"] for r in t1_recs]
     issues = []
@@ -324,7 +342,8 @@ def cmd_triage(args):
     pool = pool_load(args.pool)
     held = {h.upper() for h in _holdings()}
     wl_syms = {e["symbol"].upper() for e in wl.load()["entries"]}
-    cands = [r for r in pool if r["symbol"].upper() not in held and r["symbol"].upper() not in wl_syms]
+    cands = [r for r in pool if canon_symbol(r["symbol"]) not in held
+             and canon_symbol(r["symbol"]) not in wl_syms and r["symbol"].upper() not in wl_syms]
     scored = []
     for r in cands:
         mom, vol = (None, None)
