@@ -625,5 +625,31 @@
     "validated_on": "2026-07-15",
     "revalidate_every_days": 365,
     "owner": "MartinChen"
+  },
+  {
+    "id": "quant_metrics",
+    "name": "量化五指标",
+    "tool": "tools/quant_metrics.py",
+    "category": "风险",
+    "method": "Alpha(詹森)/Beta(Cov÷Var)/夏普/最大回撤/信息比率,vs基准,简单收益年化+定性评价",
+    "assumptions": [
+      "历史区间代表性",
+      "单一基准/简单收益"
+    ],
+    "limitations": [
+      "α/β随窗口漂移",
+      "不含黑天鹅",
+      "IR>1可能过拟合窗口"
+    ],
+    "data_sources": [
+      "datalayer 组合加权收益 + 基准"
+    ],
+    "tests": [
+      "tests/test_quant_metrics.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-15",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
   }
 ]

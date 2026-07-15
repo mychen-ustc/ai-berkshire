@@ -27,6 +27,7 @@ import sentiment as st  # noqa: E402
 import macro_regime as mac  # noqa: E402
 import news_engine as ne  # noqa: E402
 import radar as rad  # noqa: E402
+import quant_metrics as qm  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MKT_CN = {"A": "A股", "US": "美股", "HK": "港股"}
@@ -229,6 +230,14 @@ def run(args):
     # ② 组合层
     port = psc.scan_portfolio(weights)
 
+    # 量化五指标(Alpha/Beta/夏普/最大回撤/信息比率) vs 基准 SPY
+    metrics = None
+    try:
+        metrics = qm.evaluate_from_datalayer(weights, "SPY", period="2y", freq="weekly", rf=0.04)
+        metrics["rf"] = 0.04
+    except Exception:  # noqa: BLE001
+        metrics = None
+
     # watchlist 诊断（非持仓标的：候选/退出——是否反转/再入）
     entries = wl.load()["entries"]
     thesis = {e["symbol"].upper(): e for e in entries}
@@ -270,7 +279,7 @@ def run(args):
     actions = build_actions([h for h in holdings if not h.get("error")], watch_extras, due, imminent, market["verdict"])
     updates = synthesize_updates(holdings, watch_extras, port, market, radar_out)
     return {"cadence": cadence, "date": _today(), "source": src, "market": market,
-            "port": port, "holdings": holdings, "watch_extras": watch_extras,
+            "port": port, "metrics": metrics, "holdings": holdings, "watch_extras": watch_extras,
             "due": due, "timeline": timeline, "imminent": imminent, "radar": radar_out,
             "actions": actions, "updates": updates, "thesis": thesis, "us_earn": us_earn}
 
@@ -400,6 +409,15 @@ def render_text(r):
     if f:
         L.append(f"  风险/因子: 有效独立因子 {f.get('n_eff', 0):.2f}/{f.get('n', 0)} · PC1 {f.get('pc1_pct', 0):.1f}% · {f.get('verdict', '')}")
         L.append(f"  因子倾斜: 动量 {f.get('port_momentum_z', 0):+.2f} · 波动 {f.get('port_vol_z', 0):+.2f}")
+    m = r.get("metrics")
+    if m:
+        v = m["verdicts"]
+        def _f(x, pct=False):
+            return "—" if x is None else (f"{x:+.1%}" if pct else f"{x:+.2f}")
+        L.append(f"  量化五指标(vs {m['benchmark']} · {m['n_periods']}期):")
+        L.append(f"    β {_f(m['beta'])} {v['beta']}  ·  α年化 {_f(m['alpha_annual'], True)} {v['alpha']}")
+        L.append(f"    夏普 {_f(m['sharpe'])} {v['sharpe']}  ·  最大回撤 {_f(m['max_drawdown'], True)} {v['max_drawdown']}")
+        L.append(f"    信息比率 {_f(m['information_ratio'])} {v['information_ratio']}")
 
     # ③ 逐持仓五面
     L.append("\n" + "─" * 72 + "\n【三、逐持仓五面诊断】")
@@ -457,6 +475,27 @@ def render_text(r):
 
     L.append("\n  ⚠️ 复盘为工具信号聚合、非投资建议；红线/建议是提示、须人工拍板；五面皆叠加层不替代基本面。")
     return "\n".join(L)
+
+
+def _metrics_html(m):
+    """量化五指标 HTML 卡片。"""
+    if not m:
+        return ""
+    v = m["verdicts"]
+    def _f(x, pct=False):
+        return "—" if x is None else (f"{x:+.1%}" if pct else f"{x:+.2f}")
+    cells = [
+        ("Beta β", _f(m["beta"]), v["beta"]),
+        ("Alpha 年化", _f(m["alpha_annual"], True), v["alpha"]),
+        ("夏普比率", _f(m["sharpe"]), v["sharpe"]),
+        ("最大回撤", _f(m["max_drawdown"], True), v["max_drawdown"]),
+        ("信息比率 IR", _f(m["information_ratio"]), v["information_ratio"]),
+    ]
+    rows = "".join(
+        f'<tr><td>{name}</td><td style="text-align:right;font-weight:700">{val}</td>'
+        f'<td style="color:#9aa5b1">{verd}</td></tr>' for name, val, verd in cells)
+    return (f'<div class="card">量化五指标 · vs {m["benchmark"]} · {m["n_periods"]}期'
+            f'<table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px">{rows}</table></div>')
 
 
 def render_html(r):
@@ -544,6 +583,7 @@ footer{{color:var(--muted);font-size:.78rem;margin-top:20px;border-top:1px solid
 {news_items}
 <div class="mrow" style="margin-top:6px"><b>▶ 结论</b>{_h.escape(m['verdict']['summary'])}{('；'+_h.escape(m['verdict']['caution'])) if m['verdict'].get('caution') else ''}</div></div>
 <h2>二、组合层</h2><div class="card">有效独立因子 <b>{f.get('n_eff',0):.2f}/{f.get('n',0)}</b> · PC1 {f.get('pc1_pct',0):.1f}% · {_h.escape(f.get('verdict',''))}<br>因子倾斜 动量 {f.get('port_momentum_z',0):+.2f} · 波动 {f.get('port_vol_z',0):+.2f}</div>
+{_metrics_html(r.get('metrics'))}
 <h2>三、逐持仓五面诊断</h2>{holds}
 <h2>四、Watchlist 诊断（非持仓/观察）</h2>{watch or '<div class="card">无</div>'}
 <h2>五、到期复审 / 临近催化剂</h2><div class="card"><ul>{due}{imm}</ul></div>

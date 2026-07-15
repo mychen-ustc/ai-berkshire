@@ -41,6 +41,7 @@ This skill is generated from `skills/portfolio-optimization-report.md` so Claude
 | **宏观** | `macro_regime.py now` | 美林时钟象限 → 成长/价值/防御倾斜的宏观依据 |
 | **相关/伪分散** | `factor_model.py analyze` | 有效独立赌注数、PC1主导度 → 相关热力图 |
 | **尾部** | `tail_risk.py analyze` | VaR/CVaR/压力/流动性 |
+| **风险调整** | `quant_metrics.py eval` | Alpha/Beta/夏普/最大回撤/信息比率 vs 基准 + 评价 |
 | **权重基准** | `portfolio_optimizer.py --method risk-parity/min-variance` | 纯低回撤锚（再据估值/宏观倾斜） |
 | **定仓校验** | `position_sizing.py kelly` | 半凯利上限校验单只权重是否过重 |
 | **调仓落地** | `rebalance.py` | 买卖股数/换汇缺口/成本/CSV |
@@ -68,7 +69,7 @@ This skill is generated from `skills/portfolio-optimization-report.md` so Claude
 8. **⭐watchlist 分档理由**：每只新标的**为什么**进"候选/初筛/发现"某一档（纳入=进组合、待研究=有独立逻辑需查、伪分散池=与核心重叠不重复持有）
 9. **效率前沿**：3-5 版本收益-回撤定位 + 推荐点
 10. **相关性与真分散**：相关热力图 + 有效独立赌注数
-11. **尾部风险验证**：VaR/CVaR/压力/单点冲击
+11. **尾部风险 + 量化五指标**：VaR/CVaR/压力/单点冲击 + **Alpha/Beta/夏普/最大回撤/信息比率**(vs 基准)并逐项评价——β 防御性、α 是否真超额(非靠杠杆)、夏普/IR 效率、回撤复利友好度
 12. **调仓订单**：v旧→v新 买卖股数/换汇/成本
 13. **诚实边界与反面论据**：回测≠未来、黑天鹅、税摩擦、单只双刃剑
 14. **投资大师视角（含异见镜片，≥6位）**：核心四大师(巴菲特/芒格/段永平/李录)**同属格雷厄姆价值一派、想法同源**，必须按 `master-lens` 路由**额外请来异见者**避免集体犯错——周期(霍华德·马克斯)、宏观/分散(达利欧)、成长(费雪/林奇)、指数谦卑(博格)、下行/尾部(卡拉曼/塔勒布)。每位点在本轮的具体决策上，不写空泛语录。
