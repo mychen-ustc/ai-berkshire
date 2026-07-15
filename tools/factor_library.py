@@ -13,10 +13,11 @@
 
 数据源（诚实边界）：
   · 价值 = 前瞻盈利收益率 1/fwd_pe（us_consensus，美股）
+  · 质量 = ROE（pit_financials 点时库，EDGAR 真实财报，无前视）← 已接入
   · 成长 = 预期 EPS CAGR（us_consensus）
   · 动量 = 12-1 月价格收益（datalayer，全市场）
   · 低波 = −年化波动（datalayer，全市场）
-  · ⬜ 质量(ROE)/规模(市值) 需点时基本面库(路线图 Tier 1)，本版本未接入——诚实标注缺口。
+  · ⬜ 规模(市值) 待接股本；质量已由 EDGAR 点时库跑通(用 edgar_financials.py 摄取)。
 
 用法：
   python3 tools/factor_library.py analyze --symbols "GOOGL,AXP,COST,NDAQ,KO" \
@@ -31,8 +32,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import datalayer as dl  # noqa: E402
 
-FACTORS = ["value", "growth", "momentum", "lowvol"]
-FACTOR_CN = {"value": "价值", "growth": "成长", "momentum": "动量", "lowvol": "低波"}
+FACTORS = ["value", "quality", "growth", "momentum", "lowvol"]
+FACTOR_CN = {"value": "价值", "quality": "质量", "growth": "成长",
+             "momentum": "动量", "lowvol": "低波"}
 
 
 # --------------------------------------------------------------------------
@@ -156,18 +158,32 @@ def _fundamental_factors(symbol):
         return None, None
 
 
-def gather_raw(symbols):
-    """每只 → {value, growth, momentum, lowvol} 原始因子值(缺失=None)。"""
+def _quality_factor(symbol, as_of=None):
+    """→ ROE(质量) 由点时财务库取"当时已披露"最新值(无前视)。"""
+    try:
+        import pit_financials as pf
+        from datetime import date
+        d = as_of or date.today().strftime("%Y-%m-%d")
+        hit = pf.as_of(pf.load(), symbol, "roe", d)
+        return hit["value"] if hit else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def gather_raw(symbols, as_of=None):
+    """每只 → {value, quality, growth, momentum, lowvol} 原始因子值(缺失=None)。"""
     raw = {f: [] for f in FACTORS}
     meta = []
     for s in symbols:
         mom, vol = _price_factors(s)
         ey, gr = _fundamental_factors(s)
+        roe = _quality_factor(s, as_of)
         raw["value"].append(ey)                        # 盈利收益率越高越"价值"
+        raw["quality"].append(roe)                     # ROE 越高越"质量"(点时库)
         raw["growth"].append(gr)                       # EPS CAGR 越高越"成长"
         raw["momentum"].append(mom)                    # 12-1月动量
         raw["lowvol"].append(-vol if vol is not None else None)  # 负波动:越高越"低波"
-        meta.append({"symbol": s, "earnings_yield": ey, "eps_cagr": gr,
+        meta.append({"symbol": s, "earnings_yield": ey, "roe": roe, "eps_cagr": gr,
                      "mom_12_1": mom, "ann_vol": vol})
     return raw, meta
 
@@ -201,7 +217,7 @@ def _parse_weights(spec):
 
 def render(res):
     print("=" * 74)
-    print("基本面因子库 · 横截面命名因子暴露（价值/成长/动量/低波）")
+    print("基本面因子库 · 横截面命名因子暴露（价值/质量/成长/动量/低波）")
     print("=" * 74)
     syms = res["symbols"]
     z = res["z"]
@@ -237,8 +253,9 @@ def render(res):
     for (a, b), c in res["factor_corr"].items():
         if c is not None and abs(c) > 0.5:
             print(f"  ⚠️ {FACTOR_CN[a]} vs {FACTOR_CN[b]}: {c:+.2f}（高度相关，实为同一押注）")
-    print(f"\n  ⚠️ 诚实边界：仅价值/成长(美股一致预期)/动量/低波(价格)四因子；质量(ROE)/规模(市值)")
-    print(f"     需点时基本面库(路线图 Tier 1)未接入。z 分为横截面相对值，样本少时不稳。")
+    print(f"\n  ⚠️ 诚实边界：价值/成长(美股一致预期)、动量/低波(价格)、质量(ROE，EDGAR点时库)"
+          f"五因子已接；规模(市值)待接股本。")
+    print(f"     质量为点时ROE(无前视)；z 分为横截面相对值，样本少时不稳。")
 
 
 def render_rank(res, factor, top):

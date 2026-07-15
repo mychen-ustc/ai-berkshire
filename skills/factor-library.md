@@ -23,10 +23,12 @@ python3 tools/factor_library.py rank --symbols "..." --factor value --top 10   #
 
 ## 数据源与诚实边界
 - 价值 = 前瞻盈利收益率 1/fwd_pe（`us_consensus`，美股）
+- **质量 = ROE（`pit_financials` 点时库，EDGAR 真实财报，无前视）← 已接入**
 - 成长 = 预期 EPS CAGR（`us_consensus`）
 - 动量 = 12-1 月价格收益 · 低波 = −年化波动（`datalayer`，全市场）
-- **⬜ 质量(ROE)/规模(市值) 需点时基本面库(路线图 Tier 1)未接入**——诚实标注缺口，不编数据。
-- ETF 无个股基本面、非美股一致预期未接 → 价值/成长会缺失(动量/低波仍可算)。
+- 质量维度用前先摄取：`python3 tools/edgar_financials.py ingest-core`（拉核心美股 ROE 入点时库）。
+- **⬜ 规模(市值) 待接股本**；质量已由 EDGAR 点时库跑通。
+- ETF 无个股基本面、非美股(如兆易A股/consensus未覆盖) → 价值/成长/质量会缺失(动量/低波仍可算)。
 - z 分是横截面相对值，样本少时不稳；单因子排序仅是筛选起点，须结合质检与估值。
 
 ## 与其它工具的关系

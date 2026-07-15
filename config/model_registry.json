@@ -406,7 +406,7 @@
       "tests/test_factor_library.py"
     ],
     "status": "validated",
-    "validated_on": "2026-07-14",
+    "validated_on": "2026-07-15",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
   },
@@ -597,6 +597,32 @@
     ],
     "status": "validated",
     "validated_on": "2026-07-14",
+    "revalidate_every_days": 365,
+    "owner": "MartinChen"
+  },
+  {
+    "id": "edgar_financials",
+    "name": "EDGAR财务摄取(点时)",
+    "tool": "tools/edgar_financials.py",
+    "category": "事实源",
+    "method": "从SEC EDGAR companyconcept拉真实净利/权益/营收+filing date,算ROE,按披露日录点时库",
+    "assumptions": [
+      "EDGAR XBRL标签正确",
+      "filing date=首次可得"
+    ],
+    "limitations": [
+      "仅美股10-K申报人",
+      "概念标签因公司而异可能取不全",
+      "控股公司/A股/ETF不覆盖"
+    ],
+    "data_sources": [
+      "data.sec.gov XBRL companyconcept"
+    ],
+    "tests": [
+      "tests/test_edgar_financials.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-15",
     "revalidate_every_days": 365,
     "owner": "MartinChen"
   }
