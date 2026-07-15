@@ -287,16 +287,19 @@ def run(args):
         except Exception:  # noqa: BLE001
             radar_out = None
 
-    # 三级流水线：雷达线索(A+US)自动落入 T1 候选池 + 三层回顾
+    # 三级流水线：雷达线索(A股龙虎榜 + 美股13F + 港股南向)自动落入 T1 + 三层回顾
+    # 复用 pipeline 的统一 lead 函数(与 capture-radar 一致，避免重复捕获/口径不一)
     tiers = None
     if cadence != "daily":
         try:
-            if radar_out and radar_out.get("candidates", {}).get("candidates"):
-                for c in radar_out["candidates"]["candidates"]:
-                    pl.pool_add(c.get("code", ""), c.get("name", ""), "A",
-                                "雷达-A股龙虎榜/涨停", c.get("signal", ""))
-            for c in pl.us_leads():
-                pl.pool_add(c["symbol"], c["name"], "US", "雷达-美股13F新建仓", c["reason"])
+            for market, fn in (("A", pl._a_leads), ("US", pl.us_leads), ("HK", pl.hk_leads)):
+                try:
+                    for c in fn():
+                        pl.pool_add(c["symbol"], c.get("name", ""), market,
+                                    f"雷达-{c.get('signal', '')}", c.get("reason", ""),
+                                    c.get("strength", 1))
+                except Exception:  # noqa: BLE001
+                    pass
             tiers = pl.tier_view(pl.pool_load(), wl.load()["entries"], set(weights))
         except Exception:  # noqa: BLE001
             tiers = None
