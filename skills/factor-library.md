@@ -1,6 +1,6 @@
-# 基本面因子库（命名因子）
+# 基本面因子库（Barra 式六因子）
 
-对 $ARGUMENTS 算价值/成长/动量/低波的横截面因子暴露。T2-1。
+对 $ARGUMENTS 算价值/质量/成长/动量/低波/规模的横截面因子暴露。T2-1。
 
 ## 解决什么
 
@@ -21,14 +21,14 @@ python3 tools/factor_library.py rank --symbols "..." --factor value --top 10   #
 - **组合因子暴露**：>0 超配、<0 低配，标出主导因子倾斜(你真正的押注)。
 - **因子间相关**：>0.5 提示两个"命名因子"其实是同一押注。
 
-## 数据源与诚实边界
+## 数据源与诚实边界（Barra 式六因子全接）
 - 价值 = 前瞻盈利收益率 1/fwd_pe（`us_consensus`，美股）
-- **质量 = ROE（`pit_financials` 点时库，EDGAR 真实财报，无前视）← 已接入**
+- **质量 = ROE（`pit_financials` 点时库，EDGAR 真实财报，无前视）**
 - 成长 = 预期 EPS CAGR（`us_consensus`）
 - 动量 = 12-1 月价格收益 · 低波 = −年化波动（`datalayer`，全市场）
-- 质量维度用前先摄取：`python3 tools/edgar_financials.py ingest-core`（拉核心美股 ROE 入点时库）。
-- **⬜ 规模(市值) 待接股本**；质量已由 EDGAR 点时库跑通。
-- ETF 无个股基本面、非美股(如兆易A股/consensus未覆盖) → 价值/成长/质量会缺失(动量/低波仍可算)。
+- **规模 = −log(市值)，市值=现价×点时股本（`pit_financials`，EDGAR）**；+z=小盘倾斜、−z=大盘(规模溢价在小盘侧)
+- 质量/规模维度用前先摄取：`python3 tools/edgar_financials.py ingest-core`（拉核心美股 ROE+股本 入点时库）。
+- ETF 无个股基本面、非美股(如兆易A股/consensus未覆盖) → 价值/成长/质量/规模会缺失(动量/低波仍可算)。
 - z 分是横截面相对值，样本少时不稳；单因子排序仅是筛选起点，须结合质检与估值。
 
 ## 与其它工具的关系

@@ -68,6 +68,33 @@ def _fetch_concept(cik, tags):
     return []
 
 
+def latest_shares_points(units, keep=6):
+    """股本(封面 instant 值)：按 end 去重取首次披露，保留最近 keep 个。纯函数。"""
+    by_end = {}
+    for u in units:
+        e = u.get("end")
+        if not e:
+            continue
+        if e not in by_end or u["filed"] < by_end[e]["filed"]:
+            by_end[e] = u
+    return sorted(by_end.values(), key=lambda x: x["end"])[-keep:]
+
+
+def _fetch_shares(cik):
+    """股本:先 dei 封面股本，再 us-gaap。返回最近几期点(任意 form,含10-Q)。"""
+    for tax, tag in [("dei", "EntityCommonStockSharesOutstanding"),
+                     ("us-gaap", "CommonStockSharesOutstanding")]:
+        url = f"https://data.sec.gov/api/xbrl/companyconcept/CIK{int(cik):010d}/{tax}/{tag}.json"
+        try:
+            d = json.loads(dl._curl(url, ua=UA))
+        except Exception:  # noqa: BLE001
+            continue
+        pts = latest_shares_points(d.get("units", {}).get("shares", []))
+        if pts:
+            return pts
+    return []
+
+
 def ingest_symbol(symbol, cik, path=pf.STORE, limit=6):
     """拉 symbol 的净利/权益/营收 → 录点时库 + 计算 ROE。返回录入条数。"""
     if not cik:
@@ -107,6 +134,13 @@ def ingest_symbol(symbol, cik, path=pf.STORE, limit=6):
                        "value": rv["val"], "available_at": rv["filed"], "unit": "USD",
                        "source": "EDGAR 10-K"}, path)
             n += 1
+
+    # 股本(用于规模因子 = 现价×股本)。按会计期末标记 fiscal_period。
+    for u in _fetch_shares(cik):
+        pf.append({"symbol": symbol, "metric": "shares", "fiscal_period": u["end"],
+                   "value": u["val"], "available_at": u["filed"], "unit": "shares",
+                   "source": f"EDGAR {u.get('form', '')}"}, path)
+        n += 1
     return n, ni_points
 
 

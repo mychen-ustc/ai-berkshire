@@ -21,7 +21,7 @@ This skill is generated from `skills/edgar-financials.md` so Claude Code and Cod
 
 点时财务库(`pit_financials`)是**引擎**，但要有真数据才有用。`edgar_financials.py`(零依赖)从 **SEC EDGAR companyconcept API**(官方、免费、无 key)拉**真实**财务数据(净利/股东权益/营收)及其 **filing date(披露日)**，按披露日录入点时库——filing date 天然是 available_at，故录入即**无前视**、且**不编数据**。
 
-直接解锁 `factor-library` 的**质量(ROE)维度**：ROE = 净利/股东权益，此前因缺点时基本面无法计算。
+直接解锁 `factor-library` 的**质量(ROE)与规模(市值)维度**：ROE = 净利/股东权益、市值 = 现价×股本，此前因缺点时基本面无法计算。
 
 ## 执行流程
 ```bash
@@ -30,8 +30,9 @@ python3 tools/edgar_financials.py ingest-core                   # 核心美股�
 # 摄取后，质量维度即可用：
 python3 tools/factor_library.py analyze --symbols "GOOGL,AXP,COST,NDAQ,KO,AAPL" --weights "..."
 ```
-- 每期录入 net_income / stockholders_equity / revenue / roe(算)，available_at = 首次披露日。
+- 每期录入 net_income / stockholders_equity / revenue / roe(算) / shares(股本)，available_at = 首次披露日。
 - 实测 ROE(真实)：AAPL 152%(回购型)、KO 41%、GOOGL/AXP 32%、COST 28%、NDAQ 15%。
+- 股本喂规模因子：现价×股本→市值，横截面标准化(GOOGL/AAPL 大盘、NDAQ 小盘)。
 
 ## 原则与诚实边界
 - **只录真实 EDGAR 数据**：不用估计值填充；filing date = 首次披露(同一期在后续财报重复出现时取最早)。
