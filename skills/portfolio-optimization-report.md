@@ -27,6 +27,7 @@
 | **相关/伪分散** | `factor_model.py analyze` | 有效独立赌注数、PC1主导度 → 相关热力图 |
 | **尾部** | `tail_risk.py analyze` | VaR/CVaR/压力/流动性 |
 | **风险调整** | `quant_metrics.py eval` | Alpha/Beta/夏普/最大回撤/信息比率 vs 基准 + 评价 |
+| **多周期对比** | `horizon_compare.py` | 1/3/5/10/15/20年 核心指标 + 对比 QQQ/SPY/沪深300/恒生 |
 | **权重基准** | `portfolio_optimizer.py --method risk-parity/min-variance` | 纯低回撤锚（再据估值/宏观倾斜） |
 | **定仓校验** | `position_sizing.py kelly` | 半凯利上限校验单只权重是否过重 |
 | **调仓落地** | `rebalance.py` | 买卖股数/换汇缺口/成本/CSV |

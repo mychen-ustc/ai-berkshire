@@ -28,6 +28,7 @@ import macro_regime as mac  # noqa: E402
 import news_engine as ne  # noqa: E402
 import radar as rad  # noqa: E402
 import quant_metrics as qm  # noqa: E402
+import horizon_compare as hcmp  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MKT_CN = {"A": "A股", "US": "美股", "HK": "港股"}
@@ -238,6 +239,14 @@ def run(args):
     except Exception:  # noqa: BLE001
         metrics = None
 
+    # 多周期收益对比表(1/3/5/10/15/20年 × 美/A/港指数)——仅周/季(取数较重,日频跳过)
+    horizon = None
+    if cadence != "daily":
+        try:
+            horizon = hcmp.build(weights, ["QQQ", "SPY", "sh000300", "2800.HK"], rf=0.04)
+        except Exception:  # noqa: BLE001
+            horizon = None
+
     # watchlist 诊断（非持仓标的：候选/退出——是否反转/再入）
     entries = wl.load()["entries"]
     thesis = {e["symbol"].upper(): e for e in entries}
@@ -279,7 +288,7 @@ def run(args):
     actions = build_actions([h for h in holdings if not h.get("error")], watch_extras, due, imminent, market["verdict"])
     updates = synthesize_updates(holdings, watch_extras, port, market, radar_out)
     return {"cadence": cadence, "date": _today(), "source": src, "market": market,
-            "port": port, "metrics": metrics, "holdings": holdings, "watch_extras": watch_extras,
+            "port": port, "metrics": metrics, "horizon": horizon, "holdings": holdings, "watch_extras": watch_extras,
             "due": due, "timeline": timeline, "imminent": imminent, "radar": radar_out,
             "actions": actions, "updates": updates, "thesis": thesis, "us_earn": us_earn}
 
@@ -498,6 +507,47 @@ def _metrics_html(m):
             f'<table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px">{rows}</table></div>')
 
 
+def _horizon_html(hz):
+    """多周期收益对比表 HTML(三张表:组合表现 / 年化vs指数 / 回撤vs指数)。"""
+    if not hz:
+        return ""
+    def _p(x):
+        return "—" if x is None else f"{x:+.1%}"
+    def _n(x):
+        return "—" if x is None else f"{x:.2f}"
+    bl = hz["benchmarks"]
+    from horizon_compare import BENCH_CN as _BCN
+    # 表1:组合多周期
+    r1 = "".join(
+        (f'<tr><td>{row["years"]}年</td><td colspan="8" style="color:var(--muted)">— 数据不足(组合最年轻持仓限制)</td></tr>'
+         if not row["port"] else
+         f'<tr><td>{row["years"]}年</td><td>{_p(row["port"]["total_return"])}</td>'
+         f'<td>${int(row["port"]["final_balance"]):,}</td><td>{_p(row["port"]["cagr"])}</td>'
+         f'<td>{_p(row["port"]["max_drawdown"])}</td><td>{_n(row["port"]["sharpe"])}</td>'
+         f'<td>{_p(row.get("alpha"))}</td><td>{_n(row.get("beta"))}</td><td>{_n(row.get("ir"))}</td></tr>')
+        for row in hz["rows"])
+    # 表2/3:年化 / 回撤 vs 指数
+    def cmp_rows(key):
+        out = []
+        for row in hz["rows"]:
+            pc = _p(row["port"][key]) if row["port"] else "—"
+            cells = "".join(f'<td>{_p(row["bench"][b][key]) if row["bench"].get(b) else "—"}</td>' for b in bl)
+            out.append(f'<tr><td>{row["years"]}年</td><td><b>{pc}</b></td>{cells}</tr>')
+        return "".join(out)
+    bh = "".join(f"<th>{_BCN.get(b, b)}</th>" for b in bl)
+    return (
+        f'<h2>八、多周期收益对比表（初始资金 $10,000）</h2>'
+        f'<div class="card" style="font-size:.82rem;color:var(--muted)">组合共同起点 {hz["start_month"] or "—"}'
+        f'（{hz["n_months"]} 个月，月度对齐）· ⚠️ 组合受最年轻持仓限制(兆易2016)→15/20年无数据；'
+        f'用今日持仓回测历史有时代错置/幸存者偏差，是"历史画像"非当年真实收益。</div>'
+        f'<div style="overflow-x:auto"><table><tr><th>周期</th><th>总回报</th><th>最终余额</th><th>年化</th>'
+        f'<th>最大回撤</th><th>Sharpe</th><th>Alpha</th><th>Beta</th><th>IR</th></tr>{r1}</table></div>'
+        f'<div style="margin-top:8px;font-size:.85rem">年化收益 vs 主要指数</div>'
+        f'<div style="overflow-x:auto"><table><tr><th>周期</th><th>组合</th>{bh}</tr>{cmp_rows("cagr")}</table></div>'
+        f'<div style="margin-top:8px;font-size:.85rem">最大回撤 vs 主要指数</div>'
+        f'<div style="overflow-x:auto"><table><tr><th>周期</th><th>组合</th>{bh}</tr>{cmp_rows("max_drawdown")}</table></div>')
+
+
 def render_html(r):
     import html as _h
     m, p = r["market"], r["port"]
@@ -590,6 +640,7 @@ footer{{color:var(--muted);font-size:.78rem;margin-top:20px;border-top:1px solid
 <h2>六、市场机会雷达（持仓/watchlist 之外的新线索）</h2><div class="card"><div class="mrow"><b>热门板块</b>{sect_html}</div>
 <div style="margin-top:6px;font-size:.84rem;color:var(--muted)">新标的候选线索（须基本面研究后方可纳入观察，<b>非买入信号</b>）：</div><ul>{cand_html}</ul></div>
 <h2>七、组合 & Watchlist 更新建议（须人工确认）</h2><div class="upd"><ul>{ups}</ul></div>
+{_horizon_html(r.get('horizon'))}
 <footer>三层五面定期复盘(review.py)一键生成 · 复盘为信号聚合非投资建议 · 红线/建议须人工拍板 · 五面皆叠加层 · 含真实持仓仅存本地。</footer>
 </div></body></html>"""
 
@@ -643,6 +694,17 @@ def render_md(r):
     L.append("\n## 二、组合层")
     L.append(f"- 有效独立因子 **{f.get('n_eff', 0):.2f}/{f.get('n', 0)}** · PC1 {f.get('pc1_pct', 0):.1f}% · {f.get('verdict', '')}")
     L.append(f"- 因子倾斜：动量 {f.get('port_momentum_z', 0):+.2f} · 波动 {f.get('port_vol_z', 0):+.2f}")
+    m = r.get("metrics")
+    if m:
+        v = m["verdicts"]
+        def _fm(x, pct=False):
+            return "—" if x is None else (f"{x:+.1%}" if pct else f"{x:+.2f}")
+        L.append(f"- **量化五指标**（vs {m['benchmark']} · {m['n_periods']}期）：")
+        L.append(f"  - Beta β **{_fm(m['beta'])}** {v['beta']}")
+        L.append(f"  - Alpha 年化 **{_fm(m['alpha_annual'], True)}** {v['alpha']}")
+        L.append(f"  - 夏普比率 **{_fm(m['sharpe'])}** {v['sharpe']}")
+        L.append(f"  - 最大回撤 **{_fm(m['max_drawdown'], True)}** {v['max_drawdown']}")
+        L.append(f"  - 信息比率 IR **{_fm(m['information_ratio'])}** {v['information_ratio']}")
 
     # 三、逐持仓五面
     L.append("\n## 三、逐持仓五面诊断")
@@ -689,6 +751,12 @@ def render_md(r):
     # 七、更新建议
     L.append("\n## 七、组合 & Watchlist 更新建议（须人工确认）")
     L += [f"- {u}" for u in r["updates"]]
+    # 八、多周期收益对比表(1/3/5/10/15/20年 × 美/A/港指数)
+    if r.get("horizon"):
+        hmd = hcmp.render_md(r["horizon"])
+        hmd = hmd.replace("# 多周期收益对比表（初始资金 $10,000）", "## 八、多周期收益对比表（初始资金 $10,000）")
+        hmd = hmd.replace("\n## ①", "\n### ①").replace("\n## ②", "\n### ②").replace("\n## ③", "\n### ③")
+        L.append("\n" + hmd)
     L.append("\n---\n*数据源：东财(A/H前复权+主力资金流+龙虎榜+涨停+宏观) · Yahoo(US) · Finnhub/Nasdaq(美股预期) · SEC EDGAR(13F) · 新浪7×24(要闻)。含真实持仓，仅存本地。不构成投资建议。*")
     return "\n".join(L)
 

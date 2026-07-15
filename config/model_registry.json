@@ -651,5 +651,31 @@
     "validated_on": "2026-07-15",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "horizon_compare",
+    "name": "多周期收益对比表",
+    "tool": "tools/horizon_compare.py",
+    "category": "风险",
+    "method": "1/3/5/10/15/20年核心指标(总回报/年化/回撤/Sharpe/Alpha/Beta/IR)对比美A港指数,月度对齐",
+    "assumptions": [
+      "月度重采样代表性",
+      "当前权重历史持有"
+    ],
+    "limitations": [
+      "组合受最年轻持仓限制(v10兆易2016→15/20年无数据)",
+      "时代错置/幸存者偏差-历史画像非真实收益",
+      "跨频率对比"
+    ],
+    "data_sources": [
+      "datalayer 10y周频+max月频 + QQQ/SPY/沪深300/恒生2800"
+    ],
+    "tests": [
+      "tests/test_horizon_compare.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-15",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
   }
 ]
