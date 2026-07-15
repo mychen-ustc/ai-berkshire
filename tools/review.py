@@ -240,12 +240,13 @@ def run(args):
         metrics = None
 
     # 多周期收益对比表(1/3/5/10/15/20年 × 美/A/港指数)——仅周/季(取数较重,日频跳过)
-    horizon = None
+    # 注意:不用 `horizon` 名(与催化剂时间窗 int 冲突)
+    hz_tbl = None
     if cadence != "daily":
         try:
-            horizon = hcmp.build(weights, ["QQQ", "SPY", "sh000300", "2800.HK"], rf=0.04)
+            hz_tbl = hcmp.build(weights, ["QQQ", "SPY", "sh000300", "2800.HK"], rf=0.04)
         except Exception:  # noqa: BLE001
-            horizon = None
+            hz_tbl = None
 
     # watchlist 诊断（非持仓标的：候选/退出——是否反转/再入）
     entries = wl.load()["entries"]
@@ -288,7 +289,7 @@ def run(args):
     actions = build_actions([h for h in holdings if not h.get("error")], watch_extras, due, imminent, market["verdict"])
     updates = synthesize_updates(holdings, watch_extras, port, market, radar_out)
     return {"cadence": cadence, "date": _today(), "source": src, "market": market,
-            "port": port, "metrics": metrics, "horizon": horizon, "holdings": holdings, "watch_extras": watch_extras,
+            "port": port, "metrics": metrics, "horizon": hz_tbl, "holdings": holdings, "watch_extras": watch_extras,
             "due": due, "timeline": timeline, "imminent": imminent, "radar": radar_out,
             "actions": actions, "updates": updates, "thesis": thesis, "us_earn": us_earn}
 
