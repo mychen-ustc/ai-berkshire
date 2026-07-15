@@ -26,11 +26,16 @@ import pit_financials as pf  # noqa: E402
 
 UA = "ai-berkshire research contact@example.com"
 
-# 核心美股持仓 ticker → CIK（SEC 官方编号）
+# 美股 ticker → CIK（SEC 官方编号）。持仓 + 常见大盘(供 factor_risk 更广 universe)
 CIK_MAP = {
+    # 持仓/核心
     "AAPL": 320193, "GOOGL": 1652044, "GOOG": 1652044, "AXP": 4962,
     "KO": 21344, "COST": 909832, "NDAQ": 1120193, "BRK.B": 1067983,
     "MSFT": 789019, "NVDA": 1045810, "META": 1326801, "AMZN": 1018724,
+    # 扩充大盘(丰富因子横截面)
+    "JPM": 19617, "V": 1403161, "MA": 1141391, "UNH": 731766, "JNJ": 200406,
+    "PG": 80424, "HD": 354950, "WMT": 104169, "LLY": 59478, "XOM": 34088,
+    "CVX": 93410, "PFE": 78003, "TSLA": 1318605, "NFLX": 1065280, "ADBE": 796343,
 }
 
 # 概念标签(不同公司可能用不同 tag，逐个尝试)
