@@ -704,5 +704,30 @@
     "validated_on": "2026-07-15",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "pipeline",
+    "name": "三级机会流水线",
+    "tool": "tools/pipeline.py",
+    "category": "治理",
+    "method": "候选池(T1)/观察名单(T2)/持仓(T3)三级漏斗+降级级联,雷达A股+美股13F线索自动落T1",
+    "assumptions": [
+      "三层状态一致维护"
+    ],
+    "limitations": [
+      "港股线索未接",
+      "demote仅状态非实际买卖",
+      "13F用issuer名非ticker"
+    ],
+    "data_sources": [
+      "candidate_pool.jsonl + watchlist + ledger + radar/edgar_13f"
+    ],
+    "tests": [
+      "tests/test_pipeline.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-15",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
   }
 ]

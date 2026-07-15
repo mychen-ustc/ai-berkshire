@@ -29,6 +29,7 @@ import news_engine as ne  # noqa: E402
 import radar as rad  # noqa: E402
 import quant_metrics as qm  # noqa: E402
 import horizon_compare as hcmp  # noqa: E402
+import pipeline as pl  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MKT_CN = {"A": "A股", "US": "美股", "HK": "港股"}
@@ -286,12 +287,26 @@ def run(args):
         except Exception:  # noqa: BLE001
             radar_out = None
 
+    # 三级流水线：雷达线索(A+US)自动落入 T1 候选池 + 三层回顾
+    tiers = None
+    if cadence != "daily":
+        try:
+            if radar_out and radar_out.get("candidates", {}).get("candidates"):
+                for c in radar_out["candidates"]["candidates"]:
+                    pl.pool_add(c.get("code", ""), c.get("name", ""), "A",
+                                "雷达-A股龙虎榜/涨停", c.get("signal", ""))
+            for c in pl.us_leads():
+                pl.pool_add(c["symbol"], c["name"], "US", "雷达-美股13F新建仓", c["reason"])
+            tiers = pl.tier_view(pl.pool_load(), wl.load()["entries"], set(weights))
+        except Exception:  # noqa: BLE001
+            tiers = None
+
     actions = build_actions([h for h in holdings if not h.get("error")], watch_extras, due, imminent, market["verdict"])
     updates = synthesize_updates(holdings, watch_extras, port, market, radar_out)
     return {"cadence": cadence, "date": _today(), "source": src, "market": market,
-            "port": port, "metrics": metrics, "horizon": hz_tbl, "holdings": holdings, "watch_extras": watch_extras,
-            "due": due, "timeline": timeline, "imminent": imminent, "radar": radar_out,
-            "actions": actions, "updates": updates, "thesis": thesis, "us_earn": us_earn}
+            "port": port, "metrics": metrics, "horizon": hz_tbl, "tiers": tiers, "holdings": holdings,
+            "watch_extras": watch_extras, "due": due, "timeline": timeline, "imminent": imminent,
+            "radar": radar_out, "actions": actions, "updates": updates, "thesis": thesis, "us_earn": us_earn}
 
 
 def synthesize_updates(holdings, watch_extras, port, market, radar_out=None):
@@ -429,6 +444,12 @@ def render_text(r):
         L.append(f"    夏普 {_f(m['sharpe'])} {v['sharpe']}  ·  最大回撤 {_f(m['max_drawdown'], True)} {v['max_drawdown']}")
         L.append(f"    信息比率 {_f(m['information_ratio'])} {v['information_ratio']}")
 
+    t = r.get("tiers")
+    if t:
+        L.append("  三级流水线: "
+                 f"T3持仓{len(t['T3'])} · T2观察{len(t['T2'])} · T1候选{len(t['T1'])}"
+                 + (f" · ⚠️{len(t['issues'])}处一致性待查" if t["issues"] else ""))
+
     # ③ 逐持仓五面
     L.append("\n" + "─" * 72 + "\n【三、逐持仓五面诊断】")
     for h in sorted([x for x in r["holdings"] if not x.get("error")], key=lambda x: -x.get("weight", 0)):
@@ -552,6 +573,33 @@ def _horizon_html(hz):
         f'<div style="overflow-x:auto"><table><tr><th>周期</th><th>组合</th>{bh}</tr>{cmp_rows("max_drawdown")}</table></div>')
 
 
+def _tiers_html(t):
+    """三级流水线回顾 HTML。"""
+    if not t:
+        return ""
+    def row(label, syms, color):
+        chips = "".join(f'<span style="display:inline-block;background:{color};border-radius:10px;'
+                        f'padding:1px 8px;margin:2px;font-size:.8rem">{s}</span>' for s in syms) or "—"
+        return f'<div style="margin:4px 0"><b>{label}</b>（{len(syms)}）：{chips}</div>'
+    issues = ""
+    if t["issues"]:
+        issues = '<div style="color:#b45309;font-size:.82rem;margin-top:6px">⚠️ 一致性：' + \
+                 "；".join(_h_escape(i) for i in t["issues"]) + "</div>"
+    return (
+        '<h2>九、三级机会流水线回顾</h2><div class="card">'
+        + row("T3 持仓组合", t["T3"], "rgba(63,185,80,.15)")
+        + row("T2 观察名单", t["T2"], "rgba(88,166,255,.15)")
+        + row("T1 候选观察", t["T1"], "rgba(154,165,177,.15)")
+        + issues
+        + '<div style="font-size:.8rem;color:var(--muted);margin-top:6px">流转：T1→(研究)→T2→(买入)→T3；'
+          '降级 T3→T2、T2→T1(级联)。雷达线索(A股龙虎榜+美股13F新建仓)已自动落入 T1。</div></div>')
+
+
+def _h_escape(s):
+    import html as _h
+    return _h.escape(str(s))
+
+
 def render_html(r):
     import html as _h
     m, p = r["market"], r["port"]
@@ -650,6 +698,7 @@ footer{{color:var(--muted);font-size:.78rem;margin-top:20px;border-top:1px solid
 <div style="margin-top:6px;font-size:.84rem;color:var(--muted)">新标的候选线索（须基本面研究后方可纳入观察，<b>非买入信号</b>）：</div><ul>{cand_html}</ul></div>
 <h2>七、组合 & Watchlist 更新建议（须人工确认）</h2><div class="upd"><ul>{ups}</ul></div>
 {_horizon_html(r.get('horizon'))}
+{_tiers_html(r.get('tiers'))}
 <footer>三层五面定期复盘(review.py)一键生成 · 复盘为信号聚合非投资建议 · 红线/建议须人工拍板 · 五面皆叠加层 · 含真实持仓仅存本地。</footer>
 </div></body></html>"""
 
@@ -766,6 +815,16 @@ def render_md(r):
         hmd = hmd.replace("# 多周期收益对比表（初始资金 $10,000）", "## 八、多周期收益对比表（初始资金 $10,000）")
         hmd = hmd.replace("\n## ①", "\n### ①").replace("\n## ②", "\n### ②").replace("\n## ③", "\n### ③")
         L.append("\n" + hmd)
+    # 九、三级流水线回顾
+    t = r.get("tiers")
+    if t:
+        L.append("\n## 九、三级机会流水线回顾")
+        L.append(f"- **T3 持仓组合**({len(t['T3'])})：{', '.join(t['T3']) or '—'}")
+        L.append(f"- **T2 观察名单**({len(t['T2'])})：{', '.join(t['T2']) or '—'}")
+        L.append(f"- **T1 候选观察**({len(t['T1'])})：{', '.join(t['T1']) or '—'}")
+        if t["issues"]:
+            L.append("- ⚠️ 一致性：" + "；".join(t["issues"]))
+        L.append("- 流转：T1→(研究)→T2→(买入)→T3；降级 T3→T2、T2→T1(级联)。雷达线索(A股龙虎榜+美股13F新建仓)已自动落入 T1。")
     L.append("\n---\n*数据源：东财(A/H前复权+主力资金流+龙虎榜+涨停+宏观) · Yahoo(US) · Finnhub/Nasdaq(美股预期) · SEC EDGAR(13F) · 新浪7×24(要闻)。含真实持仓，仅存本地。不构成投资建议。*")
     return "\n".join(L)
 
