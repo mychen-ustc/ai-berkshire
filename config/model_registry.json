@@ -753,5 +753,29 @@
     "validated_on": "2026-07-15",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "code_gate",
+    "name": "代码质量硬门禁",
+    "tool": "tools/code_gate.py",
+    "category": "治理",
+    "method": "AST静态检查:循环变量遮蔽(三条件精化)/未用导入/语法,退出码阻断",
+    "assumptions": [
+      "AST可解析"
+    ],
+    "limitations": [
+      "非完整reaching-definitions(启发式)",
+      "不查跨文件/运行时"
+    ],
+    "data_sources": [
+      "工具源码AST"
+    ],
+    "tests": [
+      "tests/test_code_gate.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-15",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
   }
 ]
