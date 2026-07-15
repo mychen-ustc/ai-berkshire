@@ -132,10 +132,11 @@ def cmd_apply(args):
     if not records:
         print("无可入账分红。")
         return
-    # 备份
-    bak = args.from_ledger.replace(".csv", f".pre-div-backup-{datetime.now().strftime('%Y%m%d')}.csv")
-    if "reports/private" not in bak:
-        bak = os.path.join(os.path.dirname(args.from_ledger), os.path.basename(bak))
+    # 备份到 reports/private/(gitignore，含真实持仓)
+    priv = os.path.join(L.ROOT if hasattr(L, "ROOT") else
+                        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "reports", "private")
+    os.makedirs(priv, exist_ok=True)
+    bak = os.path.join(priv, f"transactions.pre-div-backup-{datetime.now().strftime('%Y%m%d')}.csv")
     shutil.copyfile(args.from_ledger, bak)
     # 追加 DIV 行
     with open(args.from_ledger, "a", encoding="utf-8") as f:

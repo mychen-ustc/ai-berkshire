@@ -39,6 +39,8 @@ data/portfolio/*.local.*
 data/cache/
 data/portfolio/decisions.jsonl
 data/portfolio/postmortems.jsonl
+data/portfolio/*backup*.csv
+data/portfolio/transactions.*.csv
 data/pit_financials.jsonl
 data/corporate_actions.jsonl
 data/delisting.jsonl
