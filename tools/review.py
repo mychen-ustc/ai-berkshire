@@ -292,10 +292,10 @@ def run(args):
     tiers = None
     if cadence != "daily":
         try:
-            for market, fn in (("A", pl._a_leads), ("US", pl.us_leads), ("HK", pl.hk_leads)):
+            for mkt, fn in (("A", pl._a_leads), ("US", pl.us_leads), ("HK", pl.hk_leads)):
                 try:
                     for c in fn():
-                        pl.pool_add(c["symbol"], c.get("name", ""), market,
+                        pl.pool_add(c["symbol"], c.get("name", ""), mkt,
                                     f"雷达-{c.get('signal', '')}", c.get("reason", ""),
                                     c.get("strength", 1))
                 except Exception:  # noqa: BLE001
