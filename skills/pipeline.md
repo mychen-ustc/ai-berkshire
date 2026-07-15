@@ -21,6 +21,7 @@ python3 tools/pipeline.py capture --symbol NVDA --market US --source 手工 --re
 python3 tools/pipeline.py promote --symbol 002463  # T1→T2(晋级观察名单)
 python3 tools/pipeline.py demote  --symbol COST    # T3→T2 或 T2→T1(级联降级)
 python3 tools/pipeline.py status                   # 三层总览 + 一致性检查
+python3 tools/pipeline.py triage [--threshold 6]   # T1候选自动分诊:证据+动量/波动排序,荐优先研究
 ```
 复盘(`review.py --weekly/--quarterly`)第九节自动回顾三层清单,并把雷达线索落入 T1。
 

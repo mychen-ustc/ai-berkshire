@@ -110,6 +110,40 @@ def pool_remove(symbol, path=POOL):
     return len(new) < len(recs)
 
 
+def triage_score(strength, mom_3m, ann_vol):
+    """线索分诊分:证据强度为主(×2) + 动量/波动微调。→ (score, tags)。纯函数。"""
+    score = float(strength) * 2.0
+    tags = []
+    if mom_3m is not None:
+        if mom_3m > 0.05:
+            score += 1.0
+            tags.append("动量↑")
+        elif mom_3m < -0.15:
+            score -= 1.0
+            tags.append("下跌趋势⚠")
+    if ann_vol is not None and ann_vol > 0.6:
+        score -= 0.5
+        tags.append("高波⚠")
+    return round(score, 1), tags
+
+
+def _quick_price(symbol):
+    """→ (mom_3m, ann_vol) 由周频价格算;取不到(如美股issuer名)返回(None,None)。"""
+    import datalayer as dl
+    import math as _m
+    try:
+        px = [p[1] for p in dl.fetch_history(symbol, freq="weekly", period="1y")["points"]]
+        if len(px) < 20:
+            return None, None
+        mom = px[-1] / px[-14] - 1                       # 近~3月动量
+        rets = [_m.log(px[i] / px[i - 1]) for i in range(1, len(px))]
+        mu = sum(rets) / len(rets)
+        vol = _m.sqrt(sum((r - mu) ** 2 for r in rets) / (len(rets) - 1)) * _m.sqrt(52)
+        return mom, vol
+    except Exception:  # noqa: BLE001
+        return None, None
+
+
 def _holdings(ledger_path=LEDGER):
     try:
         pos, _, _, _ = L.rebuild(L.load_ledger(ledger_path))
@@ -285,6 +319,41 @@ def cmd_status(args):
     print(f"\n  流转规则：T1→(研究)→T2→(买入)→T3；降级 T3→T2、T2→T1(级联)。")
 
 
+def cmd_triage(args):
+    """对 T1 候选池自动分诊:证据强度 + 快速价格信号(动量/波动) → 排序 + 晋级建议。"""
+    pool = pool_load(args.pool)
+    held = {h.upper() for h in _holdings()}
+    wl_syms = {e["symbol"].upper() for e in wl.load()["entries"]}
+    cands = [r for r in pool if r["symbol"].upper() not in held and r["symbol"].upper() not in wl_syms]
+    scored = []
+    for r in cands:
+        mom, vol = (None, None)
+        if r.get("market") in ("A", "HK"):               # 有代码,可取价;美股为issuer名跳过
+            mom, vol = _quick_price(r["symbol"])
+        sc, tags = triage_score(r.get("strength", 1), mom, vol)
+        scored.append({**r, "score": sc, "mom_3m": mom, "ann_vol": vol, "tags": tags})
+    scored.sort(key=lambda x: -x["score"])
+    print("=" * 72)
+    print(f"T1 候选池自动分诊 · {len(scored)} 个线索 · 分=证据强度×2 + 动量/波动微调")
+    print("=" * 72)
+    print(f"  {'分':>4} {'市场':<4}{'标的':<12}{'名称':<12}{'快速信号':<16}{'提示线索'}")
+    for r in scored:
+        m = {"A": "A股", "US": "美股", "HK": "港股"}.get(r.get("market"), "?")
+        sig = []
+        if r["mom_3m"] is not None:
+            sig.append(f"动量{r['mom_3m']:+.0%}")
+        if r["ann_vol"] is not None:
+            sig.append(f"波{r['ann_vol']:.0%}")
+        sig += r["tags"]
+        print(f"  {r['score']:>4.1f} {m:<4}{r['symbol']:<12}{(r.get('name') or '')[:11]:<12}"
+              f"{('·'.join(sig))[:15]:<16}{r.get('reason', '')[:30]}")
+    top = [r for r in scored if r["score"] >= args.threshold]
+    print(f"\n  🎯 建议优先研究(分≥{args.threshold}, {len(top)}个): "
+          + (", ".join(f"{r['symbol']}({r['score']})" for r in top[:8]) or "无"))
+    print(f"  → 分高=证据强+动量正;仍须 /investment-research 基本面研究后再 promote 到 T2,非买入信号。")
+    print(f"  ⚠️ 美股线索为 13F issuer 名(无ticker),仅按证据强度评分,需手工定位代码再研究。")
+
+
 def main():
     ap = argparse.ArgumentParser(description="三级机会流水线:候选池/观察名单/持仓(零依赖)")
     ap.add_argument("--pool", default=POOL)
@@ -301,9 +370,12 @@ def main():
     dm = sub.add_parser("demote", help="降级 T3→T2 或 T2→T1")
     dm.add_argument("--symbol", required=True)
     sub.add_parser("status", help="三层总览 + 一致性检查")
+    tr = sub.add_parser("triage", help="T1候选池自动分诊(证据+快速信号排序)")
+    tr.add_argument("--threshold", type=float, default=6.0, help="晋级建议分数线(默认6)")
     args = ap.parse_args()
     {"capture": cmd_capture, "capture-radar": cmd_capture_radar, "promote": cmd_promote,
-     "demote": cmd_demote, "status": cmd_status}.get(args.cmd, lambda a: ap.print_help())(args)
+     "demote": cmd_demote, "status": cmd_status, "triage": cmd_triage}.get(
+        args.cmd, lambda a: ap.print_help())(args)
 
 
 if __name__ == "__main__":

@@ -47,3 +47,26 @@ class TestTierView(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestTriageScore(unittest.TestCase):
+    def test_strength_base(self):
+        # 无价格信号:分=强度×2
+        sc, tags = pl.triage_score(3, None, None)
+        self.assertEqual(sc, 6.0)
+        self.assertEqual(tags, [])
+
+    def test_positive_momentum_bonus(self):
+        sc, tags = pl.triage_score(3, 0.20, 0.3)
+        self.assertEqual(sc, 7.0)                       # 6 + 动量1
+        self.assertIn("动量↑", tags)
+
+    def test_falling_knife_penalty(self):
+        sc, tags = pl.triage_score(3, -0.25, 0.3)
+        self.assertEqual(sc, 5.0)                       # 6 - 1
+        self.assertIn("下跌趋势⚠", tags)
+
+    def test_high_vol_penalty(self):
+        sc, tags = pl.triage_score(3, 0.20, 0.8)        # 6 +1(动量) -0.5(高波)
+        self.assertEqual(sc, 6.5)
+        self.assertIn("高波⚠", tags)
