@@ -7,8 +7,8 @@
 统一按**月度**重采样(多年回测标准粒度)。组合按当前权重、月度再平衡回测。
 
 ★两条诚实边界(必须随表呈现)：
-  1) 数据边界：组合回测受**最年轻持仓**限制——当前 v10 因兆易(2016上市)只有 ~10 年
-     共同历史，故 15/20 年组合列为"数据不足"。指数有 20 年+，仍照常对比。
+  1) 年轻持仓处理：长周期若某持仓当时未上市(如兆易2016)，将其**权重设0、其余重新归一**
+     并在"剔除"列标出——故长周期是"当时已存在子集"的表现，非完整 v10。
   2) 时代错置/幸存者偏差：用"今天的持仓"回测历史 = 假设你当年就持有这些(还都活到今天)，
      系统性高估。这不是你当年的真实收益，只是"当前组合的历史特征画像"。
 
@@ -94,49 +94,114 @@ def _rets_from_prices(pts):
     return [pr[i] / pr[i - 1] - 1 for i in range(1, len(pr))]
 
 
+def month_range(start, end):
+    """连续 YYYY-MM 列表 [start..end]。纯函数。"""
+    y, m = int(start[:4]), int(start[5:7])
+    y1, m1 = int(end[:4]), int(end[5:7])
+    out = []
+    while (y, m) <= (y1, m1):
+        out.append(f"{y:04d}-{m:02d}")
+        m += 1
+        if m > 12:
+            m, y = 1, y + 1
+    return out
+
+
+def forward_fill(pairs, grid):
+    """把 [(month,price)] 对齐到 grid，前向填充；首个观测前为 None。纯函数。"""
+    d = dict(pairs)
+    out, last = [], None
+    for g in grid:
+        if g in d:
+            last = d[g]
+        out.append(last)
+    return out
+
+
+def portfolio_returns(filled_by_sym, weights, eligible):
+    """在对齐网格上算 eligible(权重重新归一) 组合月收益。纯函数。"""
+    tot = sum(weights[s] for s in eligible) or 1.0
+    w = {s: weights[s] / tot for s in eligible}
+    n = len(next(iter(filled_by_sym.values()))) if filled_by_sym else 0
+    rets = []
+    for i in range(1, n):
+        if all(filled_by_sym[s][i - 1] and filled_by_sym[s][i] for s in eligible):
+            rets.append(sum(w[s] * (filled_by_sym[s][i] / filled_by_sym[s][i - 1] - 1) for s in eligible))
+    return rets
+
+
 def build(weights, benchmarks, rf=0.04):
-    """全程月度(YYYY-MM)对齐(跨市场周频星期锚不同，月度键才能对齐)。
-    组合 + 指数 ≤10 年用 10y 周频重采样月度；指数 15/20 年用 max 月度。ppy=12。"""
+    """月度网格 + 前向填充。长周期若年轻持仓无数据→剔除(权重归零)、其余重新归一，并记录剔除名单。
+    组合 ≤10 年用 10y 周频重采样月度(密)；>10 年用 max 月度前向填充。指数同理。ppy=12。"""
     import datalayer as dl
     PPY = 12
-    # 组合成分 + 基准：10y 周频 → 月度
-    mo10 = {}
-    for s in list(weights) + benchmarks:
+    syms = list(weights)
+    mo10, moMax = {}, {}
+    for s in syms + benchmarks:
         try:
             mo10[s] = resample_monthly(dl.fetch_history(s, freq="weekly", period="10y")["points"])
         except Exception:  # noqa: BLE001
             pass
-    months, port_mo, start = align_weekly(mo10, weights)   # 按月键对齐(泛用)
-    bench_mo10 = {b: _rets_from_prices(mo10[b]) for b in benchmarks if b in mo10 and len(mo10[b]) > 4}
-
-    # 指数：max → 月度(供 15/20 年)
-    bench_moMax = {}
-    for b in benchmarks:
         try:
-            bench_moMax[b] = _rets_from_prices(resample_monthly(
-                dl.fetch_history(b, freq="weekly", period="max")["points"]))
+            moMax[s] = resample_monthly(dl.fetch_history(s, freq="weekly", period="max")["points"])
         except Exception:  # noqa: BLE001
             pass
+    # 全局连续月度网格(长周期前向填充用)
+    allm = sorted({m for s in moMax for m, _ in moMax[s]})
+    grid = month_range(allm[0], allm[-1]) if allm else []
+    filledMax = {s: forward_fill(moMax.get(s, []), grid) for s in syms + benchmarks}
+    earliest = {s: (moMax[s][0][0] if moMax.get(s) else None) for s in syms + benchmarks}
+    start = None
+
+    def bench_rets(b, need, y):
+        """基准在最近 need 月的收益(≤10 年用 mo10,>10 用 max 前向填充)。"""
+        if y <= 10 and b in mo10 and len(mo10[b]) >= need:
+            return _rets_from_prices(mo10[b][-need:])
+        if b in filledMax:
+            win = filledMax[b][-need:]
+            if all(x for x in win):
+                return [win[i] / win[i - 1] - 1 for i in range(1, len(win))]
+        return []
 
     rows = []
     for y in HORIZONS:
         row = {"years": y}
-        ps = horizon_slice(port_mo, y, PPY) if port_mo else None
-        row["port"] = series_metrics(ps, rf, PPY) if ps else None
-        if ps and benchmarks and benchmarks[0] in bench_mo10:
-            bsl = bench_mo10[benchmarks[0]][-len(ps):]
-            n = min(len(ps), len(bsl))
-            if n >= 12:
-                row["alpha"] = qm.alpha_annual(ps[-n:], bsl[-n:], rf, PPY)
-                row["beta"] = qm.beta(ps[-n:], bsl[-n:])
-                row["ir"] = qm.information_ratio(ps[-n:], bsl[-n:], PPY)
+        need = y * PPY
+        if y <= 10:
+            elig = [s for s in syms if s in mo10 and len(mo10[s]) >= need]
+            dropped = [s for s in syms if s not in elig]
+            prets = []
+            if elig:
+                common = sorted(set.intersection(*[set(m for m, _ in mo10[s]) for s in elig]))[-need:]
+                pmap = {s: dict(mo10[s]) for s in elig}
+                filt = {s: [pmap[s].get(m) for m in common] for s in elig}
+                prets = portfolio_returns(filt, weights, elig)
+                if y == max(h for h in HORIZONS if h <= 10) and common:
+                    start = common[0]
+        else:
+            win = grid[-need:] if len(grid) >= need else grid
+            wstart = win[0] if win else None
+            elig = [s for s in syms if earliest.get(s) and wstart and earliest[s] <= wstart]
+            dropped = [s for s in syms if s not in elig]
+            idx0 = len(grid) - len(win)
+            sub = {s: filledMax[s][idx0:] for s in elig}
+            prets = portfolio_returns(sub, weights, elig) if elig else []
+        row["dropped"] = dropped
+        row["port"] = series_metrics(prets, rf, PPY) if len(prets) >= 6 else None
+        # Alpha/Beta/IR vs 主基准
+        if row["port"] and benchmarks:
+            bsl = bench_rets(benchmarks[0], need, y)
+            n = min(len(prets), len(bsl))
+            if n >= 10:
+                row["alpha"] = qm.alpha_annual(prets[-n:], bsl[-n:], rf, PPY)
+                row["beta"] = qm.beta(prets[-n:], bsl[-n:])
+                row["ir"] = qm.information_ratio(prets[-n:], bsl[-n:], PPY)
         row["bench"] = {}
         for b in benchmarks:
-            src = bench_mo10 if y <= 10 else bench_moMax   # ≤10 年用近端月度, >10 用 max
-            bs = horizon_slice(src.get(b, []), y, PPY)
-            row["bench"][b] = series_metrics(bs, rf, PPY) if bs else None
+            br = bench_rets(b, need, y)
+            row["bench"][b] = series_metrics(br, rf, PPY) if len(br) >= 6 else None
         rows.append(row)
-    return {"rows": rows, "start_month": start, "n_months": len(port_mo) if port_mo else 0,
+    return {"rows": rows, "start_month": start, "n_months": len(grid),
             "benchmarks": benchmarks, "weights": weights}
 
 
@@ -151,10 +216,22 @@ def _num(x):
     return "—" if x is None else f"{x:.2f}"
 
 
+_NAME = {"603986": "兆易"}
+
+
+def dropped_notes(res):
+    """→ [(years, [剔除标的显示名])]，仅列有剔除的周期。纯函数。"""
+    out = []
+    for r in res["rows"]:
+        if r.get("dropped"):
+            out.append((r["years"], [_NAME.get(s, s) for s in r["dropped"]]))
+    return out
+
+
 def render_text(res):
     print("=" * 92)
-    print(f"多周期收益对比表 · 初始资金 $10,000 · 组合共同起点 {res['start_month'] or '—'}"
-          f"（{res['n_months']} 个月，2016起，月度对齐）")
+    print("多周期收益对比表 · 初始资金 $10,000 · 组合按当前权重月度再平衡回测"
+          "(长周期剔除当时未上市持仓，见ⓘ)")
     print("=" * 92)
     print("\n① 组合多周期表现:")
     print(f"  {'周期':<8}{'总回报':>10}{'最终余额':>12}{'年化':>8}{'最大回撤':>9}{'Sharpe':>8}"
@@ -168,6 +245,10 @@ def render_text(res):
               f"{'$'+format(int(p['final_balance']), ','):>12}{_pct(p['cagr']):>8}"
               f"{_pct(p['max_drawdown']):>9}{_num(p['sharpe']):>8}"
               f"{_pct(r.get('alpha')):>8}{_num(r.get('beta')):>7}{_num(r.get('ir')):>6}")
+    dn = dropped_notes(res)
+    if dn:
+        print("  ⓘ 长周期剔除年轻持仓(权重归零、其余重新归一): "
+              + " · ".join(f"{y}年→剔{','.join(names)}" for y, names in dn))
 
     print("\n② 年化收益 vs 主要指数:")
     bl = res["benchmarks"]
@@ -185,27 +266,28 @@ def render_text(res):
         print(f"  {str(r['years'])+'年':<8}{pc:>9}{cells}")
 
     print("\n⚠️ 诚实边界：")
-    print("  1) 数据边界：组合回测受最年轻持仓限制(v10 因兆易 2016 上市，仅 ~10 年共同历史)，"
-          "15/20 年组合无数据；指数有 20 年+仍对比。")
+    print("  1) 年轻持仓处理：长周期若某持仓当时未上市(如兆易2016)，将其权重设0、其余重新归一"
+          "(见上'剔除'提示)——故长周期是'当时已存在的子集'的表现，非完整 v10。")
     print("  2) 时代错置/幸存者：用今天的持仓回测历史=假设当年就持有且都活到今天，系统性高估——"
           "这是'当前组合的历史特征画像'，非你当年真实收益。")
-    print("  3) 月度重采样、单一无风险利率；不含黑天鹅。")
+    print("  3) 月度重采样、长周期含前向填充、单一无风险利率；不含黑天鹅。")
 
 
 def render_md(res):
     L = ["# 多周期收益对比表（初始资金 $10,000）", ""]
-    L.append(f"> 组合共同起点 {res['start_month'] or '—'}（{res['n_months']} 个月，月度对齐；15/20年指数用max月频）")
+    L.append("> 组合按当前权重月度再平衡回测；长周期剔除当时未上市持仓(见'剔除'列)。月度对齐、含前向填充。")
     L.append("\n## ① 组合多周期表现")
-    L.append("| 周期 | 总回报 | 最终余额 | 年化 | 最大回撤 | Sharpe | Alpha(vs主基准) | Beta | IR |")
-    L.append("|---|---|---|---|---|---|---|---|---|")
+    L.append("| 周期 | 总回报 | 最终余额 | 年化 | 最大回撤 | Sharpe | Alpha | Beta | IR | 剔除(年轻持仓) |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|")
     for r in res["rows"]:
         p = r["port"]
+        drp = "、".join(_NAME.get(s, s) for s in r.get("dropped", [])) or "—"
         if not p:
-            L.append(f"| {r['years']}年 | — 数据不足(组合最年轻持仓限制) |  |  |  |  |  |  |  |")
+            L.append(f"| {r['years']}年 | — 数据不足 |  |  |  |  |  |  |  | {drp} |")
             continue
         L.append(f"| {r['years']}年 | {_pct(p['total_return'])} | ${int(p['final_balance']):,} | "
                  f"{_pct(p['cagr'])} | {_pct(p['max_drawdown'])} | {_num(p['sharpe'])} | "
-                 f"{_pct(r.get('alpha'))} | {_num(r.get('beta'))} | {_num(r.get('ir'))} |")
+                 f"{_pct(r.get('alpha'))} | {_num(r.get('beta'))} | {_num(r.get('ir'))} | {drp} |")
     bl = res["benchmarks"]
     L.append("\n## ② 年化收益 vs 主要指数")
     L.append("| 周期 | 组合 | " + " | ".join(BENCH_CN.get(b, b) for b in bl) + " |")
@@ -221,9 +303,10 @@ def render_md(res):
         pc = _pct(r["port"]["max_drawdown"]) if r["port"] else "—"
         cells = " | ".join(_pct(r["bench"][b]["max_drawdown"]) if r["bench"].get(b) else "—" for b in bl)
         L.append(f"| {r['years']}年 | {pc} | {cells} |")
-    L.append("\n**诚实边界**：① 组合受最年轻持仓限制(v10 兆易 2016→仅~10年共同史,15/20年无数据)；"
-             "② 时代错置/幸存者——用今天持仓回测历史系统性高估,是'当前组合历史画像'非当年真实收益；"
-             "③ 月度重采样、单一rf、不含黑天鹅。")
+    L.append("\n**诚实边界**：① 年轻持仓处理——长周期若某持仓当时未上市(如兆易2016)，权重设0、"
+             "其余重新归一(见'剔除'列)，故长周期是'当时子集'表现非完整v10；"
+             "② 时代错置/幸存者——用今天持仓回测历史系统性高估,是'历史画像'非当年真实收益；"
+             "③ 月度重采样、长周期含前向填充、单一rf、不含黑天鹅。")
     return "\n".join(L)
 
 

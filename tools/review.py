@@ -517,15 +517,18 @@ def _horizon_html(hz):
     def _n(x):
         return "—" if x is None else f"{x:.2f}"
     bl = hz["benchmarks"]
-    from horizon_compare import BENCH_CN as _BCN
-    # 表1:组合多周期
+    from horizon_compare import BENCH_CN as _BCN, _NAME as _HNM
+    def _drp(row):
+        return "、".join(_HNM.get(s, s) for s in row.get("dropped", [])) or "—"
+    # 表1:组合多周期(含"剔除"列)
     r1 = "".join(
-        (f'<tr><td>{row["years"]}年</td><td colspan="8" style="color:var(--muted)">— 数据不足(组合最年轻持仓限制)</td></tr>'
+        (f'<tr><td>{row["years"]}年</td><td colspan="8" style="color:var(--muted)">— 数据不足</td><td>{_drp(row)}</td></tr>'
          if not row["port"] else
          f'<tr><td>{row["years"]}年</td><td>{_p(row["port"]["total_return"])}</td>'
          f'<td>${int(row["port"]["final_balance"]):,}</td><td>{_p(row["port"]["cagr"])}</td>'
          f'<td>{_p(row["port"]["max_drawdown"])}</td><td>{_n(row["port"]["sharpe"])}</td>'
-         f'<td>{_p(row.get("alpha"))}</td><td>{_n(row.get("beta"))}</td><td>{_n(row.get("ir"))}</td></tr>')
+         f'<td>{_p(row.get("alpha"))}</td><td>{_n(row.get("beta"))}</td><td>{_n(row.get("ir"))}</td>'
+         f'<td style="color:var(--muted)">{_drp(row)}</td></tr>')
         for row in hz["rows"])
     # 表2/3:年化 / 回撤 vs 指数
     def cmp_rows(key):
@@ -538,14 +541,14 @@ def _horizon_html(hz):
     bh = "".join(f"<th>{_BCN.get(b, b)}</th>" for b in bl)
     return (
         f'<h2>八、多周期收益对比表（初始资金 $10,000）</h2>'
-        f'<div class="card" style="font-size:.82rem;color:var(--muted)">组合共同起点 {hz["start_month"] or "—"}'
-        f'（{hz["n_months"]} 个月，月度对齐）· ⚠️ 组合受最年轻持仓限制(兆易2016)→15/20年无数据；'
+        f'<div class="card" style="font-size:.82rem;color:var(--muted)">月度对齐 · ⚠️ 长周期若持仓当时未上市'
+        f'(如兆易2016)则权重设0、其余重新归一(见"剔除"列)，故长周期是"当时子集"表现非完整 v10；'
         f'用今日持仓回测历史有时代错置/幸存者偏差，是"历史画像"非当年真实收益。</div>'
         f'<div style="overflow-x:auto"><table><tr><th>周期</th><th>总回报</th><th>最终余额</th><th>年化</th>'
-        f'<th>最大回撤</th><th>Sharpe</th><th>Alpha</th><th>Beta</th><th>IR</th></tr>{r1}</table></div>'
-        f'<div style="margin-top:8px;font-size:.85rem">年化收益 vs 主要指数</div>'
+        f'<th>最大回撤</th><th>Sharpe</th><th>Alpha</th><th>Beta</th><th>IR</th><th>剔除</th></tr>{r1}</table></div>'
+        f'<div style="margin-top:10px;font-size:.9rem;font-weight:600">年化收益 vs 主要指数</div>'
         f'<div style="overflow-x:auto"><table><tr><th>周期</th><th>组合</th>{bh}</tr>{cmp_rows("cagr")}</table></div>'
-        f'<div style="margin-top:8px;font-size:.85rem">最大回撤 vs 主要指数</div>'
+        f'<div style="margin-top:10px;font-size:.9rem;font-weight:600">最大回撤 vs 主要指数</div>'
         f'<div style="overflow-x:auto"><table><tr><th>周期</th><th>组合</th>{bh}</tr>{cmp_rows("max_drawdown")}</table></div>')
 
 
@@ -622,6 +625,11 @@ h2{{color:var(--head);font-size:1.08rem;border-left:5px solid var(--accent);padd
 ul{{margin:.3em 0;padding-left:1.3em}}li{{margin:.25em 0;font-size:.87rem}}
 .mrow{{font-size:.86rem;margin:3px 0}}.mrow b{{color:var(--accent);display:inline-block;min-width:6.5em}}
 .ni{{font-size:.8rem;color:var(--muted);margin:2px 0 2px 6.5em}}
+table{{border-collapse:collapse;width:100%;margin:6px 0;font-size:.82rem}}
+th,td{{border:1px solid var(--line);padding:6px 9px;text-align:right;white-space:nowrap}}
+th{{background:var(--card);color:var(--head);font-weight:600}}
+td:first-child,th:first-child{{text-align:left}}
+tr:nth-child(even) td{{background:rgba(127,127,127,.05)}}
 footer{{color:var(--muted);font-size:.78rem;margin-top:20px;border-top:1px solid var(--line);padding-top:10px}}</style></head><body><div class="wrap">
 <h1>投资组合定期复盘（三层五面）· {r['cadence'].upper()}</h1><div class="sub">{r['date']} · {_h.escape(r['source'])}</div>
 <h2>🎯 行动清单</h2><div class="act"><ul>{acts}</ul></div>
