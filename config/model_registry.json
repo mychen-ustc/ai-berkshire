@@ -729,5 +729,29 @@
     "validated_on": "2026-07-15",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "monitor",
+    "name": "运营监控与健康检查",
+    "tool": "tools/monitor.py",
+    "category": "治理",
+    "method": "数据源canary探测+cron dead-man's-switch+数据新鲜度,健康看板+非零退出码告警",
+    "assumptions": [
+      "cron日志mtime代表上次运行"
+    ],
+    "limitations": [
+      "行情时段外天然旧(仅极端告警)",
+      "需装cron才有心跳意义"
+    ],
+    "data_sources": [
+      "datalayer canary + EDGAR + 文件mtime + cron日志"
+    ],
+    "tests": [
+      "tests/test_monitor.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-15",
+    "revalidate_every_days": 180,
+    "owner": "MartinChen"
   }
 ]
