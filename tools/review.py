@@ -585,14 +585,29 @@ def _tiers_html(t):
     if t["issues"]:
         issues = '<div style="color:#b45309;font-size:.82rem;margin-top:6px">⚠️ 一致性：' + \
                  "；".join(_h_escape(i) for i in t["issues"]) + "</div>"
+    recs = t.get("T1_recs", [])
+    t1_tbl = ""
+    if recs:
+        rows = []
+        for mk, cn in (("A", "A股·龙虎榜"), ("US", "美股·13F新建"), ("HK", "港股·南向净买")):
+            items = [r for r in recs if r.get("market") == mk]
+            for i, r in enumerate(items[:6]):
+                st = "★" * min(int(r.get("strength", 1)), 5)
+                mkcell = f'<td rowspan="{min(len(items),6)}">{cn}</td>' if i == 0 else ""
+                rows.append(f'<tr>{mkcell}<td>{st}</td><td>{_h_escape(r["symbol"])}</td>'
+                            f'<td>{_h_escape((r.get("name") or "")[:14])}</td>'
+                            f'<td style="text-align:left">{_h_escape(r.get("reason", "")[:60])}</td></tr>')
+        t1_tbl = ('<div style="overflow-x:auto"><table><tr><th>市场</th><th>印证</th><th>标的</th>'
+                  '<th>名称</th><th>提示线索(印证纳入T1的理由)</th></tr>' + "".join(rows) + "</table></div>")
     return (
         '<h2>九、三级机会流水线回顾</h2><div class="card">'
         + row("T3 持仓组合", t["T3"], "rgba(63,185,80,.15)")
         + row("T2 观察名单", t["T2"], "rgba(88,166,255,.15)")
-        + row("T1 候选观察", t["T1"], "rgba(154,165,177,.15)")
+        + f'<div style="margin:4px 0"><b>T1 候选观察</b>（{len(t["T1"])}）——三市场全覆盖·★=印证强度(多源自动升级)：</div>'
+        + t1_tbl
         + issues
         + '<div style="font-size:.8rem;color:var(--muted);margin-top:6px">流转：T1→(研究)→T2→(买入)→T3；'
-          '降级 T3→T2、T2→T1(级联)。雷达线索(A股龙虎榜+美股13F新建仓)已自动落入 T1。</div></div>')
+          '降级 T3→T2、T2→T1(级联)。★≥3=多源印证(强)优先研究。A股龙虎榜+美股13F+港股南向自动落入 T1。</div></div>')
 
 
 def _h_escape(s):
@@ -821,10 +836,18 @@ def render_md(r):
         L.append("\n## 九、三级机会流水线回顾")
         L.append(f"- **T3 持仓组合**({len(t['T3'])})：{', '.join(t['T3']) or '—'}")
         L.append(f"- **T2 观察名单**({len(t['T2'])})：{', '.join(t['T2']) or '—'}")
-        L.append(f"- **T1 候选观察**({len(t['T1'])})：{', '.join(t['T1']) or '—'}")
+        L.append(f"- **T1 候选观察**({len(t['T1'])})——三市场全覆盖·★=印证强度(多源自动升级)：")
+        recs = t.get("T1_recs", [])
+        for mk, cn in (("A", "A股·龙虎榜/涨停"), ("US", "美股·13F新建仓"), ("HK", "港股·南向净买")):
+            items = [r for r in recs if r.get("market") == mk]
+            if items:
+                L.append(f"  - **{cn}**：")
+                for r in items[:6]:
+                    st = "★" * min(int(r.get("strength", 1)), 5)
+                    L.append(f"    - {st} {r['symbol']} {(r.get('name') or '')[:12]} — {r.get('reason', '')[:56]}")
         if t["issues"]:
             L.append("- ⚠️ 一致性：" + "；".join(t["issues"]))
-        L.append("- 流转：T1→(研究)→T2→(买入)→T3；降级 T3→T2、T2→T1(级联)。雷达线索(A股龙虎榜+美股13F新建仓)已自动落入 T1。")
+        L.append("- 流转：T1→(研究)→T2→(买入)→T3；降级 T3→T2、T2→T1(级联)。★≥3=多源印证(强)，优先研究。")
     L.append("\n---\n*数据源：东财(A/H前复权+主力资金流+龙虎榜+涨停+宏观) · Yahoo(US) · Finnhub/Nasdaq(美股预期) · SEC EDGAR(13F) · 新浪7×24(要闻)。含真实持仓，仅存本地。不构成投资建议。*")
     return "\n".join(L)
 
