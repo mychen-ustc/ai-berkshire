@@ -25,6 +25,7 @@ This skill is generated from `skills/dividends.md` so Claude Code and Codex user
 ```bash
 python3 tools/dividends.py preview --from-ledger data/portfolio/transactions.csv          # 预览
 python3 tools/dividends.py apply --from-ledger data/portfolio/transactions.csv [--tax 0.15] # 追加DIV(先自动备份)
+python3 tools/dividends.py reinvest --from-ledger ... --target "GOOGL=16,MTUM=14,..." [--apply]  # 按权重DRIP再投资
 ```
 - preview 按标的汇总应记分红 + 最近笔明细；apply 追加 DIV 行并备份原账本。
 - 账本已内建 DIV 动作(现金 += 分红)；追加后 `ledger.py positions` 重建即见现金含分红。
@@ -33,7 +34,7 @@ python3 tools/dividends.py apply --from-ledger data/portfolio/transactions.csv [
 - **仅美股**(Yahoo 分红事件)；A股/港股(兆易)分红需东财数据，本版本未接。
 - 记**除息日 × 当时持股**的应得分红；实际派息有延迟。
 - 默认记**税前毛股息**；外国投资者美股股息有预扣税(~30%/协定~15%)，用 `--tax` 记税后。
-- 默认现金入账(不自动 DRIP 再投资)；再投资需另下买单。
+- 默认现金入账；`reinvest` 命令按目标权重把现金**碎股 DRIP 再投资**(向下截断防超额、留微小正残留;异币种/A股100股起板的标的排除并提示,需FX单独处理)。
 - ex-date 用 `interval=1d` 取准确日(1mo 会吸附月初)。
 
 ## 相关

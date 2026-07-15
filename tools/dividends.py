@@ -19,6 +19,7 @@
 """
 import argparse
 import json
+import math
 import os
 import shutil
 import sys
@@ -40,6 +41,21 @@ def filter_calendar(divs, start, end):
 def div_cash(shares, dps, tax=0.0):
     """应收分红现金 = 持股 × 每股 × (1−预扣税)。纯函数。"""
     return shares * dps * (1 - tax)
+
+
+def allocate(cash, weights, prices, whole=False):
+    """按权重(在有价标的间重新归一)把 cash 分配为(碎)股。
+    → {sym:{weight,alloc,price,shares}}。whole=True 则向下取整为整股。纯函数。"""
+    avail = {s: weights[s] for s in weights if prices.get(s)}
+    tot = sum(avail.values()) or 1.0
+    out = {}
+    for s, w in avail.items():
+        alloc = cash * w / tot
+        raw = alloc / prices[s] if prices[s] else 0
+        # 向下截断(整股或4位碎股)，确保不超额→现金不为负
+        sh = float(int(raw)) if whole else math.floor(raw * 10000) / 10000
+        out[s] = {"weight": w, "alloc": round(alloc, 2), "price": prices[s], "shares": sh}
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -149,16 +165,78 @@ def cmd_apply(args):
     print(f"   用 `ledger.py positions` 重建可见现金已含分红。")
 
 
+def cmd_reinvest(args):
+    """把可用现金(默认USD分红)按目标权重碎股再投资(DRIP)。"""
+    rows = L.load_ledger(args.from_ledger)
+    _, cash, _, _ = L.rebuild(rows)
+    ccy = args.ccy
+    avail = float(cash.get(ccy, 0))
+    if avail <= 0:
+        print(f"无可再投资 {ccy} 现金(={avail})。")
+        return
+    tgt = {}
+    for part in args.target.split(","):
+        if "=" in part:
+            k, v = part.split("=", 1)
+            tgt[dl.detect(k.strip())["symbol"]] = float(v)
+    # 仅在与现金同币种的标的间部署(异币种需FX，且A股100股起板，故排除)
+    usd_tgt, prices, dropped = {}, {}, []
+    for s, w in tgt.items():
+        info = dl.detect(s)
+        if info["currency"] != ccy:
+            dropped.append(s)
+            continue
+        try:
+            prices[s] = dl.fetch_quote(s, cross=False).get("price")
+            usd_tgt[s] = w
+        except Exception:  # noqa: BLE001
+            dropped.append(s)
+    alloc = allocate(avail, usd_tgt, prices, whole=args.whole)
+    print("=" * 62)
+    print(f"分红再投资(DRIP) · 可用 {ccy} ${avail:.2f} · 按 v10 权重{'(整股)' if args.whole else '(碎股)'}")
+    print("=" * 62)
+    print(f"  {'标的':<7}{'目标%':>6}{'分配$':>9}{'现价':>10}{'买入股数':>11}")
+    deployed = 0.0
+    for s in sorted(alloc, key=lambda x: -alloc[x]["weight"]):
+        a = alloc[s]
+        deployed += a["shares"] * a["price"]
+        print(f"  {s:<7}{a['weight']:>5.0f}%{a['alloc']:>9.2f}{a['price']:>10.2f}{a['shares']:>11.4f}")
+    print(f"  部署 ${deployed:.2f} · 残留现金 ${avail - deployed:.2f}")
+    if dropped:
+        print(f"  ⓘ 排除(异币种/A股100股起板，需FX单独处理): {', '.join(dropped)}")
+    if not args.apply:
+        print(f"\n  → 加 --apply 追加 {len(alloc)} 条 BUY 到账本(先备份)。")
+        return
+    priv = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "reports", "private")
+    os.makedirs(priv, exist_ok=True)
+    bak = os.path.join(priv, f"transactions.pre-drip-backup-{datetime.now().strftime('%Y%m%d')}.csv")
+    shutil.copyfile(args.from_ledger, bak)
+    today = datetime.now().strftime("%Y-%m-%d")
+    with open(args.from_ledger, "a", encoding="utf-8") as f:
+        for s, a in alloc.items():
+            if a["shares"] <= 0:
+                continue
+            f.write(f"{today},BUY,{s},美股,{ccy},{a['shares']},{a['price']},0,,分红再投资DRIP-v10权重\n")
+    print(f"\n✅ 已追加 {sum(1 for a in alloc.values() if a['shares'] > 0)} 条 BUY(备份 → {os.path.basename(bak)})")
+
+
 def main():
-    ap = argparse.ArgumentParser(description="分红入账:真实分红×时点持股→账本DIV交易(零依赖)")
+    ap = argparse.ArgumentParser(description="分红入账+再投资:真实分红→账本DIV,可按权重DRIP(零依赖)")
     ap.add_argument("--tax", type=float, default=0.0, help="股息预扣税率(如0.1协定/0.3)")
     sub = ap.add_subparsers(dest="cmd")
     for c in ("preview", "apply"):
         p = sub.add_parser(c)
         p.add_argument("--from-ledger", required=True)
         p.add_argument("--tax", type=float, default=0.0)
+    ri = sub.add_parser("reinvest", help="按目标权重把分红现金DRIP再投资")
+    ri.add_argument("--from-ledger", required=True)
+    ri.add_argument("--target", required=True, help='v10目标权重 "GOOGL=16,MTUM=14,..."')
+    ri.add_argument("--ccy", default="USD", help="再投资币种(默认USD)")
+    ri.add_argument("--whole", action="store_true", help="整股(默认碎股)")
+    ri.add_argument("--apply", action="store_true", help="写入账本(默认仅预览)")
     args = ap.parse_args()
-    {"preview": cmd_preview, "apply": cmd_apply}.get(args.cmd, lambda a: ap.print_help())(args)
+    {"preview": cmd_preview, "apply": cmd_apply, "reinvest": cmd_reinvest}.get(
+        args.cmd, lambda a: ap.print_help())(args)
 
 
 if __name__ == "__main__":
