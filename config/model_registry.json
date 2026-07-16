@@ -998,5 +998,32 @@
     "validated_on": "2026-07-16",
     "revalidate_every_days": 180,
     "owner": "claude"
+  },
+  {
+    "id": "notify",
+    "name": "结果通知(桌面/webhook/日志)",
+    "tool": "tools/notify.py",
+    "category": "运营与编排",
+    "method": "多通道结果通知:macOS osascript/Linux notify-send桌面 + 飞书/Slack webhook(secrets) + alerts.log/ALERT.flag;level(info/warn/crit)门控;monitor --notify 非🟢时触发、cron失败触发、CI失败webhook",
+    "assumptions": [
+      "webhook URL存gitignore的secrets.local.json(NOTIFY_WEBHOOK)",
+      "桌面通知需本机命令可用"
+    ],
+    "limitations": [
+      "桌面通知仅本机(cron无人在场时看不到,靠webhook/日志兜底)",
+      "webhook需自配secret",
+      "非保证送达"
+    ],
+    "data_sources": [
+      "keys.get_key(NOTIFY_WEBHOOK)",
+      "本机 osascript/notify-send"
+    ],
+    "tests": [
+      "tests/test_notify.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-16",
+    "revalidate_every_days": 180,
+    "owner": "claude"
   }
 ]

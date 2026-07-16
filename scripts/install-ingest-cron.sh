@@ -22,10 +22,10 @@ ILOG="$ROOT/logs/ingest-cron.log"
 MLOG="$ROOT/logs/monitor-cron.log"
 TAG="# ai-berkshire-ingest"   # 用于幂等识别(独立于 review 的 TAG)
 
-# 周一 06:45 摄取(在 07:30 market_review / 08:00 周复盘之前,让复盘用上新数据)
-INGEST="45 6 * * 1 cd '$ROOT' && '$PY' tools/ingest_universe.py run >> '$ILOG' 2>&1 $TAG"
-# 工作日 07:15 健康体检(非零退出码=有🔴,日志留痕;monitor 现真正定时运行)
-MONITOR="15 7 * * 1-5 cd '$ROOT' && '$PY' tools/monitor.py check >> '$MLOG' 2>&1 $TAG"
+# 周一 06:45 摄取(在 07:30 market_review / 08:00 周复盘之前,让复盘用上新数据);失败即告警
+INGEST="45 6 * * 1 cd '$ROOT' && { '$PY' tools/ingest_universe.py run >> '$ILOG' 2>&1 || '$PY' tools/notify.py send --title '数据摄取失败' --message 'ingest_universe run 非零退出,见 logs/ingest-cron.log' --level crit; } $TAG"
+# 工作日 07:15 健康体检(--notify:非🟢时发桌面/webhook/日志告警;非零退出码=有🔴)
+MONITOR="15 7 * * 1-5 cd '$ROOT' && '$PY' tools/monitor.py check --notify >> '$MLOG' 2>&1 $TAG"
 
 current="$(crontab -l 2>/dev/null || true)"
 cleaned="$(printf '%s\n' "$current" | grep -v "$TAG" || true)"

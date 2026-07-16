@@ -5,9 +5,11 @@ __pycache__/
 .codex/
 /tmp/
 logs/command-log.jsonl
-# 复盘 cron 日志含持仓信号，只存本地
+# 复盘/摄取/告警 日志与告警标记含持仓信号或运营状态，只存本地
 logs/*.log
 logs/review-cron.log
+logs/alerts.log
+logs/ALERT.flag
 reports/美团/command-log.jsonl
 
 # 雪球爬虫登录态缓存（含 cookies，本地使用）

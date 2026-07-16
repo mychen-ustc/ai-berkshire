@@ -164,11 +164,25 @@ def render(res):
     print(f"\n  ⚠️ 行情新鲜度在交易时段外天然偏旧(仅极端过期告警);监控是运营底线,非投资信号。")
 
 
+def _notify_health(res):
+    """总体非🟢时,把故障/告警项摘要推给 notify(桌面/webhook/日志)。"""
+    try:
+        import notify
+    except Exception:  # noqa: BLE001
+        return
+    bad = [f"{c['status']}{c['name']}" for checks in res["groups"].values()
+           for c in checks if c["status"] != "🟢"]
+    level = "crit" if res["overall"] == "🔴" else "warn"
+    notify.send(f"运营健康 {res['overall']}", "; ".join(bad) or "见 monitor check", level=level, min_level="warn")
+
+
 def main():
     ap = argparse.ArgumentParser(description="运营监控与健康检查(心跳/数据源/新鲜度,零依赖)")
     sub = ap.add_subparsers(dest="cmd")
     c = sub.add_parser("check", help="全面健康体检")
     c.add_argument("--json", action="store_true")
+    c.add_argument("--notify", action="store_true",
+                   help="总体非🟢时发结果通知(桌面/webhook/日志)——供 cron 无人值守告警")
     args = ap.parse_args()
     if args.cmd == "check":
         res = run_checks()
@@ -176,6 +190,8 @@ def main():
             print(json.dumps(res, ensure_ascii=False, indent=2))
         else:
             render(res)
+        if getattr(args, "notify", False) and res["overall"] != "🟢":
+            _notify_health(res)
         sys.exit(0 if res["overall"] != "🔴" else 1)
     else:
         ap.print_help()
