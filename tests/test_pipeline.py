@@ -70,3 +70,43 @@ class TestTriageScore(unittest.TestCase):
         sc, tags = pl.triage_score(3, 0.20, 0.8)        # 6 +1(动量) -0.5(高波)
         self.assertEqual(sc, 6.5)
         self.assertIn("高波⚠", tags)
+
+
+class TestCaptureCLIWiring(unittest.TestCase):
+    """回归：cmd_capture 曾把 args.pool(路径串)当 strength 位置参传入，
+    污染候选池并让 status/triage 因 float()/int() 崩溃。经诊断审计发现并修复。"""
+
+    def _run(self, pool, *extra):
+        import subprocess
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        return subprocess.run(
+            [sys.executable, os.path.join(root, "tools", "pipeline.py"),
+             "--pool", pool, *extra],
+            capture_output=True, text=True, timeout=30)
+
+    def test_capture_writes_int_strength_and_downstream_ok(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            pool = os.path.join(d, "pool.jsonl")
+            r = self._run(pool, "capture", "--symbol", "TEST", "--market", "US",
+                          "--source", "手工", "--reason", "回归", "--strength", "2")
+            self.assertEqual(r.returncode, 0, msg=r.stderr)
+            with open(pool) as fh:
+                rec = json.loads(fh.read().strip())
+            # strength 必须是整数 2，绝不能是池文件路径字符串
+            self.assertEqual(rec["strength"], 2)
+            self.assertIsInstance(rec["strength"], int)
+            # 下游主命令不得崩溃
+            self.assertEqual(self._run(pool, "status").returncode, 0)
+            self.assertEqual(self._run(pool, "triage").returncode, 0)
+
+    def test_capture_default_strength_is_one(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            pool = os.path.join(d, "pool.jsonl")
+            self._run(pool, "capture", "--symbol", "T2")
+            with open(pool) as fh:
+                rec = json.loads(fh.read().strip())
+            self.assertEqual(rec["strength"], 1)

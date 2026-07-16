@@ -53,6 +53,28 @@ class TestAudit(unittest.TestCase):
         self.assertEqual(f["overdue"], [])
         self.assertEqual(f["untested"], [])
 
+    def test_tests_missing_gate(self):
+        # 治理盲区修复：标 validated 却引用不存在的测试文件应被 tests_missing 抓到
+        entries = [
+            {"id": "good", "status": "validated", "validated_on": "2026-07-14",
+             "revalidate_every_days": 180, "tests": ["tests/test_model_registry.py"]},
+            {"id": "ghost", "status": "validated", "validated_on": "2026-07-14",
+             "revalidate_every_days": 180, "tests": ["tests/test_DOES_NOT_EXIST.py"]},
+        ]
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        f = mr.audit_findings(entries, date(2026, 7, 14), root=root)
+        self.assertEqual([m["entry"]["id"] for m in f["tests_missing"]], ["ghost"])
+        # 不传 root 时保持向后兼容（不检查文件存在性）
+        f0 = mr.audit_findings(entries, date(2026, 7, 14))
+        self.assertEqual(f0["tests_missing"], [])
+
+    def test_registry_no_phantom_test_files(self):
+        # 真实登记册不得引用磁盘上不存在的测试文件（防治理剧场回归）
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        f = mr.audit_findings(mr.load(), date(2026, 7, 14), root=root)
+        self.assertEqual(f["tests_missing"], [],
+                         msg=f"登记册引用了不存在的测试: {f['tests_missing']}")
+
 
 if __name__ == "__main__":
     unittest.main()

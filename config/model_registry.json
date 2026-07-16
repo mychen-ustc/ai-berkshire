@@ -275,7 +275,7 @@
       "调用方假设 + 历史财报"
     ],
     "tests": [
-      "tests/test_statement_model.py"
+      "tests/test_batch2.py"
     ],
     "status": "validated",
     "validated_on": "2026-07-15",
@@ -300,7 +300,7 @@
       "调用方假设"
     ],
     "tests": [
-      "tests/test_scenario.py"
+      "tests/test_batch2.py"
     ],
     "status": "validated",
     "validated_on": "2026-07-08",

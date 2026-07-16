@@ -167,9 +167,19 @@ def needs_revalidation(entry, today):
     return d > int(entry.get("revalidate_every_days", 365))
 
 
-def audit_findings(entries, today):
-    """→ {overdue, experimental, untested}。治理体检的三类问题模型。"""
-    overdue, experimental, untested = [], [], []
+def missing_test_files(entry, root):
+    """登记项声明的 test 文件里，磁盘上实际不存在的那些。root=仓库根。纯函数(仅 stat)。"""
+    return [t for t in (entry.get("tests") or [])
+            if not os.path.exists(t if os.path.isabs(t) else os.path.join(root, t))]
+
+
+def audit_findings(entries, today, root=None):
+    """→ {overdue, experimental, untested, tests_missing}。治理体检的问题模型分类。
+
+    tests_missing：status 标 validated 却引用了磁盘上不存在的测试文件——
+    此前 audit 只判 tests 字段非空、从不 stat 文件，对"已验证但测试文件不存在"结构性失明
+    (诊断审计发现的治理盲区)。传 root 才启用该检查。"""
+    overdue, experimental, untested, tests_missing = [], [], [], []
     for e in entries:
         if needs_revalidation(e, today):
             overdue.append(e)
@@ -177,7 +187,12 @@ def audit_findings(entries, today):
             experimental.append(e)
         if not e.get("tests"):
             untested.append(e)
-    return {"overdue": overdue, "experimental": experimental, "untested": untested}
+        if root is not None and e.get("tests"):
+            miss = missing_test_files(e, root)
+            if miss:
+                tests_missing.append({"entry": e, "missing": miss})
+    return {"overdue": overdue, "experimental": experimental,
+            "untested": untested, "tests_missing": tests_missing}
 
 
 # --------------------------------------------------------------------------
@@ -280,7 +295,7 @@ def cmd_add(args):
 def cmd_audit(args):
     entries = load(args.path)
     today = _today(args)
-    f = audit_findings(entries, today)
+    f = audit_findings(entries, today, root=ROOT)
     print("=" * 66)
     print(f"模型治理体检 · {today} · 在册 {len(entries)} 个")
     print("=" * 66)
@@ -298,6 +313,11 @@ def cmd_audit(args):
         print(f"\n  ⚠️  无回归测试（{len(f['untested'])}）：")
         for e in f["untested"]:
             print(f"     · {e['id']:<20} {e['name']}")
+    if f["tests_missing"]:
+        print(f"\n  🔴 测试文件缺失（{len(f['tests_missing'])}）——标 validated 却引用不存在的测试(治理剧场)：")
+        for m in f["tests_missing"]:
+            e = m["entry"]
+            print(f"     · {e['id']:<20} 缺 {', '.join(m['missing'])}")
     if not any(f.values()):
         print("\n  ✅ 全部模型在有效期内、均已校验、均有测试——治理健康。")
     print()

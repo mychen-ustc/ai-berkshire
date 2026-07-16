@@ -174,7 +174,8 @@ def _holdings(ledger_path=LEDGER):
 # 命令
 # --------------------------------------------------------------------------
 def cmd_capture(args):
-    ok = pool_add(args.symbol, args.name, args.market, args.source, args.reason, args.pool)
+    ok = pool_add(args.symbol, args.name, args.market, args.source, args.reason,
+                  args.strength, path=args.pool)
     print(f"{'✅ 已加入' if ok else '⏭️ 已存在'} T1 候选观察名单: {args.symbol}"
           + (f"（{args.source}: {args.reason}）" if ok else ""))
 
@@ -383,6 +384,7 @@ def main():
     cap.add_argument("--market", default="")
     cap.add_argument("--source", default="手工")
     cap.add_argument("--reason", default="")
+    cap.add_argument("--strength", type=int, default=1, help="证据强度(1弱/2中/3强),喂 triage 打分")
     cr = sub.add_parser("capture-radar", help="雷达线索(A+US)批量落入 T1")
     pr = sub.add_parser("promote", help="晋级 T1→T2")
     pr.add_argument("--symbol", required=True)

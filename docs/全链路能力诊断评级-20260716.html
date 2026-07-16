@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全链路能力诊断评级（2026-07-16）</title>
+<style>
+:root{
+  --bg:#f6f8fb;--card:#fff;--ink:#152030;--muted:#5b6472;--line:#e4e8ef;--head:#0b2942;--accent:#0e7490;--accent2:#0f766e;
+  --green:#16a34a;--amber:#e0a010;--blue:#2563eb;--red:#dc2626;--purple:#7c3aed;
+  --green-bg:#dcfce7;--amber-bg:#fef3c7;--blue-bg:#dbeafe;--red-bg:#fee2e2;--purple-bg:#ede9fe;--gray-bg:#eef2f6;--grid:#e4e8ef;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e1116;--card:#161b22;--ink:#e6edf3;--muted:#9aa5b1;--line:#2a3139;--head:#cfe8f5;--accent:#22b8cf;--accent2:#2dd4bf;
+  --green:#34d399;--amber:#f5c542;--blue:#60a5fa;--red:#f87171;--purple:#a78bfa;
+  --green-bg:#0f2e1e;--amber-bg:#33280a;--blue-bg:#0f2038;--red-bg:#3a1414;--purple-bg:#221836;--gray-bg:#1b222b;--grid:#2a3139;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.7;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 20px 80px;}
+header.top{border-bottom:3px solid var(--accent);padding-bottom:18px;}
+h1{font-size:1.85rem;color:var(--head);margin:.1em 0 .3em;}
+.sub{color:var(--muted);font-size:.9rem;}
+.tagline{margin-top:14px;padding:14px 18px;background:linear-gradient(90deg,var(--blue-bg),var(--amber-bg));border-radius:10px;font-size:.95rem;}
+.tagline b{color:var(--head);}
+nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:9px 0;margin:8px 0 4px;z-index:20;font-size:.8rem;}
+nav a{color:var(--accent);text-decoration:none;margin-right:12px;white-space:nowrap;line-height:2;}
+h2{font-size:1.28rem;color:var(--head);margin:1.9em 0 .6em;padding-left:.55em;border-left:5px solid var(--accent);scroll-margin-top:52px;}
+h3{font-size:1.04rem;color:var(--accent2);margin:1.3em 0 .5em;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+p{margin:.5em 0;} strong{color:var(--head);} small{color:var(--muted);}
+.note{background:var(--gray-bg);border-radius:8px;padding:10px 14px;font-size:.88rem;margin:12px 0;}
+table{border-collapse:collapse;width:100%;font-size:.86rem;margin:6px 0;}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;}
+th{background:var(--gray-bg);color:var(--head);font-weight:700;}
+code{background:var(--gray-bg);padding:.1em .4em;border-radius:5px;font-size:.86em;}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;}
+.tablewrap table{margin:0;} .tablewrap th{white-space:nowrap;}
+
+/* KPI 头部 */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0;}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center;}
+.kpi .n{font-size:1.7rem;font-weight:800;color:var(--head);line-height:1.1;}
+.kpi .l{font-size:.78rem;color:var(--muted);margin-top:4px;}
+.score-hero{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:linear-gradient(120deg,var(--amber-bg),var(--gray-bg));border-radius:14px;padding:18px 22px;margin:16px 0;}
+.score-hero .big{font-size:3rem;font-weight:900;color:var(--amber);line-height:1;}
+.score-hero .txt{flex:1;min-width:240px;font-size:.92rem;}
+
+/* 评级条 */
+.rbars{display:grid;gap:7px;margin:8px 0;}
+.rrow{display:grid;grid-template-columns:210px 1fr 40px;align-items:center;gap:10px;font-size:.82rem;}
+.rrow .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rrow .name b{color:var(--head);}
+.track{position:relative;height:16px;background:var(--gray-bg);border-radius:8px;overflow:hidden;}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:8px;}
+.fill.l4{background:var(--green);} .fill.l35{background:#5aa54a;}
+.fill.l3{background:var(--blue);} .fill.l25{background:var(--amber);}
+.rrow .val{text-align:right;font-weight:700;color:var(--head);font-variant-numeric:tabular-nums;}
+.badge{display:inline-block;font-size:.68rem;padding:1px 7px;border-radius:20px;font-weight:700;vertical-align:middle;}
+.b-hold{background:var(--green-bg);color:var(--green);}
+.b-down{background:var(--red-bg);color:var(--red);}
+.b-star{background:var(--amber-bg);color:var(--amber);}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin:8px 0;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.chip{width:12px;height:12px;border-radius:3px;display:inline-block;}
+
+/* 短板卡 */
+.weak{border-left:5px solid var(--red);}
+.weak h3{color:var(--red);}
+.fix{border-left:5px solid var(--green);}
+
+/* 方向卡 */
+.dirs{display:grid;gap:12px;}
+.dir{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;border-left:5px solid var(--accent);}
+.dir .p{display:inline-block;font-size:.72rem;font-weight:800;padding:2px 9px;border-radius:20px;margin-right:8px;}
+.p0{background:var(--red-bg);color:var(--red);} .p1{background:var(--amber-bg);color:var(--amber);} .p2{background:var(--blue-bg);color:var(--blue);}
+.dir h3{margin:.2em 0 .4em;display:inline;}
+.dir .why{font-size:.85rem;color:var(--muted);margin-top:6px;}
+.done{color:var(--green);font-weight:700;}
+.verdict{background:linear-gradient(120deg,var(--blue-bg),var(--purple-bg));border-radius:14px;padding:20px 24px;font-size:.95rem;}
+.verdict b{color:var(--head);}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>全链路能力诊断评级</h1>
+  <div class="sub">ai-berkshire · 2026-07-16 · 经对抗验证（12 域并行审计 → 质疑防虚高 → 综合）</div>
+  <div class="tagline">
+    路线图四方向已全部落地，工具覆盖<b>基本完成</b>。但"覆盖完成"≠"运营化完成"≠"数据充实完成"——
+    本诊断只认<b>代码与测试实证</b>，把文档乐观叙事里的缺口揪出来。
+  </div>
+</header>
+
+<nav>
+  <a href="#hero">总评</a>
+  <a href="#ratings">12域评级</a>
+  <a href="#weak">三大短板</a>
+  <a href="#fix">今日止血</a>
+  <a href="#dirs">改进方向</a>
+  <a href="#verdict">裁定</a>
+</nav>
+
+<section id="hero">
+<div class="score-hero">
+  <div class="big">3.3<small style="font-size:1.1rem;color:var(--muted)"> / 5</small></div>
+  <div class="txt">
+    <b>引擎级 L3+、双域 L4、零域 L5。</b> 工程内核扎实（全程 Decimal、纯函数、435 测试 0.14s 全绿、诚实边界遍布），
+    但<b>事实源近乎空置</b>、<b>治理未管到旗舰且已漂移</b>、<b>全域未被证明自主运转</b>。<br>
+    本质：一套<b>"算得准、但没在自动转、且喂进去的是玩具级数据"</b>的高质量单机研究工具箱，而非在运营的机构级平台。
+  </div>
+</div>
+<div class="kpis">
+  <div class="kpi"><div class="n">67</div><div class="l">工具（全零依赖）</div></div>
+  <div class="kpi"><div class="n">435</div><div class="l">回归测试全绿 0.14s</div></div>
+  <div class="kpi"><div class="n">32</div><div class="l">登记模型</div></div>
+  <div class="kpi"><div class="n">73</div><div class="l">skill</div></div>
+  <div class="kpi"><div class="n" style="color:var(--red)">10/12</div><div class="l">域自评虚高</div></div>
+  <div class="kpi"><div class="n" style="color:var(--red)">0</div><div class="l">域达 L5</div></div>
+</div>
+</section>
+
+<section id="ratings">
+<h2>全链路 12 域诊断评级</h2>
+<div class="legend">
+  <span><i class="chip" style="background:var(--green)"></i>L4</span>
+  <span><i class="chip" style="background:#5aa54a"></i>L3.5</span>
+  <span><i class="chip" style="background:var(--blue)"></i>L3</span>
+  <span><i class="chip" style="background:var(--amber)"></i>L2.5</span>
+  <span>·标尺 L0 无 → L3 交叉验证 → L4 治理+数据 → L5 自动运转+可重放审计</span>
+</div>
+<div class="card">
+<div class="rbars">
+  <div class="rrow"><div class="name"><b>风险管理</b> <span class="badge b-star">⭐唯一闭环</span></div><div class="track"><div class="fill l4" style="width:80%"></div></div><div class="val">4.0</div></div>
+  <div class="rrow"><div class="name"><b>运营与编排</b> <span class="badge b-star">⭐</span> <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l4" style="width:80%"></div></div><div class="val">4.0</div></div>
+  <div class="rrow"><div class="name"><b>数据层与事实源</b> <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l35" style="width:70%"></div></div><div class="val">3.5</div></div>
+  <div class="rrow"><div class="name"><b>组合构建</b> <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l35" style="width:70%"></div></div><div class="val">3.5</div></div>
+  <div class="rrow"><div class="name"><b>回测与业绩归因</b> <span class="badge b-hold">维持</span></div><div class="track"><div class="fill l35" style="width:70%"></div></div><div class="val">3.5</div></div>
+  <div class="rrow"><div class="name"><b>治理</b> <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l35" style="width:70%"></div></div><div class="val">3.5</div></div>
+  <div class="rrow"><div class="name"><b>估值建模</b> <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l3" style="width:60%"></div></div><div class="val">3.0</div></div>
+  <div class="rrow"><div class="name"><b>因子与系统化</b> <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l3" style="width:60%"></div></div><div class="val">3.0</div></div>
+  <div class="rrow"><div class="name"><b>一致预期与机构持仓</b> <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l3" style="width:60%"></div></div><div class="val">3.0</div></div>
+  <div class="rrow"><div class="name"><b>机会流水线/多市场/账务</b> <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l3" style="width:60%"></div></div><div class="val">3.0</div></div>
+  <div class="rrow"><div class="name"><b>五面研究</b> ⚠️ <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l25" style="width:50%"></div></div><div class="val">2.5</div></div>
+  <div class="rrow"><div class="name"><b>宏观事件与法务筛查</b> ⚠️ <span class="badge b-down">虚高⬇</span></div><div class="track"><div class="fill l25" style="width:50%"></div></div><div class="val">2.5</div></div>
+</div>
+</div>
+<div class="tablewrap">
+<table>
+<tr><th>域</th><th>评级</th><th>一句话实证（只认代码/测试）</th></tr>
+<tr><td><b>风险管理</b></td><td>4.0</td><td>全系统<b>唯一完整闭环</b>：portfolio_risk 端到端实测复现 HHI 0.409 golden + 触发 IPS 前三大 100%&gt;90% 越限；31 测试；三工具全 validated；被 7 个下游 import</td></tr>
+<tr><td><b>运营与编排</b></td><td>4.0</td><td>5 个真编排器（review 886 行等）+ 38 测试 + 安装器幂等；但<b>零 L5</b>：无 <code>.github/workflows</code>、monitor.py 不在 crontab、日志证据显示定时任务<b>从未自主执行过一次</b></td></tr>
+<tr><td><b>数据层与事实源</b></td><td>3.5</td><td>引擎骨架达 L4（59 测试真金：PIT 无前视/复权/幸存者/lineage）；但<b>事实源空置</b>：delisting 仅 1 条、corporate_actions 仅 1 条、security_master.json/pit_store.json <b>磁盘不存在</b>、A 股退市记录=0——反偏差引擎对真实工作池<b>纯空转</b></td></tr>
+<tr><td><b>组合构建</b></td><td>3.5</td><td>4 工具真 L3（A·A⁻¹=I / ERC / 奇异矩阵抛错 golden）；但 asset_allocation 声明 data_sources=macro_regime 实际只 import argparse（<b>声明≠实现</b>）；构建主管线无测；IPS status=draft</td></tr>
+<tr><td><b>回测与业绩归因</b></td><td>3.5</td><td>Brinson 三效应/拆股还原/幸存者量化 35 真金测；但 <b>backtest.py 主引擎不 import backtest_rigorous</b>，仍跑活股票池；修正数据玩具级；无 numpy/scipy 对拍</td></tr>
+<tr><td><b>治理</b></td><td>3.5</td><td>32 条真登记 + code_gate 真 AST 门禁 + lineage + 44 测试，这半边扎实；但<b>脚手架不管旗舰</b>（旗舰估值零登记）+ 门禁盲区（validated 但测试文件不存在，<span class="done">今日已修</span>）+ 漂移</td></tr>
+<tr><td><b>估值建模</b></td><td>3.0</td><td>dcf 全程 Decimal 真 L3 + reverse round-trip；但<b>无 DCF↔comps 跨模型交叉验证</b>；旗舰零登记；comps 声称 PE/PB/PS/EV 但 PS/EV 未接</td></tr>
+<tr><td><b>因子与系统化</b></td><td>3.0</td><td>因子三件套真 L4（Jacobi/PCA/OLS golden、点时库喂）；但"系统化"半壁是废件；<b>backtest_rigorous 不 import factor_library，因子→策略闭环不存在</b></td></tr>
+<tr><td><b>一致预期与机构持仓</b></td><td>3.0</td><td>4 个 CLI 真 L3；但 <b>L4 治理 100% 缺失</b>（不在 registry/code_gate、无血缘信封）；取数解析层无 fixture、脆弱层未测</td></tr>
+<tr><td><b>机会流水线/多市场/账务</b></td><td>3.0</td><td>三级流水线 + 美 A 港多市场线索；但 <b>cmd_capture 参数错位 bug</b>（validated 却在主命令崩溃、污染候选池，<span class="done">今日已修+补测</span>）；promote/demote 无级联测试</td></tr>
+<tr><td><b>五面研究</b> ⚠️</td><td>2.5</td><td>57 测试真金(手算 golden)；但<b>信号从未被证明有效</b>（零 forward-return/backtest 校准）、恐惧贪婪合成分=朴素均值、sector_rotation 仅 L2、这 5 工具<b>治理零命中</b></td></tr>
+<tr><td><b>宏观事件与法务筛查</b> ⚠️</td><td>2.5</td><td>forensic 法务筛查 <b>100% 手工喂参</b>、本质是带 golden 的公式计算器、治理仅 1/4；招牌的"反偏差/法务筛查"恰恰<b>最空</b></td></tr>
+</table>
+</div>
+<div class="note">分布：L4 两域 · L3.5 三域 · L3 四域 · L2.5 两域 · <b>L5 零域</b>。12 域中 <b>10 域自评虚高</b>——过往文档乐观叙事与代码实证有系统性偏差。唯二不虚高：风险管理（维持 4.0）、回测（维持 3.5，反而自评低报了治理）。</div>
+</section>
+
+<section id="weak">
+<h2>三大结构性短板（全链路共性）</h2>
+<div class="card weak">
+  <h3>① 事实源近乎空置 —— 全系统地基裂缝</h3>
+  <p>delisting.jsonl 仅 1 行、corporate_actions.jsonl 仅 1 行、security_master.json 与 pit_store.json <b>磁盘上根本不存在</b>（已 find 确认）。实际工作 universe 是 24 只 A 股而幸存者/公司行动引擎的 A 股记录=0、PIT 仅美股 25 只。<b>两个招牌反偏差引擎对本该服务的池子纯空转</b>——引擎再精，喂进去的是玩具级数据。唯一同时卡住"数据层/回测/因子"三域的地基缺口。</p>
+</div>
+<div class="card weak">
+  <h3>② 治理"脚手架不管旗舰"且有漂移/剧场</h3>
+  <p>治理是本系统的<b>差异化卖点</b>，但：旗舰绝对估值 dcf/industry_valuation/morningstar <b>零登记</b>；statement_model/scenario 登记引用的测试文件<b>磁盘不存在却标 validated</b>，而 audit_findings() 只判字段非空、从不 stat 文件——对"已验证但测试不存在"<b>结构性失明</b>（<span class="done">今日已修</span>）；asset_allocation 声明的数据血缘与代码矛盾。治理最该杜绝"声明≠实现"，它自己犯了。</p>
+</div>
+<div class="card weak">
+  <h3>③ 全域零 L5 —— 没有一处被证明能自主运转</h3>
+  <p>无 <code>.github/workflows</code>（PR 不自动跑测试/门禁）、无 pre-commit、cron 装了 3 条 review 但 <b>monitor.py（dead-man's-switch）不在 crontab</b>、日志证据显示定时任务<b>从未自主执行过一次</b>。"装了不转"比"没装"更危险——它给人"在运营"的错觉。</p>
+</div>
+</section>
+
+<section id="fix">
+<h2>今日已止血（诊断即修复）</h2>
+<div class="card fix">
+<p>诊断揪出的三处<b>低成本高价值</b>问题，当场修复并补测（<b>435 测试全绿</b>、code_gate 0 致命）：</p>
+<div class="tablewrap">
+<table>
+<tr><th>问题</th><th>严重度</th><th>修复</th></tr>
+<tr><td><code>pipeline.py</code> cmd_capture 把 <code>args.pool</code>(路径串)当 <code>strength</code> 位置参传入——validated 工具在主命令崩溃、污染候选池</td><td>🔴 正确性</td><td>补 <code>--strength</code> 参数 + 关键字传 <code>path</code>；补 2 个 CLI 级联回归测试</td></tr>
+<tr><td><code>model_registry.audit_findings()</code> 从不 stat 测试文件——"validated 但测试文件不存在"的治理盲区</td><td>🔴 治理剧场</td><td>新增 <code>tests_missing</code> 门禁（<code>missing_test_files</code> 纯函数 + stat）；补 2 个回归测试</td></tr>
+<tr><td>登记册 2 条（三表建模/情景）引用不存在的测试文件</td><td>🟡 漂移</td><td>校正指向真实的 <code>tests/test_batch2.py</code></td></tr>
+</table>
+</div>
+</div>
+</section>
+
+<section id="dirs">
+<h2>后续改进方向（按优先级 · 经综合排序）</h2>
+<div class="dirs">
+  <div class="dir" style="border-left-color:var(--red)">
+    <span class="p p0">P0</span><h3>数据底座补齐（唯一解锁三域的地基）</h3>
+    <p>为实际工作 universe（24 只 A 股 + 25 只美股）补齐<b>真实</b>退市/公司行动/证券主数据，落盘持久化 security_master.json 与 pit_store.json，写<b>最小自动摄取脚本 + 新鲜度时间戳</b>。</p>
+    <div class="why">为何最先：所有反偏差/回测/因子引擎的价值都由数据底座赋予，当前引擎在空转。不做这一步，其余优化都是<b>给空管道镀金</b>。影响：高。</div>
+  </div>
+  <div class="dir" style="border-left-color:var(--red)">
+    <span class="p p0">P0</span><h3>治理修到旗舰（成本低）</h3>
+    <p>(a) <span class="done">✅ audit 增加测试文件 stat 校验（今日完成）</span>；(b) 登记旗舰 dcf/industry_valuation/morningstar；(c) 校正 asset_allocation/factor_library 的 data_sources 与 limitations 使之与代码一致。</p>
+    <div class="why">治理是差异化卖点，却对最核心的旗舰失明且已漂移。边际成本极低、可信度回报高，能防止未来评估被"治理剧场"污染。</div>
+  </div>
+  <div class="dir" style="border-left-color:var(--red)">
+    <span class="p p0">P0</span><h3>流水线正确性收尾（成本低）</h3>
+    <p><span class="done">✅ 修 cmd_capture 参数 + 补 capture CLI 测试（今日完成）</span>；仍待：补 promote/demote 三级级联测试。</p>
+    <div class="why">一个 validated 工具在主命令崩溃是硬伤，且暴露了"验证门禁形同虚设"的根因。</div>
+  </div>
+  <div class="dir" style="border-left-color:var(--amber)">
+    <span class="p p1">P1</span><h3>补齐 L3 交叉验证支柱（工作量中）</h3>
+    <p>DCF↔comps 自动交叉校验、consensus 多源对账、信号工具接 forward-return/backtest 有效性校准。</p>
+    <div class="why">交叉验证是 L3 明列要件，估值/一致预期/五面均缺这根支柱而停在 L2.5–L3。按域分批：先估值（核心）再信号（边际）。</div>
+  </div>
+  <div class="dir" style="border-left-color:var(--amber)">
+    <span class="p p1">P1</span><h3>CI 刚性：把手动门禁变强制（成本低）</h3>
+    <p>加 <code>.github/workflows</code>：每次 PR 自动跑 435 测试 + code_gate。</p>
+    <div class="why">通用价值、应优先于"无人值守定时运转"。与其"装了不转"，不如先把可验证的 CI 刚性坐实；L5 自主运转待数据与监控回路补齐后再谈。</div>
+  </div>
+  <div class="dir" style="border-left-color:var(--blue)">
+    <span class="p p2">P2 条件</span><h3>打通因子→可验证策略闭环</h3>
+    <p>让 backtest.py 默认走 backtest_rigorous 路径（接 delisting/corporate_actions/pit），并让 backtest_rigorous import factor_library。</p>
+    <div class="why">仅当系统定位要认真做系统化/量化策略时才关键；若定位是"辅助基本面研究的工具箱"可后置——<b>且前提是先完成 P0 数据底座</b>，否则严谨引擎仍无数据可跑。</div>
+  </div>
+</div>
+</section>
+
+<section id="verdict">
+<h2>最终裁定</h2>
+<div class="verdict">
+  <p>系统处在<b>"引擎已具机构级骨架的高质量单机研究工具箱"</b>阶段——算得准、测试全绿、诚实克制，但<b>事实源空置、治理未管到旗舰、全域未被证明自主运转</b>。</p>
+  <p>离顶级机构级还差<b>三件事</b>：① 一个真实且自动摄取的点时数据底座；② 一个真正管到旗舰并能自查漂移的治理门禁；③ 一套被证明能无人值守自主运转且可重放审计的自动化回路。</p>
+  <p>当前的本质是<b>"能算、但没在转，且喂进去的是玩具级数据"</b>。路线图的"工具建设"章已基本翻篇，下一章的题目是<b>"数据充实 + 治理坐实 + 运营化"</b>——这三件事做完，3.3 才能真正走向 4.5+。</p>
+</div>
+</section>
+
+<footer>
+规模基线（2026-07-16）：67 工具 · 435 回归测试全绿(0.14s) · 32 登记模型 · 73 skill · 全零依赖。<br>
+诊断方法：12 域并行审计 → 对抗质疑防虚高 → 首席评估官综合（25 agent / 385 工具调用 / 17 分钟）。评级只认代码与测试实证，不认文档自述。
+</footer>
+</div>
+</body>
+</html>
