@@ -76,5 +76,45 @@ class TestAudit(unittest.TestCase):
                          msg=f"登记册引用了不存在的测试: {f['tests_missing']}")
 
 
+class TestAuditStrictCLI(unittest.TestCase):
+    """audit --strict 是 CI 治理硬门禁：validated 却无测试文件应非零退出。"""
+
+    def _run(self, path, strict):
+        import json
+        import subprocess
+        import tempfile
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        argv = [sys.executable, os.path.join(root, "tools", "model_registry.py"),
+                "--path", path, "audit", "--today", "2026-07-16"]
+        if strict:
+            argv.append("--strict")
+        return subprocess.run(argv, capture_output=True, text=True, timeout=30)
+
+    def test_strict_blocks_phantom_test(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            reg = os.path.join(d, "reg.json")
+            entry = [{"id": "ghost", "name": "G", "tool": "x.py", "category": "t",
+                      "tests": ["tests/NOPE_missing.py"], "status": "validated",
+                      "validated_on": "2026-07-16", "revalidate_every_days": 365}]
+            with open(reg, "w") as fh:
+                json.dump(entry, fh)
+            self.assertEqual(self._run(reg, strict=True).returncode, 1)    # 阻断
+            self.assertEqual(self._run(reg, strict=False).returncode, 0)   # 非 strict 只告警
+
+    def test_strict_passes_when_clean(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            reg = os.path.join(d, "reg.json")
+            entry = [{"id": "ok", "name": "O", "tool": "x.py", "category": "t",
+                      "tests": ["tests/test_model_registry.py"], "status": "validated",
+                      "validated_on": "2026-07-16", "revalidate_every_days": 365}]
+            with open(reg, "w") as fh:
+                json.dump(entry, fh)
+            self.assertEqual(self._run(reg, strict=True).returncode, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

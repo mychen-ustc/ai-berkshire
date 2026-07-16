@@ -220,10 +220,10 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
     <p>DCF↔comps 自动交叉校验、consensus 多源对账、信号工具接 forward-return/backtest 有效性校准。</p>
     <div class="why">交叉验证是 L3 明列要件，估值/一致预期/五面均缺这根支柱而停在 L2.5–L3。按域分批：先估值（核心）再信号（边际）。</div>
   </div>
-  <div class="dir" style="border-left-color:var(--amber)">
-    <span class="p p1">P1</span><h3>CI 刚性 + 无人值守（成本低）<span class="done"> · 部分完成</span></h3>
-    <p><span class="done">✅ cron 自动调度已装</span>（<code>install-ingest-cron.sh</code>：每周一 06:45 <code>ingest_universe run</code> + 工作日 07:15 <code>monitor check</code>，独立 TAG 不扰 review；monitor 现在 crontab 内无人值守）；待办：加 <code>.github/workflows</code> 每 PR 跑 460 测试 + code_gate + 结果通知。</p>
-    <div class="why">诊断曾指"cron 未跑摄取、monitor 不在 crontab、定时从未自主执行"——现摄取与健康体检均已定时。合力关闭"零 L5"缺口的第一块。</div>
+  <div class="dir" style="border-left-color:var(--green)">
+    <span class="p p1">P1</span><h3>CI 刚性 + 无人值守（成本低）<span class="done"> · ✅ 完成</span></h3>
+    <p><span class="done">✅ cron 自动调度</span>（<code>install-ingest-cron.sh</code>：每周一 06:45 <code>ingest_universe run</code> + 工作日 07:15 <code>monitor check</code>，独立 TAG 不扰 review）；<span class="done">✅ <code>.github/workflows/ci.yml</code></span>：每 push/PR 自动跑 <b>465 测试 + code_gate + 治理体检 <code>--strict</code></b>（validated 却无测试文件即阻断，为此给 audit 加了 <code>--strict</code> 硬退出）。</p>
+    <div class="why">诊断曾指"cron 未跑摄取、monitor 不在 crontab、无 .github/workflows、定时从未自主执行"——通用刚性两块（无人值守 + PR门禁）均已补上；尚缺可重放审计 + 结果通知才算完整 L5。</div>
   </div>
   <div class="dir" style="border-left-color:var(--blue)">
     <span class="p p2">P2 条件</span><h3>打通因子→可验证策略闭环</h3>

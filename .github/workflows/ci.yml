@@ -1,0 +1,37 @@
+name: CI
+
+# 提交前门禁强制化(P1)：把手动跑的 465 回归测试 + 代码质量门禁 + 治理体检
+# 变成每次 push/PR 自动强制运行——关闭诊断"零 L5/无 .github/workflows"缺口的通用刚性。
+# 全零外部依赖(纯 stdlib)，故 CI 极简：无 pip install。
+
+on:
+  push:
+    branches: [main, feat/martin]
+  pull_request:
+    branches: [main]
+
+# 同分支新推送取消旧运行，省额度
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: 测试 + 代码门禁 + 治理体检
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 回归测试（全零依赖 stdlib，纯函数 + golden）
+        run: python3 -m unittest discover -s tests -v
+
+      - name: 代码质量硬门禁（AST：循环变量遮蔽 / 语法 / 未用导入）
+        run: python3 tools/code_gate.py check --path tools/ --errors-only
+
+      - name: 模型治理体检（--strict：validated 却无测试文件即阻断）
+        run: python3 tools/model_registry.py audit --strict

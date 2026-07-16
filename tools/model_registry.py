@@ -321,6 +321,10 @@ def cmd_audit(args):
     if not any(f.values()):
         print("\n  ✅ 全部模型在有效期内、均已校验、均有测试——治理健康。")
     print()
+    # --strict：CI 硬门禁——治理剧场(validated 却无测试文件)阻断构建
+    if getattr(args, "strict", False) and f["tests_missing"]:
+        print(f"  ❌ --strict：{len(f['tests_missing'])} 个模型 validated 却缺测试文件，治理门禁不通过。")
+        raise SystemExit(1)
 
 
 def main():
@@ -360,6 +364,8 @@ def main():
 
     au = sub.add_parser("audit", help="过期/实验中/无测试 体检")
     au.add_argument("--today", help="YYYY-MM-DD（默认今天）")
+    au.add_argument("--strict", action="store_true",
+                    help="治理剧场(validated却无测试文件)时非零退出——供 CI 硬门禁")
 
     args = ap.parse_args()
     {"init": cmd_init, "list": cmd_list, "show": cmd_show, "validate": cmd_validate,
