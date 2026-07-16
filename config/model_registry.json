@@ -394,19 +394,21 @@
       "前瞻EPS/PE可靠"
     ],
     "limitations": [
-      "质量(ROE)/规模(市值)需点时基本面库未接入",
-      "ETF/非美股价值成长会缺失",
+      "质量(ROE)/规模由点时库接入(美股EDGAR+A股东财),已非'未接入'",
+      "成长仍限美股(A股无免费前瞻一致预期源,不与美股前瞻口径混用)",
+      "ETF/无覆盖标的部分因子会缺失",
       "小样本z分不稳"
     ],
     "data_sources": [
-      "us_consensus(价值/成长)",
-      "datalayer(动量/低波)"
+      "us_consensus(价值/成长,仅美股)",
+      "datalayer(动量/低波)",
+      "pit_financials 点时库(质量ROE/规模股本;EDGAR美股+东财A股)"
     ],
     "tests": [
       "tests/test_factor_library.py"
     ],
     "status": "validated",
-    "validated_on": "2026-07-15",
+    "validated_on": "2026-07-16",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
   },
@@ -562,16 +564,18 @@
     ],
     "limitations": [
       "regime事后描述非预测",
-      "仅资产类别权重非择券"
+      "仅资产类别权重非择券",
+      "regime 靠 --regime 手动传参,不自动读取 macro_regime(声明已校正)"
     ],
     "data_sources": [
-      "macro_regime + 调用方风险档"
+      "无外部数据源(纯函数)",
+      "regime/风险档由调用方传参(regime 可参考 macro_regime 输出)"
     ],
     "tests": [
       "tests/test_asset_allocation.py"
     ],
     "status": "validated",
-    "validated_on": "2026-07-14",
+    "validated_on": "2026-07-16",
     "revalidate_every_days": 365,
     "owner": "MartinChen"
   },
@@ -809,21 +813,23 @@
     "name": "数据底座摄取编排器",
     "tool": "tools/ingest_universe.py",
     "category": "数据层/事实源",
-    "method": "解析真实工作universe(持仓⊕候选池⊕watchlist,滤13F名/币种)→批量resolve主数据+Yahoo events抓真实拆股分红(去重增量)+A股点时快照+新鲜度清单",
+    "method": "解析真实工作universe(持仓⊕候选池⊕watchlist,滤13F名/币种)→批量resolve主数据+公司行动(美/港Yahoo、A股东财分红送配,去重增量)+A股点时快照+A股点时财务+新鲜度清单",
     "assumptions": [
       "Yahoo events=div,split口径准确",
       "腾讯gtimg A股快照字段稳定",
       "ticker=无空格且非币种记号"
     ],
     "limitations": [
-      "A/H公司行动免费源不稳,仅自动抓美股Yahoo",
+      "公司行动免费源可能漏个别行动;A/H拆股以datalayer前复权为准",
       "13F issuer名(非ticker)跳过需映射",
       "退市库靠seed高置信textbook起始集非全市场"
     ],
     "data_sources": [
-      "Yahoo events",
-      "腾讯gtimg",
-      "datalayer.detect/fetch_quote"
+      "Yahoo events(美股/港股拆股分红)",
+      "东财分红送配(A股拆股分红)",
+      "腾讯gtimg(A股快照)",
+      "datalayer.detect/fetch_quote",
+      "东财业绩报表(A股财务,via ashare_financials)"
     ],
     "tests": [
       "tests/test_ingest_universe.py"

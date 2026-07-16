@@ -82,11 +82,47 @@ class TestMergeActions(unittest.TestCase):
         self.assertEqual(new[0]["type"], "dividend")
 
     def test_ratio_vs_amount_no_collision(self):
-        # 同标的同日 split(ratio) 与 dividend(amount) 不应被误判为同一条
+        # 同标的同日 split 与 dividend 不应被误判为同一条(类型不同)
         recs = [{"symbol": "X", "type": "split", "date": "2026-01-01", "ratio": 2},
                 {"symbol": "X", "type": "dividend", "date": "2026-01-01", "amount": 2}]
         new = iu.merge_actions([], recs)
         self.assertEqual(len(new), 2)
+
+    def test_float_jitter_deduped(self):
+        # 同一(标的,类型,除息日)的分红,源返回微小浮点抖动(~1e-5),必须视为同一条(否则每次摄取膨胀)
+        existing = [{"symbol": "09999.HK", "type": "dividend", "date": "2020-06-11", "amount": 0.3637593}]
+        incoming = [{"symbol": "09999.HK", "type": "dividend", "date": "2020-06-11", "amount": 0.36373422}]
+        self.assertEqual(iu.merge_actions(existing, incoming), [])   # 抖动值不产生新记录
+
+
+class TestParseAshareBonus(unittest.TestCase):
+    def test_dividend_per_ten_to_per_share(self):
+        # 东财"10派0.22元"→ PRETAX_BONUS_RMB=0.22(每10股)→ 每股 0.022
+        rows = [{"EX_DIVIDEND_DATE": "2026-06-10 00:00:00", "PRETAX_BONUS_RMB": 0.22}]
+        out = iu.parse_ashare_bonus(rows, "002185.SZ")
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["type"], "dividend")
+        self.assertAlmostEqual(out[0]["amount"], 0.022)
+        self.assertEqual(out[0]["date"], "2026-06-10")             # 除权除息日
+
+    def test_song_zhuan_to_split_ratio(self):
+        # 10送5转3 → split ratio = (10+5+3)/10 = 1.8
+        rows = [{"EX_DIVIDEND_DATE": "2012-07-12", "BONUS_RATIO": 5, "IT_RATIO": 3}]
+        out = iu.parse_ashare_bonus(rows, "002185.SZ")
+        split = [r for r in out if r["type"] == "split"][0]
+        self.assertAlmostEqual(split["ratio"], 1.8)
+
+    def test_dividend_and_split_same_date(self):
+        rows = [{"EX_DIVIDEND_DATE": "2012-07-12", "PRETAX_BONUS_RMB": 1.0,
+                 "BONUS_RATIO": 6, "IT_RATIO": 0}]
+        out = iu.parse_ashare_bonus(rows, "X.SZ")
+        self.assertEqual({r["type"] for r in out}, {"dividend", "split"})
+
+    def test_no_ex_date_skipped(self):
+        # 预案未实施(无除息日)→ 跳过,不产脏记录
+        rows = [{"EX_DIVIDEND_DATE": "", "PRETAX_BONUS_RMB": 0.5},
+                {"EX_DIVIDEND_DATE": None, "BONUS_RATIO": 10}]
+        self.assertEqual(iu.parse_ashare_bonus(rows, "X.SZ"), [])
 
 
 if __name__ == "__main__":

@@ -6,12 +6,13 @@
 (持仓+候选池+watchlist)**纯空转**。本编排器一键补齐、且带新鲜度戳，让 monitor 能体检：
 
   ① security_master  — 解析真实工作 universe 的证券主数据(名称/市场/交易所/币种)并持久化
-  ② corporate_actions — 从 Yahoo events 抓**真实**拆股/分红(美股)，去重增量入库(供复权/持仓账务)
+  ② corporate_actions — 抓**真实**拆股/分红:美股/港股→Yahoo events;A股→东财分红送配。去重增量入库
   ③ pit_store        — 对 A 股记点时快照(价/PE/PB/市值,腾讯)，让点时库真正开始积累
-  ④ 新鲜度清单        — data/ingest_manifest.json 记录各源 count + updated，供 monitor 体检
+  ④ pit_financials   — A 股年报点时财务(东财业绩报表,公告日=available_at) via ashare_financials
+  ⑤ 新鲜度清单        — data/ingest_manifest.json 记录各源 count + updated，供 monitor 体检
 
-诚实边界：摄取即**真数据**，不编。A 股/港股公司行动免费源不稳，本环境只自动抓美股 Yahoo
-(A/H 的拆股/分红需另补或靠 datalayer 前复权);13F issuer 名(非 ticker)自动跳过、需 ticker 映射;
+诚实边界：摄取即**真数据**，不编。公司行动三市场已覆盖(美/港 Yahoo、A 股东财分红送配),
+但免费源仍可能漏个别行动、A/H 拆股以 datalayer 前复权为准;13F issuer 名(非 ticker)自动跳过、需 ticker 映射;
 退市库(防幸存者)是另一维度，见 seed-delisting(补录真实退市样本)。
 
 用法：
@@ -122,10 +123,41 @@ def parse_yahoo_events(result, symbol):
     return sorted(out, key=lambda x: (x["date"], x["type"]))
 
 
+def _num(v):
+    if v in (None, "", "-", "--"):
+        return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def parse_ashare_bonus(rows, symbol):
+    """东财分红送配 rows → corporate_actions 记录(A股)。纯函数。
+    东财口径均为**每10股**：派现 PRETAX_BONUS_RMB(税前,每10股派X元) → 每股 = /10;
+    送股 BONUS_RATIO + 转增 IT_RATIO(每10股) → split ratio = (10+送+转)/10。
+    date=除权除息日(EX_DIVIDEND_DATE);仅记**已实施**(有除息日)的行动。"""
+    out = []
+    for r in rows:
+        ex = str(r.get("EX_DIVIDEND_DATE", ""))[:10]
+        if not ex or not ex.startswith("20"):
+            continue                                     # 预案未实施/无除息日 → 跳过
+        div10 = _num(r.get("PRETAX_BONUS_RMB"))
+        song = _num(r.get("BONUS_RATIO")) or 0.0
+        zhuan = _num(r.get("IT_RATIO")) or 0.0
+        if div10 and div10 > 0:
+            out.append({"symbol": symbol, "type": "dividend", "date": ex,
+                        "amount": round(div10 / 10.0, 6), "source": "东财分红送配"})
+        if (song + zhuan) > 0:
+            out.append({"symbol": symbol, "type": "split", "date": ex,
+                        "ratio": round((10.0 + song + zhuan) / 10.0, 6), "source": "东财分红送配"})
+    return sorted(out, key=lambda x: (x["date"], x["type"]))
+
+
 def ca_key(rec):
-    """公司行动去重键(同标的同日同类型同幅度视为同一条)。纯函数。"""
-    amt = rec.get("ratio", rec.get("amount", ""))
-    return (rec.get("symbol"), rec.get("type"), rec.get("date"), round(float(amt), 6) if amt != "" else "")
+    """公司行动去重键 = (标的, 类型, 日期)。一个除权/除息日至多一次该类型行动,
+    故不含幅度——源(如 Yahoo)可能对同一分红返回微小浮点抖动(~1e-5),纳入幅度会误判为新记录。纯函数。"""
+    return (rec.get("symbol"), rec.get("type"), rec.get("date"))
 
 
 def merge_actions(existing, incoming):
@@ -180,9 +212,9 @@ def load_universe():
 # 抓取（IO）
 # --------------------------------------------------------------------------
 def fetch_yahoo_actions(symbol, years=10):
-    """Yahoo events=div,split → corporate_actions 记录(仅美股)。IO。"""
+    """Yahoo events=div,split → corporate_actions 记录(美股 + 港股,Yahoo 两者都覆盖)。IO。"""
     info = dl.detect(symbol)
-    if info["market"] != "US":
+    if info["market"] not in ("US", "HK"):
         return []
     url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{info['yahoo']}"
            f"?interval=1d&range={years}y&events=div,split")
@@ -192,6 +224,23 @@ def fetch_yahoo_actions(symbol, years=10):
     except Exception:  # noqa: BLE001
         return []
     return parse_yahoo_events(result, symbol)
+
+
+def fetch_ashare_actions(symbol, page_size=40):
+    """东财分红送配 RPT_SHAREBONUS_DET → corporate_actions 记录(A股拆股/分红)。IO。"""
+    if _market(symbol) != "A":
+        return []
+    code = dl.detect(symbol)["symbol"].split(".")[0]
+    url = ("https://datacenter-web.eastmoney.com/api/data/v1/get?"
+           "reportName=RPT_SHAREBONUS_DET&columns=ALL"
+           f"&filter=(SECURITY_CODE=%22{code}%22)"
+           f"&sortColumns=EX_DIVIDEND_DATE&sortTypes=-1&pageNumber=1&pageSize={page_size}")
+    try:
+        d = json.loads(dl._curl(url))
+        rows = (d.get("result") or {}).get("data") or []
+    except Exception:  # noqa: BLE001
+        return []
+    return parse_ashare_bonus(rows, dl.detect(symbol)["symbol"])
 
 
 # --------------------------------------------------------------------------
@@ -209,12 +258,17 @@ def ingest_security_master(universe):
 
 
 def ingest_corporate_actions(universe):
+    """按市场路由抓公司行动:美股/港股→Yahoo events;A股→东财分红送配。去重增量入库。"""
     existing = ca.load()
     all_new = []
     for u in universe:
-        if _market(u["symbol"]) != "US":
+        mkt = _market(u["symbol"])
+        if mkt in ("US", "HK"):
+            incoming = fetch_yahoo_actions(u["symbol"])
+        elif mkt == "A":
+            incoming = fetch_ashare_actions(u["symbol"])
+        else:
             continue
-        incoming = fetch_yahoo_actions(u["symbol"])
         new = merge_actions(existing + all_new, incoming)
         all_new.extend(new)
     for r in all_new:
