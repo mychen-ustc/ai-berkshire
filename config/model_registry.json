@@ -945,5 +945,58 @@
     "validated_on": "2026-07-16",
     "revalidate_every_days": 180,
     "owner": "claude"
+  },
+  {
+    "id": "valuation_cross_check",
+    "name": "估值交叉校验(DCF↔comps↔市价)",
+    "tool": "tools/valuation_cross_check.py",
+    "category": "估值建模",
+    "method": "多独立估值法三角对账:两两相对背离度→收敛(≤15%)/部分/分歧(≥35%)判定+三角中枢区间+市价定位+置信度;comps隐含价=同业中位倍数×本公司每股指标",
+    "assumptions": [
+      "各法相互独立(绝对DCF vs 相对comps)",
+      "背离度用均值归一(异号/非正均值不可比)"
+    ],
+    "limitations": [
+      "只校验方法间一致性不保证任一法对",
+      "comps隐含价受同业与每股指标口径影响",
+      "收敛非正确、分歧才是信号"
+    ],
+    "data_sources": [
+      "调用方传入(dcf.py每股价/comps.py中位倍数/morningstar FV)"
+    ],
+    "tests": [
+      "tests/test_valuation_cross_check.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-16",
+    "revalidate_every_days": 180,
+    "owner": "claude"
+  },
+  {
+    "id": "signal_calibration",
+    "name": "信号有效性校准(前瞻收益vs基线)",
+    "tool": "tools/signal_calibration.py",
+    "category": "五面研究/信号",
+    "method": "信号触发日前瞻收益 vs 无条件基线:算均值/中位/胜率edge;有效需样本≥min_n且均值edge>0且胜率edge>0同向占优;RSI用Wilder逐bar序列",
+    "assumptions": [
+      "前复权日线",
+      "触发即i日买入持有horizon",
+      "基线=每个可算日无条件持有"
+    ],
+    "limitations": [
+      "描述性校准非严格显著性检验(无t检验)",
+      "样本少/regime变化/前瞻窗口重叠会失真",
+      "非交易建议"
+    ],
+    "data_sources": [
+      "datalayer.fetch_history(前复权)"
+    ],
+    "tests": [
+      "tests/test_signal_calibration.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-16",
+    "revalidate_every_days": 180,
+    "owner": "claude"
   }
 ]
