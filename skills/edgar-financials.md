@@ -21,7 +21,7 @@ python3 tools/factor_library.py analyze --symbols "GOOGL,AXP,COST,NDAQ,KO,AAPL" 
 
 ## 原则与诚实边界
 - **只录真实 EDGAR 数据**：不用估计值填充；filing date = 首次披露(同一期在后续财报重复出现时取最早)。
-- **仅美股 10-K 申报人**：BRK.B(控股公司结构)/兆易(A股)/ETF 不在覆盖内。
+- **仅美股 10-K 申报人**：BRK.B(控股公司结构)/ETF 不在覆盖内；**A 股用对称件 `ashare-financials`**(东财业绩报表)。
 - 概念标签因公司而异(营收有多个 tag)，工具逐个尝试；仍可能有个别公司取不全，需 --cik 指定或人工补。
 - 这是"给点时库喂真数据"的一环，与 `data-foundation`(引擎)配套。
 

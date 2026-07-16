@@ -236,6 +236,21 @@ def ingest_pit_snapshots(universe):
     return n
 
 
+def ingest_ashare_financials(universe):
+    """A股年报点时财务(东财业绩报表)→ pit_financials。返回录入条数。"""
+    import ashare_financials as af
+    n = 0
+    for u in universe:
+        if _market(u["symbol"]) != "A":
+            continue
+        try:
+            cnt, _ = af.ingest_symbol(u["symbol"])
+            n += cnt
+        except Exception:  # noqa: BLE001
+            pass
+    return n
+
+
 def _count_jsonl(path):
     if not os.path.exists(path):
         return 0
@@ -341,7 +356,11 @@ def cmd_run(args):
     n_pit = ingest_pit_snapshots(universe)
     print(f"   ✅ 新增 {n_pit} 条 A股点时快照 → data/pit_store.json")
 
-    print("\n④ 写新鲜度清单...")
+    print("\n④ pit_financials A股点时财务(东财业绩报表,公告日=available_at)...")
+    n_fin = ingest_ashare_financials(universe)
+    print(f"   ✅ 录入 {n_fin} 条 A股点时财务 → data/pit_financials.jsonl（质量ROE维度对A股生效）")
+
+    print("\n⑤ 写新鲜度清单...")
     m = write_manifest(len(universe), skipped)
     print(f"   ✅ data/ingest_manifest.json @ {m['generated_at']}")
     print("      " + " · ".join(f"{k}:{v['count']}" for k, v in m["sources"].items()))

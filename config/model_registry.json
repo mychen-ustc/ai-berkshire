@@ -832,5 +832,33 @@
     "validated_on": "2026-07-16",
     "revalidate_every_days": 180,
     "owner": "claude"
+  },
+  {
+    "id": "ashare_financials",
+    "name": "A股点时财务摄取",
+    "tool": "tools/ashare_financials.py",
+    "category": "数据层/事实源",
+    "method": "东财业绩报表RPT_LICO_FN_CPD→年报归母净利/营收/加权ROE/EPS,available_at=公告日(NOTICE_DATE)录入点时库;ROE百分数÷100转比率对齐EDGAR;shares取当前快照",
+    "assumptions": [
+      "东财NOTICE_DATE=真实公告日",
+      "WEIGHTAVG_ROE为百分数口径",
+      "REPORTDATE以12-31结尾=年报"
+    ],
+    "limitations": [
+      "仅A股",
+      "成长因子仍限美股(A股无免费前瞻一致预期,避免与美股前瞻口径混用)",
+      "shares取当前快照非期末"
+    ],
+    "data_sources": [
+      "东财业绩报表",
+      "腾讯gtimg(股本)"
+    ],
+    "tests": [
+      "tests/test_ashare_financials.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-16",
+    "revalidate_every_days": 180,
+    "owner": "claude"
   }
 ]

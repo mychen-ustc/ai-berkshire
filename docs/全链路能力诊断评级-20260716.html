@@ -202,8 +202,8 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
 <div class="dirs">
   <div class="dir" style="border-left-color:var(--green)">
     <span class="p p0">P0</span><h3>数据底座补齐（唯一解锁三域的地基）<span class="done"> · 已实质推进</span></h3>
-    <p><span class="done">✅ 新建 ingest_universe.py</span> 一键为真实工作 universe（31 标的：13 A/6 HK/12 US）补真数据：<b>security_master 31 条</b>（诊断时磁盘不存在）· <b>corporate_actions 418 条真实拆股/分红</b>（诊断时 1 条 demo，抽查 AAPL 4:1/GOOGL 20:1/SCHD 3:1 全对）· <b>pit_store 13 条 A股快照</b>（诊断时不存在）· <b>delisting 4 条 textbook</b>（安然/世通/乐视网，survivorship-check 现产真实结果）· <b>ingest_manifest.json 新鲜度戳已接 monitor</b>。</p>
-    <div class="why">仍未做：A/H 公司行动仅美股 Yahoo；<b>A 股点时财务(ROE/成长)仍空</b>——A 股质量/成长因子缺数据；退市库是起始集；未接 cron 自动摄取。故"事实源"半边由<b>空置→真实但覆盖不全</b>，向 L4 迈进未达。</div>
+    <p><span class="done">✅ ingest_universe.py + ashare_financials.py</span> 一键为真实工作 universe（31 标的：13 A/6 HK/12 US）补真数据：<b>security_master 31 条</b>（诊断时磁盘不存在）· <b>corporate_actions 418 条真实拆股/分红</b>（抽查 AAPL 4:1/GOOGL 20:1/SCHD 3:1 全对）· <b>pit_store 13 条 A股快照</b> · <b>pit_financials +324 条 A股点时财务</b>（东财业绩报表，公告日=available_at，<b>A股质量ROE因子现生效</b>：华天4.14%/兆易9.3%，无前视成立）· <b>delisting 4 条 textbook</b>（survivorship-check 现产真实结果）· <b>ingest_manifest 新鲜度戳接 monitor</b>。</p>
+    <div class="why">仍未做：A/H <b>公司行动</b>仅美股 Yahoo（A/H 靠前复权兜底）；A 股<b>成长因子</b>仍限美股（无免费前瞻一致预期，刻意不与美股前瞻口径混用）；退市库是起始集；未接 cron。故"事实源"半边由<b>空置→真实、质量维度全市场可算</b>，逼近 L4。</div>
   </div>
   <div class="dir" style="border-left-color:var(--red)">
     <span class="p p0">P0</span><h3>治理修到旗舰（成本低）</h3>
