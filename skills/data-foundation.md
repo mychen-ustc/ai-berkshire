@@ -11,6 +11,18 @@
 | `pit_financials.py`（T1-1） | **前视偏差** | 存财报 + **披露日(available_at)**，历史查询只返回"当时已知"的数据 |
 | `corporate_actions.py`（T1-2） | **复权/接续错误** | 拆股/分红/更名的复权因子与代码接续，历史收益才准确 |
 | `delisting.py`（T1-3） | **幸存者偏差** | 退市/破产样本 + "当时在市"股票池，回测不在赢家里挑赢家 |
+| `ingest_universe.py`（P0 摄取） | **数据空置** | 一键为真实工作 universe 补齐真实主数据/公司行动/快照 + 新鲜度清单 |
+
+## 一键摄取（P0 数据底座补齐）
+
+诊断曾发现：引擎齐全但**数据空置**（security_master/pit_store 磁盘不存在、公司行动仅 demo 1 条），反偏差引擎对真实 universe 纯空转。`ingest_universe.py` 是**自动摄取编排器**，把上面三个引擎从"手工补录"变"一键喂真数据"：
+```bash
+python3 tools/ingest_universe.py universe            # 解析真实工作 universe(持仓⊕候选池⊕watchlist,滤13F名/币种)
+python3 tools/ingest_universe.py run                 # ①主数据 ②Yahoo真实拆股/分红(去重增量) ③A股点时快照 ④新鲜度清单
+python3 tools/ingest_universe.py seed-delisting      # 补录高置信 textbook 退市样本(防幸存者)
+python3 tools/ingest_universe.py manifest            # 看各源 count + 生成时间(monitor 也会体检)
+```
+产出 `data/ingest_manifest.json`（新鲜度戳，`monitor.py check` 纳入"数据底座清单"体检）。建议接 cron 定期 `run`。
 
 ## 执行流程
 ```bash
@@ -34,7 +46,7 @@ python3 tools/delisting.py survivorship-check --date 2008-06-01
 
 ## 原则与诚实边界
 - **available_at 是灵魂**：录入财报务必填"披露日"而非"会计期末"——录错就退化成有前视的普通库。
-- **引擎 vs 数据**：这三个工具是正确的**查询引擎**；数据靠手工/增量补录，非全市场数据库——覆盖不全时体检偏乐观，需诚实标注。
+- **引擎 vs 数据**：这三个工具是正确的**查询引擎**；`ingest_universe.py run` 已为真实 universe 摄取真实主数据/美股公司行动/A股快照（不再空置），但 A/H 公司行动免费源不稳、退市库是高置信起始集非全市场库——覆盖不全时体检仍偏乐观，需诚实标注。
 - 复权因子分红项需当时价格(前复权近似)；退市库空时幸存者体检无意义。
 
 ## 相关

@@ -200,10 +200,10 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
 <section id="dirs">
 <h2>后续改进方向（按优先级 · 经综合排序）</h2>
 <div class="dirs">
-  <div class="dir" style="border-left-color:var(--red)">
-    <span class="p p0">P0</span><h3>数据底座补齐（唯一解锁三域的地基）</h3>
-    <p>为实际工作 universe（24 只 A 股 + 25 只美股）补齐<b>真实</b>退市/公司行动/证券主数据，落盘持久化 security_master.json 与 pit_store.json，写<b>最小自动摄取脚本 + 新鲜度时间戳</b>。</p>
-    <div class="why">为何最先：所有反偏差/回测/因子引擎的价值都由数据底座赋予，当前引擎在空转。不做这一步，其余优化都是<b>给空管道镀金</b>。影响：高。</div>
+  <div class="dir" style="border-left-color:var(--green)">
+    <span class="p p0">P0</span><h3>数据底座补齐（唯一解锁三域的地基）<span class="done"> · 已实质推进</span></h3>
+    <p><span class="done">✅ 新建 ingest_universe.py</span> 一键为真实工作 universe（31 标的：13 A/6 HK/12 US）补真数据：<b>security_master 31 条</b>（诊断时磁盘不存在）· <b>corporate_actions 418 条真实拆股/分红</b>（诊断时 1 条 demo，抽查 AAPL 4:1/GOOGL 20:1/SCHD 3:1 全对）· <b>pit_store 13 条 A股快照</b>（诊断时不存在）· <b>delisting 4 条 textbook</b>（安然/世通/乐视网，survivorship-check 现产真实结果）· <b>ingest_manifest.json 新鲜度戳已接 monitor</b>。</p>
+    <div class="why">仍未做：A/H 公司行动仅美股 Yahoo；<b>A 股点时财务(ROE/成长)仍空</b>——A 股质量/成长因子缺数据；退市库是起始集；未接 cron 自动摄取。故"事实源"半边由<b>空置→真实但覆盖不全</b>，向 L4 迈进未达。</div>
   </div>
   <div class="dir" style="border-left-color:var(--red)">
     <span class="p p0">P0</span><h3>治理修到旗舰（成本低）</h3>

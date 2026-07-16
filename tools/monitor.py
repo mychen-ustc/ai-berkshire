@@ -106,6 +106,7 @@ def check_files(now):
         ("watchlist 流水线", "data/watchlist.pipeline.json", 24 * 30, 24 * 120),
         ("T1 候选池", "data/candidate_pool.jsonl", 24 * 14, 24 * 45),
         ("点时财务库", "data/pit_financials.jsonl", 24 * 120, 24 * 400),
+        ("数据底座清单", "data/ingest_manifest.json", 24 * 30, 24 * 90),
     ]
     out = []
     for name, rel, warn_h, crit_h in specs:

@@ -803,5 +803,34 @@
     "validated_on": "2026-07-15",
     "revalidate_every_days": 180,
     "owner": "MartinChen"
+  },
+  {
+    "id": "ingest_universe",
+    "name": "数据底座摄取编排器",
+    "tool": "tools/ingest_universe.py",
+    "category": "数据层/事实源",
+    "method": "解析真实工作universe(持仓⊕候选池⊕watchlist,滤13F名/币种)→批量resolve主数据+Yahoo events抓真实拆股分红(去重增量)+A股点时快照+新鲜度清单",
+    "assumptions": [
+      "Yahoo events=div,split口径准确",
+      "腾讯gtimg A股快照字段稳定",
+      "ticker=无空格且非币种记号"
+    ],
+    "limitations": [
+      "A/H公司行动免费源不稳,仅自动抓美股Yahoo",
+      "13F issuer名(非ticker)跳过需映射",
+      "退市库靠seed高置信textbook起始集非全市场"
+    ],
+    "data_sources": [
+      "Yahoo events",
+      "腾讯gtimg",
+      "datalayer.detect/fetch_quote"
+    ],
+    "tests": [
+      "tests/test_ingest_universe.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-16",
+    "revalidate_every_days": 180,
+    "owner": "claude"
   }
 ]

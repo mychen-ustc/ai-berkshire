@@ -61,3 +61,4 @@ data/watchlist.pipeline.json
 data/security_master.json
 data/pit_store.json
 data/candidate_pool.jsonl
+data/ingest_manifest.json
