@@ -36,13 +36,19 @@ jobs:
       - name: 模型治理体检（--strict：validated 却无测试文件即阻断）
         run: python3 tools/model_registry.py audit --strict
 
-      # 失败结果通知：配了 NOTIFY_WEBHOOK secret 则推飞书/Slack；否则 GitHub 默认失败邮件兜底
+      # 失败结果通知：配了 NOTIFY_WEBHOOK secret 则推飞书/Slack；否则 GitHub 默认失败邮件兜底。
+      # 注意：secrets 不能用于 if: 条件(GitHub 限制)，故在 shell 里判空。
       - name: 失败通知（webhook，可选）
-        if: ${{ failure() && secrets.NOTIFY_WEBHOOK != '' }}
+        if: failure()
         env:
           NOTIFY_WEBHOOK: ${{ secrets.NOTIFY_WEBHOOK }}
           NOTIFY_WEBHOOK_KIND: ${{ secrets.NOTIFY_WEBHOOK_KIND }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          python3 tools/notify.py send --level crit \
-            --title "CI 失败 ${{ github.ref_name }}@${{ github.sha }}" \
-            --message "测试/门禁/治理未通过，见 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ -n "$NOTIFY_WEBHOOK" ]; then
+            python3 tools/notify.py send --level crit \
+              --title "CI 失败 ${{ github.ref_name }}@${{ github.sha }}" \
+              --message "测试/门禁/治理未通过，见 $RUN_URL"
+          else
+            echo "未配置 NOTIFY_WEBHOOK secret，跳过 webhook（GitHub 默认失败邮件兜底）。"
+          fi
