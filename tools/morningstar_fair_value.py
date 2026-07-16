@@ -44,6 +44,13 @@ def extract_ticker(tenforeid: str) -> str:
     return parts[-1] if len(parts) >= 3 else tenforeid
 
 
+def upside_pct(fair_value, close_price):
+    """相对晨星公允价值的潜在涨幅(%)：(FV − 现价)/现价 × 100。现价<=0 返回 None。纯函数。"""
+    if not fair_value or not close_price or close_price <= 0:
+        return None
+    return (fair_value - close_price) / close_price * 100
+
+
 def main():
     print(f"\n{'='*80}")
     print(f"  Morningstar 公允价值筛选  {datetime.now().strftime('%Y-%m-%d %H:%M')}")
@@ -83,7 +90,7 @@ def main():
             continue
 
         ticker = extract_ticker(row.get("TenforeId", ""))
-        upside = (fair_value - close_price) / close_price * 100
+        upside = upside_pct(fair_value, close_price)
 
         stocks.append({
             "ticker": ticker,

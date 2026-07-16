@@ -860,5 +860,84 @@
     "validated_on": "2026-07-16",
     "revalidate_every_days": 180,
     "owner": "claude"
+  },
+  {
+    "id": "dcf",
+    "name": "现金流折现估值(DCF)",
+    "tool": "tools/dcf.py",
+    "category": "估值建模",
+    "method": "两阶段FCF折现:显式期逐年FCF+永续增长终值,全程Decimal(prec28)贴现;含reverse-DCF反解隐含增长",
+    "assumptions": [
+      "WACC>永续增长g(否则raises)",
+      "FCF可预测",
+      "终值用Gordon永续"
+    ],
+    "limitations": [
+      "对WACC/g/终值高度敏感(需三情景)",
+      "不做DCF↔comps自动交叉验证(待补)",
+      "未登记跨模型对账"
+    ],
+    "data_sources": [
+      "手工/statement_model FCF"
+    ],
+    "tests": [
+      "tests/test_dcf.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-16",
+    "revalidate_every_days": 180,
+    "owner": "claude"
+  },
+  {
+    "id": "industry_valuation",
+    "name": "分行业估值口径",
+    "tool": "tools/industry_valuation.py",
+    "category": "估值建模",
+    "method": "按行业选适配估值口径(银行PB/ROE、券商PB、地产NAV、周期EV/EBITDA、成长PS/PEG等),避免单一PE误用",
+    "assumptions": [
+      "行业归类正确",
+      "口径与行业商业模式匹配"
+    ],
+    "limitations": [
+      "口径是经验映射非模型推导",
+      "跨行业可比性弱",
+      "分位需历史数据(A股点时库刚补)"
+    ],
+    "data_sources": [
+      "手工/datalayer"
+    ],
+    "tests": [
+      "tests/test_batch2.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-16",
+    "revalidate_every_days": 180,
+    "owner": "claude"
+  },
+  {
+    "id": "morningstar_fair_value",
+    "name": "晨星公允价值筛选",
+    "tool": "tools/morningstar_fair_value.py",
+    "category": "估值建模",
+    "method": "拉晨星已发布公允价值/星级/护城河,算潜在涨幅=(FV−现价)/现价;按涨幅排序筛低估",
+    "assumptions": [
+      "晨星公允价值可信",
+      "现价及时"
+    ],
+    "limitations": [
+      "转发第三方(晨星)公允价值,非本系统自有模型",
+      "爬虫依赖晨星API稳定",
+      "星级/护城河为晨星主观评级"
+    ],
+    "data_sources": [
+      "晨星 API(morningstar.com)"
+    ],
+    "tests": [
+      "tests/test_morningstar.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-16",
+    "revalidate_every_days": 180,
+    "owner": "claude"
   }
 ]
