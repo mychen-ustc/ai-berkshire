@@ -2,8 +2,17 @@
 
 ## 项目概述
 
-基于 Claude Code 的价值投资研究 Skill 合集。四大师框架：巴菲特、芒格、段永平、李录。
+基于 Claude Code 的价值投资研究 Skill 合集。
 GitHub: xbtlin/ai-berkshire
+
+## 投资大师阵容（默认全用 13 位，禁止默认只用 4 位）
+
+**默认阵容 = 4 核心 + 9 国际 = 13 位镜头，凡多师分析（investment-team / earnings-team / 复盘 / 组合诊断 / workflow）默认召唤全部，不得默认退回"四大师"。**
+
+- **4 核心**（质量价值一脉）：巴菲特（护城河+安全边际）、芒格（多元思维+逆向）、段永平（生意本质+能力圈）、李录（深度价值+中国机会）
+- **9 国际**（补四核心"同源盲点"，见 `docs/投资哲学扩展-国际大师借鉴.md`）：霍华德·马克斯（周期/风险）、瑞·达利欧（宏观/分散）、菲利普·费雪（一手调研/成长质量）、彼得·林奇（GARP/买你懂的）、塞思·卡拉曼（下行优先/绝对收益）、本杰明·格雷厄姆（定量深度便宜）、莫尼什·帕伯莱（非对称赔率/仓位）、约翰·博格（成本/指数化谦卑）、纳西姆·塔勒布（尾部/反脆弱/生存）
+
+> 四核心同源，易在同一处集体犯错（高位重仓、忽略周期/宏观/尾部）。9 位国际大师的作用是**唱反调**。完整镜头库与语录见 `skills/master-lens.md`。若某次因成本/篇幅只用子集，**必须在报告里显式说明用了哪几位、为何略去其余**，而不是默默只用 4 位。
 
 ## 项目结构
 
@@ -41,14 +50,14 @@ reports/
 
 | Skill | 文件命名格式 | 示例 |
 |------|---------|------|
-| /investment-team | `{公司名}/` 目录内含4个视角+最终报告 | `reports/拼多多/最终报告.md` |
+| /investment-team | `{公司名}/` 目录内含13席视角(4核心+9国际)+最终报告 | `reports/拼多多/最终报告.md` |
 | /investment-research | `{公司名}-research-{YYYYMMDD}.md` | `reports/腾讯/腾讯-research-20260408.md` |
 | /investment-checklist | `{公司名}-checklist-{YYYYMMDD}.md` | `reports/腾讯/腾讯-checklist-20260408.md` |
 | /industry-research | `{行业名}-industry-{YYYYMMDD}.md`（根目录） | `reports/核电-industry-20260409.md` |
 | /industry-funnel | `{行业名}-funnel-{YYYYMMDD}.md`（根目录） | `reports/AI算力-funnel-20260509.md` |
 | /private-company-research | `{公司名}-private-{YYYYMMDD}.md` | `reports/字节跳动/字节跳动-private-20260408.md` |
 | /earnings-review | `{公司名}-earnings-{期间}.md` | `reports/腾讯/腾讯-earnings-2025Q4.md` |
-| /earnings-team | `{公司名}/` 目录内含4个大师视角+研究底稿+公众号文章+读者评审 | `reports/腾讯/腾讯-earnings-2025Q4.md`（公众号定稿） |
+| /earnings-team | `{公司名}/` 目录内含13席大师视角(4核心+9国际)+研究底稿+公众号文章+读者评审 | `reports/腾讯/腾讯-earnings-2025Q4.md`（公众号定稿） |
 | /thesis-tracker | `{公司名}-thesis.md`（长期维护） | `reports/腾讯/腾讯-thesis.md` |
 | /portfolio-review | `portfolio-latest.md`（根目录，持续更新） | `reports/portfolio-latest.md` |
 | /management-deep-dive | `{公司名}-management-{YYYYMMDD}.md` | `reports/腾讯/腾讯-management-20260409.md` |
@@ -58,12 +67,14 @@ reports/
 ```
 reports/{公司名}/
 ├── README.md                         — 研究框架概览+核心结论
-├── 01-商业模式分析-段永平视角.md
-├── 02-财务估值分析-巴菲特视角.md
-├── 03-行业竞争分析-芒格视角.md
-├── 04-风险管理层评估-李录视角.md
-└── 最终报告.md                       — Team Lead 综合报告
+├── 01-商业模式分析-段永平视角.md      ┐
+├── 02-财务估值分析-巴菲特视角.md      │ 核心 4 席
+├── 03-行业竞争分析-芒格视角.md        │
+├── 04-风险管理层评估-李录视角.md      ┘
+├── 05-异见庭-国际9席.md              — 马克斯/达利欧/费雪/林奇/卡拉曼/格雷厄姆/帕伯莱/博格/塔勒布(默认全用,唱反调)
+└── 最终报告.md                       — Team Lead 综合报告(含大师异见庭:分歧不抹平)
 ```
+> 默认 13 席（4 核心 + 9 国际，见「投资大师阵容」）。国际 9 席可合并为一个"异见庭"文件或各自成篇；**不得默默只出 4 席**。
 
 ## 投研分析核心原则（最高优先级）
 
@@ -82,7 +93,7 @@ reports/{公司名}/
 - 数据必须标注来源，关键数据至少2个来源交叉验证
 - 估计值必须注明"估计"
 - 评分使用★符号（★1-5），不含半星
-- 穿插巴菲特/芒格/段永平/李录的语录点评
+- 穿插大师语录点评：默认从 13 位阵容（4 核心 + 9 国际，见"投资大师阵容"）中按相关性引用，**不默认只穿插四大师**
 
 ## GitHub 操作
 
