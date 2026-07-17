@@ -1116,10 +1116,10 @@
   },
   {
     "id": "factor_screen",
-    "name": "五面因子 IS-FDR 双门筛",
+    "name": "因子 IS-FDR 三态筛(OOS-first)",
     "tool": "tools/factor_screen.py",
     "category": "回测与业绩归因",
-    "method": "一次跑全部可离线PIT重建因子(quality=ROE/momentum=12-1价格/lowvol=负波动,均由本地pit_financials+CSV价格矩阵as_of截断重建,无网络)→OOS-first回测(复用strategy_backtest脊柱)→四道门:①物质性(OOS CAGR≥门槛)②相对基准净超额>0(真alpha)③BH-FDR跨因子家族(控FDR,多重检验分母=筛了几个因子)④power_at功效≥0.5(样本能否得结论);size/value/growth因缺股本或非PIT显式列'不可离线测'附因,不静默跳过",
+    "method": "跑全部可离线PIT重建因子(quality=ROE/momentum=12-1价格/lowvol=负波动,本地pit_financials+CSV as_of截断,无网络)→OOS-first回测→三态裁决(🟢通过/🔴拒/⚪不可判定):①功效power_at<0.5→⚪不可判定(证据不足≠因子无效,不进AND淘汰)+给MDE②物质性OOS CAGR≥门槛 ③**相对同池等权(same-opportunity-set)净超额>0**隔离选股技能与资产漂移(SPY仅并列)④显著性用相对同池等权的配对超额block-bootstrap(非vs0) ⑤BH-FDR跨因子家族。经对抗性评审(5核验者)修正基准错配/功效范畴错误/bootstrap零假设",
     "assumptions": [
       "价格矩阵前复权周频",
       "因子分数越高越优选",
@@ -1127,11 +1127,11 @@
       "BH-FDR家族=本次所筛因子"
     ],
     "limitations": [
-      "本价格矩阵是ETF+大盘股混合篮(含债/金ETF),非干净股票universe,factor语义弱→本工具是机制演示非因子研究",
-      "仅3面可离线筛(quality/momentum/lowvol);size需历史股本、value/growth非PIT,均不可离线测",
-      "10个OOS观测→功效0.07-0.11极低,几乎必然拒(诚实预期)",
-      "bootstrap启发式非严格零分布;coverage多为unknown(无成分分母)",
-      "FDR家族仅本次因子,非全历史试验分母"
+      "本价格矩阵是ETF+大盘股混合篮(含债/金ETF),非干净股票universe→机制压力测试非因子研究",
+      "每因子OOS n≈10→功效结构性<0.15,多数因子应落⚪不可判定而非证伪",
+      "quality实际universe仅5只megacap、top50%仅2只,不足以称因子检验",
+      "size需历史股本、value/growth非PIT,均不可离线测",
+      "bootstrap启发式(有效独立块≈n/3),p只看数量级不可排序;coverage多为unknown"
     ],
     "data_sources": [
       "价格矩阵CSV",
