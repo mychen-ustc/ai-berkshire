@@ -162,8 +162,22 @@ def cmd_calibrate(args):
     base_fwd = baseline_forward(closes, args.horizon)
     cal = calibrate(sig_fwd, base_fwd)
     vd = verdict(cal, args.min_n)
+    # 防过拟合升级(signal_lab):功效体检(重叠窗独立观测) + 分块自助显著性(尊重自相关) + 试验台账
+    import signal_lab as sl
+    eff = sl.effective_independent_obs(idx, args.horizon)
+    boot = sl.block_bootstrap_pvalue(sig_fwd, null_mean=(cal.get("baseline_mean") or 0.0), block=5, seed=0)
     res = {"symbol": args.symbol, "signal": args.signal, "horizon": args.horizon,
-           "freq": args.freq, "n_points": len(closes), "calibration": cal, "verdict": vd}
+           "freq": args.freq, "n_points": len(closes), "calibration": cal, "verdict": vd,
+           "effective_obs": eff, "bootstrap_p": boot["p_value"]}
+    if not args.no_record:
+        import run_audit as ra
+        from datetime import datetime
+        sl.record_trial({"as_of": datetime.now().strftime("%Y-%m-%d"), "git_sha": (ra.git_sha() or "")[:7],
+                         "signal": args.signal, "symbol": args.symbol, "horizon": args.horizon, "freq": args.freq,
+                         "split": args.split, "n_signals": cal["n_signals"], "effective_obs": eff,
+                         "edge_mean": cal.get("edge_mean"), "edge_hit": cal.get("edge_hit"),
+                         "bootstrap_p": boot["p_value"], "verdict": vd["status"]})
+        res["trial_count"] = sl.trial_count()
     if args.json:
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return
@@ -175,8 +189,12 @@ def cmd_calibrate(args):
         print(f"  信号后前瞻收益: 均值 {cal['signal_mean']:+.2%} · 中位 {cal['signal_median']:+.2%} · 胜率 {cal['signal_hit']:.0%}")
         print(f"  无条件基线:     均值 {cal['baseline_mean']:+.2%} · 胜率 {cal['baseline_hit']:.0%}")
         print(f"  → edge: 均值超额 {cal['edge_mean']:+.2%} · 胜率超额 {cal['edge_hit']:+.1%}")
+    print(f"  防过拟合: 有效独立观测 {eff}(重叠窗压缩后) · 分块自助 p={boot['p_value']:.3f}"
+          + ("(edge 显著)" if boot["p_value"] < 0.05 else "(不显著/证据弱)"))
+    if not args.no_record:
+        print(f"  试验台账: 累计 {res['trial_count']} 次(多重检验分母,见 data/signal_trials.jsonl)")
     print(f"\n  判定: {vd['status']} —— {vd['note']}")
-    print("\n  ⚠️ 描述性校准非严格显著性检验;样本少/regime变化/窗口重叠会失真;免费日线前复权;非交易建议。")
+    print("\n  ⚠️ 单信号校准即使自助 p 小,在多重检验(试N个)下仍须 BH-FDR 校正;免费日线前复权;非交易建议。")
 
 
 def main():
@@ -190,6 +208,8 @@ def main():
     c.add_argument("--period", default="10y")
     c.add_argument("--rsi-thresh", dest="rsi_thresh", type=float, default=30)
     c.add_argument("--min-n", dest="min_n", type=int, default=20, help="判定有效所需最少触发次数")
+    c.add_argument("--split", default="train", choices=["train", "holdout"], help="试验属发现集(train)还是密封样本外(holdout)")
+    c.add_argument("--no-record", dest="no_record", action="store_true", help="不写试验台账(试跑用)")
     c.add_argument("--json", action="store_true")
     args = ap.parse_args()
     {"calibrate": cmd_calibrate}.get(args.cmd, lambda a: ap.print_help())(args)
