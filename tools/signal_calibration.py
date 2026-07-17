@@ -151,10 +151,18 @@ def fire_indices(closes, signal, rsi_thresh=30):
 # --------------------------------------------------------------------------
 def cmd_calibrate(args):
     import datalayer as dl
-    env = dl.fetch_history(args.symbol, freq=args.freq, period=args.period)
+    # --split holdout/validation 必须给 --as-of(真 cutoff),否则只是贴标签(评审#2)
+    if args.split in ("holdout", "validation") and not args.as_of:
+        raise SystemExit(f"--split {args.split} 需配 --as-of DATE(真数据截断);仅贴标签不构成样本外")
+    env = dl.fetch_history(args.symbol, freq=args.freq, period="10y" if args.as_of else args.period)
     pts = env.get("points") or []
+    if args.as_of:
+        pts = [p for p in pts if len(p) >= 2 and p[0] <= args.as_of]   # ← 真截断:只用 <=cutoff 的数据
     # points 为 (date, close) 元组序列(datalayer 前复权)
     closes = [p[1] for p in pts if len(p) >= 2 and p[1]]
+    if args.split == "holdout":
+        print("⚠️ 诚实提示:对**历史**数据做 holdout,该段大概率已被此前校准观察过=污染;"
+              "真正 final holdout 只能用未来/可证从未观察的数据(见路线图)。此处按 validation 对待。")
     if len(closes) < 220:
         print(f"⚠️ 历史点仅 {len(closes)},金叉/长周期校准可能不足;继续。")
     idx = fire_indices(closes, args.signal, args.rsi_thresh)
@@ -172,12 +180,16 @@ def cmd_calibrate(args):
     if not args.no_record:
         import run_audit as ra
         from datetime import datetime
-        sl.record_trial({"as_of": datetime.now().strftime("%Y-%m-%d"), "git_sha": (ra.git_sha() or "")[:7],
-                         "signal": args.signal, "symbol": args.symbol, "horizon": args.horizon, "freq": args.freq,
-                         "split": args.split, "n_signals": cal["n_signals"], "effective_obs": eff,
-                         "edge_mean": cal.get("edge_mean"), "edge_hit": cal.get("edge_hit"),
-                         "bootstrap_p": boot["p_value"], "verdict": vd["status"]})
+        trec = {"recorded_at": datetime.now().isoformat(timespec="seconds"), "git_sha": (ra.git_sha() or "")[:7],
+                "signal": args.signal, "symbol": args.symbol, "horizon": args.horizon, "freq": args.freq,
+                "cutoff": args.as_of, "split": args.split, "n_signals": cal["n_signals"], "effective_obs": eff,
+                "edge_mean": cal.get("edge_mean"), "edge_hit": cal.get("edge_hit"),
+                "bootstrap_p": boot["p_value"], "verdict": vd["status"]}
+        trec["param_hash"] = sl.param_hash(args.signal, args.symbol, args.horizon, args.freq, args.rsi_thresh, args.as_of)
+        trec["trial_id"] = sl.trial_uid(trec)
+        sl.record_trial(trec)
         res["trial_count"] = sl.trial_count()
+        res["trial_id"] = trec["trial_id"]
     if args.json:
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return
@@ -208,7 +220,8 @@ def main():
     c.add_argument("--period", default="10y")
     c.add_argument("--rsi-thresh", dest="rsi_thresh", type=float, default=30)
     c.add_argument("--min-n", dest="min_n", type=int, default=20, help="判定有效所需最少触发次数")
-    c.add_argument("--split", default="train", choices=["train", "holdout"], help="试验属发现集(train)还是密封样本外(holdout)")
+    c.add_argument("--as-of", dest="as_of", help="数据截断日 YYYY-MM-DD(只用<=此日的数据,真PIT样本外)")
+    c.add_argument("--split", default="train", choices=["train", "validation", "holdout"], help="发现集train/验证validation/样本外holdout(后两者需--as-of)")
     c.add_argument("--no-record", dest="no_record", action="store_true", help="不写试验台账(试跑用)")
     c.add_argument("--json", action="store_true")
     args = ap.parse_args()

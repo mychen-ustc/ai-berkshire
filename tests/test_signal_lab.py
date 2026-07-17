@@ -96,38 +96,52 @@ class TestBenjaminiHochberg(unittest.TestCase):
         self.assertEqual(sl.benjamini_hochberg([])["n_reject"], 0)
 
 
-class TestDeflatedSharpe(unittest.TestCase):
+class TestSidakSharpe(unittest.TestCase):
     def test_norm_cdf(self):
         self.assertAlmostEqual(sl._norm_cdf(0), 0.5, places=6)
         self.assertAlmostEqual(sl._norm_cdf(1.6449), 0.95, places=3)
 
-    def test_deflation_monotonic(self):
-        # 试验越多,同一 Sharpe 的去膨胀 p 越大(越不显著)
-        p1 = sl.deflated_sharpe_pvalue(0.25, 104, n_trials=1)["p_deflated"]
-        p20 = sl.deflated_sharpe_pvalue(0.25, 104, n_trials=20)["p_deflated"]
+    def test_sidak_monotonic(self):
+        # 试验越多,同一 Sharpe 的 Šidák 校正 p 越大(越不显著)
+        p1 = sl.sidak_adjusted_sharpe_pvalue(0.25, 104, n_trials=1)["p_sidak"]
+        p20 = sl.sidak_adjusted_sharpe_pvalue(0.25, 104, n_trials=20)["p_sidak"]
         self.assertGreater(p20, p1)
-        self.assertGreaterEqual(sl.deflated_sharpe_pvalue(0.25, 104, 1)["p_deflated"],
-                                sl.deflated_sharpe_pvalue(0.25, 104, 1)["p_single"] - 1e-9)
+
+    def test_backcompat_alias(self):
+        # 旧名保留为别名,且旧 key p_deflated 仍在
+        self.assertIs(sl.deflated_sharpe_pvalue, sl.sidak_adjusted_sharpe_pvalue)
+        self.assertIn("p_deflated", sl.sidak_adjusted_sharpe_pvalue(0.25, 104, 1))
 
     def test_tstat_zero_obs(self):
         self.assertEqual(sl.sharpe_tstat(1.0, 1), 0.0)
 
 
 class TestCoverageVerdict(unittest.TestCase):
-    def test_absent_when_no_delist_hit(self):
+    def test_no_denominator_is_unknown(self):
+        # 无分母 → coverage-unknown,不能通过(评审#6:1命中不等于覆盖)
         r = sl.coverage_verdict(["600519", "000001"], delisting_symbols=["LEHMQ"])
         self.assertFalse(r["trustworthy"])
-        self.assertTrue(any("survivorship" in f for f in r["flags"]))
+        self.assertIsNone(r["survivorship_coverage"])
+        self.assertTrue(any("coverage-unknown" in f for f in r["flags"]))
+
+    def test_partial_coverage_fails(self):
+        # 分母2、命中1 → 覆盖50%<80% → 不可信
+        r = sl.coverage_verdict(["A"], delisting_symbols=["X"], expected_delisted=["X", "Y"])
+        self.assertFalse(r["trustworthy"])
+        self.assertAlmostEqual(r["survivorship_coverage"], 0.5)
 
     def test_pit_coverage_flag(self):
-        r = sl.coverage_verdict(["A", "B"], delisting_symbols=["A"], pit_covered_symbols=["A"])
-        # delist 命中1(不触发幸存者旗) 但 PIT 覆盖 50%<80% → 触发前视旗
+        r = sl.coverage_verdict(["A", "B"], delisting_symbols=["X", "Y"],
+                                expected_delisted=["X", "Y"], pit_covered_symbols=["A"])
+        # 幸存者覆盖100%达标,但 PIT 50%<80% → 前视旗 → 不可信
         self.assertFalse(r["trustworthy"])
         self.assertTrue(any("lookahead" in f for f in r["flags"]))
 
-    def test_trustworthy(self):
-        r = sl.coverage_verdict(["A", "B"], delisting_symbols=["A"], pit_covered_symbols=["A", "B"])
+    def test_trustworthy_needs_full_coverage(self):
+        r = sl.coverage_verdict(["A", "B"], delisting_symbols=["X", "Y"],
+                                expected_delisted=["X", "Y"], pit_covered_symbols=["A", "B"])
         self.assertTrue(r["trustworthy"])
+        self.assertEqual(r["survivorship_coverage"], 1.0)
 
 
 class TestTrialLedger(unittest.TestCase):

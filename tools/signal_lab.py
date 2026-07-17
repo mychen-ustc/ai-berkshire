@@ -113,12 +113,17 @@ def walk_forward_splits(n, train, test, step=None, purge=0, embargo=0):
 # 分块自助显著性(尊重重叠前瞻窗的自相关)
 # --------------------------------------------------------------------------
 def block_bootstrap_pvalue(sample, null_mean=0.0, block=5, n_iter=2000, seed=0):
-    """单边检验:样本均值是否显著 > null_mean。分块重采样保留自相关(重叠前瞻窗必须)。
-    → 经验 p 值(自助均值 <= null_mean 的比例)。纯函数(固定 seed 可复现)。"""
+    """**启发式**单边检验:样本均值是否 > null_mean。**圆形**分块重采样(wrap-around)保留自相关。
+    → 启发式 p 值(自助均值 <= null_mean 的比例)。纯函数(固定 seed 可复现)。
+
+    ⚠️ 诚实边界(评审纠正):这**不是**严格的"经验零分布 p 值"——它重采样**已观测**的信号收益、
+    对比**固定**的基线均值(未同时处理基线估计误差/信号选择/触发间隔不规则)。仅作启发式证据强弱,
+    非严格显著性。严格版需时间块置换构造零分布 + scipy/statsmodels oracle 校准 size/power(见路线图)。
+    block 应与前瞻窗长挂钩(重叠窗自相关≈horizon);调用方宜传 block≈horizon。"""
     xs = [float(x) for x in sample if x is not None]
     n = len(xs)
     if n == 0:
-        return {"p_value": 1.0, "n": 0, "mean": None}
+        return {"p_value": 1.0, "n": 0, "mean": None, "method": "circular-block-bootstrap-heuristic"}
     rnd = random.Random(seed)
     b = max(1, min(int(block), n))
     n_blocks = math.ceil(n / b)
@@ -126,12 +131,13 @@ def block_bootstrap_pvalue(sample, null_mean=0.0, block=5, n_iter=2000, seed=0):
     for _ in range(n_iter):
         vals = []
         for _ in range(n_blocks):
-            start = rnd.randint(0, n - b) if n > b else 0
-            vals.extend(xs[start:start + b])
+            start = rnd.randint(0, n - 1)                          # 圆形:任意起点
+            vals.extend(xs[(start + k) % n] for k in range(b))     # wrap-around 取块
         m = sum(vals[:n]) / n
         if m <= null_mean:
             le += 1
-    return {"p_value": le / n_iter, "n": n, "mean": sum(xs) / n, "null_mean": null_mean, "block": b}
+    return {"p_value": le / n_iter, "n": n, "mean": sum(xs) / n, "null_mean": null_mean,
+            "block": b, "method": "circular-block-bootstrap-heuristic", "strict": False}
 
 
 # --------------------------------------------------------------------------
@@ -174,41 +180,79 @@ def sharpe_tstat(sharpe_periodic, n_obs):
     return sharpe_periodic / se if se > 0 else 0.0
 
 
-def deflated_sharpe_pvalue(sharpe_periodic, n_obs, n_trials=1):
-    """观测 Sharpe 的单边 p 值,再按试验次数做族内校正(Šidák)。→ 去膨胀后 p。纯函数。
-    n_trials=你为找到它试过多少个信号/参数;试得越多,同样的 Sharpe 越不显著。"""
+def sidak_adjusted_sharpe_pvalue(sharpe_periodic, n_obs, n_trials=1):
+    """观测 Sharpe 的**正态近似**单边 p 值,再按试验次数做**Šidák FWER**校正。纯函数。
+    n_trials=为找到它试过多少个信号/参数;试得越多,同样的 Sharpe 越不显著(防"试到显著为止")。
+
+    ⚠️ 命名诚实(评审纠正):这**不是**完整 Deflated Sharpe Ratio——DSR 需处理 skew/kurtosis,此处
+    只是"正态近似 Sharpe p 值 + Šidák 多重检验校正"。Šidák 控 **FWER(族错误率)**,与 BH 控 **FDR** 不同。"""
     t = sharpe_tstat(sharpe_periodic, n_obs)
     p_single = 1.0 - _norm_cdf(t)
-    p_family = 1.0 - (1.0 - p_single) ** max(1, int(n_trials))   # Šidák
-    return {"t_stat": t, "p_single": p_single, "p_deflated": min(1.0, p_family), "n_trials": n_trials}
+    p_family = 1.0 - (1.0 - p_single) ** max(1, int(n_trials))   # Šidák(FWER)
+    return {"t_stat": t, "p_single": p_single, "p_sidak": min(1.0, p_family),
+            "p_deflated": min(1.0, p_family), "n_trials": n_trials, "note": "Šidák-adjusted正态近似,非完整DSR"}
+
+
+# 向后兼容别名(旧名过度承诺,已重命名为 sidak_adjusted_sharpe_pvalue)
+deflated_sharpe_pvalue = sidak_adjusted_sharpe_pvalue
 
 
 # --------------------------------------------------------------------------
 # 反转覆盖率门禁(专治"在缺失数据上通过"的空操作剧场)
 # --------------------------------------------------------------------------
-def coverage_verdict(tested_symbols, delisting_symbols, pit_covered_symbols=None, min_pit_frac=0.8):
-    """回测前的诚实门禁。修正数据对被测池覆盖不足时,拒绝声称"无偏差",强制标 coverage-absent。纯函数。
-    - 退市库对被测池若 0 命中 → 幸存者修正是空操作,不能称"无幸存者偏差"
-    - PIT 覆盖 < 阈值 → 前视修正不可信"""
+def coverage_verdict(tested_symbols, delisting_symbols, expected_delisted=None,
+                     pit_covered_symbols=None, min_cov=0.8, min_pit_frac=0.8):
+    """回测前的诚实门禁。**度量覆盖率(需分母),不是命中**(评审纠正)。纯函数。
+
+    幸存者:分母 = `expected_delisted`（该市场/时期"本应存在的已退市"名单,来自交易所历史证券主表/
+    历史指数成分）。覆盖率 = |delisting_symbols ∩ expected_delisted| / |expected_delisted|。
+    **无分母 → coverage-unknown(不能通过)**——加一个 LEHMQ 不能证明其余退市数据完整。
+    PIT:被测池的点时覆盖率 < 阈值 → 前视修正不可信。"""
     tested = set(tested_symbols)
-    delist_hits = len(tested & set(delisting_symbols))
+    flags = []
+    # 幸存者覆盖率(需分母)
+    if expected_delisted is None:
+        cov_frac = None
+        flags.append("survivorship: coverage-unknown(无历史证券主表/指数成分分母,无法计算退市覆盖率——不得称'无偏差')")
+    else:
+        exp = set(expected_delisted)
+        cov_frac = (len(set(delisting_symbols) & exp) / len(exp)) if exp else None
+        if cov_frac is None:
+            flags.append("survivorship: 分母为空,coverage-unknown")
+        elif cov_frac < min_cov:
+            flags.append(f"survivorship: 退市覆盖率 {cov_frac:.0%}<{min_cov:.0%}(幸存者修正不完整)")
+    # PIT 覆盖率
     pit = set(pit_covered_symbols or [])
     pit_frac = (len(tested & pit) / len(tested)) if tested else 0.0
-    flags = []
-    if delist_hits == 0:
-        flags.append("survivorship: coverage-absent(退市库对被测池0命中,幸存者修正为空操作,不得称'无偏差')")
     if pit_covered_symbols is not None and pit_frac < min_pit_frac:
         flags.append(f"lookahead: PIT覆盖仅 {pit_frac:.0%}<{min_pit_frac:.0%}(前视修正不可信)")
     trustworthy = len(flags) == 0
-    return {"trustworthy": trustworthy, "delist_hits": delist_hits, "pit_frac": round(pit_frac, 3),
-            "flags": flags, "verdict": "可信" if trustworthy else "coverage-absent/不可信"}
+    return {"trustworthy": trustworthy, "survivorship_coverage": cov_frac,
+            "pit_frac": round(pit_frac, 3), "flags": flags,
+            "verdict": "可信" if trustworthy else ("coverage-unknown/不可信" if cov_frac is None else "coverage-partial/不可信")}
 
 
 # --------------------------------------------------------------------------
 # 试验台账(append-only,多重比较的分母)
 # --------------------------------------------------------------------------
+def param_hash(*parts):
+    """参数指纹(标识"同一试验")。纯函数。"""
+    import hashlib
+    s = "|".join("" if p is None else str(p) for p in parts)
+    return hashlib.sha256(s.encode()).hexdigest()[:12]
+
+
+def trial_uid(rec):
+    """试验唯一 ID = 关键字段内容哈希。纯函数。"""
+    import hashlib
+    key = "|".join(str(rec.get(k)) for k in ("recorded_at", "signal", "symbol", "horizon", "freq", "cutoff", "split"))
+    return hashlib.sha256(key.encode()).hexdigest()[:12]
+
+
 def record_trial(rec, path=TRIALS):
-    """追加一次信号校准试验(从第 1 次起记,不能把 N 次失败藏在 1 个幸存者后)。IO。"""
+    """追加一次信号校准试验(从第 1 次起记,含失败/0触发,不能把 N 次失败藏在 1 个幸存者后)。IO。
+    ⚠️ 诚实边界(评审#5):append-only 但**非防篡改/非跨机器**——无哈希链、无统一强制入口、可手删、
+    --no-record 可绕过。故"台账条数==历史校准次数"仅在单机、经统一 CLI、无人为删改时成立,不是密码学保证。"""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -253,10 +297,12 @@ def cmd_demo(args):
     print(f"block-bootstrap p(均值0.035 vs null0.01): {bp['p_value']:.3f}")
     bh = benjamini_hochberg([0.001, 0.01, 0.04, 0.2, 0.5])
     print(f"BH-FDR([.001,.01,.04,.2,.5],a=.05): 拒绝 {bh['n_reject']} 个,阈值 {bh['threshold']:.4f}")
-    ds = deflated_sharpe_pvalue(0.25, 104, n_trials=20)
-    print(f"deflated Sharpe(周SR0.25,104期,试20次): p_single {ds['p_single']:.3f} → p_deflated {ds['p_deflated']:.3f}")
-    cv = coverage_verdict(["600519", "000001"], delisting_symbols=["LEHMQ"], pit_covered_symbols=["600519"])
-    print(f"覆盖率门禁: {cv['verdict']} · {cv['flags']}")
+    ds = sidak_adjusted_sharpe_pvalue(0.25, 104, n_trials=20)
+    print(f"Šidák-adj Sharpe(周SR0.25,104期,试20次): p_single {ds['p_single']:.3f} → p_sidak {ds['p_sidak']:.3f}")
+    cv = coverage_verdict(["600519", "000001"], delisting_symbols=["LEHMQ"])   # 无分母
+    print(f"覆盖率门禁(无分母): {cv['verdict']} · {cv['flags'][0][:50]}...")
+    cv2 = coverage_verdict(["A"], delisting_symbols=["X"], expected_delisted=["X", "Y"])  # 覆盖50%
+    print(f"覆盖率门禁(分母2/命中1): {cv2['verdict']} · 覆盖率 {cv2['survivorship_coverage']:.0%}")
 
 
 def main():

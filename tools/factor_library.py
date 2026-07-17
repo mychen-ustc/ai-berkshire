@@ -126,86 +126,109 @@ def factor_correlation(z_by_factor):
 # --------------------------------------------------------------------------
 # 数据采集（原始因子值）
 # --------------------------------------------------------------------------
-def _price_factors(symbol):
-    """→ (momentum_12_1, ann_vol) 由周频价格算。全市场可用。"""
-    try:
-        pts = dl.fetch_history(symbol, freq="weekly", period="2y")["points"]
-        px = [p[1] for p in pts]
-        if len(px) < 60:
-            return None, None
-        # 12-1 月动量：约 52 周前 → 约 4 周前(跳过最近1月反转)
-        mom = (px[-5] / px[-57] - 1) if len(px) >= 57 else None
-        # 年化波动(近~1年周频)
-        recent = px[-53:] if len(px) >= 53 else px
-        rets = [math.log(recent[i] / recent[i - 1]) for i in range(1, len(recent))]
-        mu = sum(rets) / len(rets)
-        vol = math.sqrt(sum((r - mu) ** 2 for r in rets) / (len(rets) - 1)) * math.sqrt(52)
-        return mom, vol
-    except Exception:  # noqa: BLE001
+# PIT 安全性(评审#1纠正):as_of 回测时只有这些因子可无前视重建。
+PIT_SAFE_FACTORS = {"quality", "momentum", "lowvol", "size"}   # 点时库/截断价格可重建
+NON_PIT_FACTORS = {"value", "growth"}                          # 前瞻一致预期(us_consensus),历史不可 PIT 重建
+
+
+def factor_pit_status():
+    """声明各因子是否可 PIT(as_of)无前视重建。回测须只用 PIT_SAFE 子集。纯函数。"""
+    return {"pit_safe": sorted(PIT_SAFE_FACTORS), "non_pit": sorted(NON_PIT_FACTORS),
+            "note": "value/growth 读当前前瞻一致预期,历史 as_of 无法重建→回测须排除"}
+
+
+def _price_history_asof(symbol, as_of=None):
+    """周频前复权收盘,**截断到 <= as_of**(PIT:只用当时已知)。纯截断,无前视。"""
+    period = "5y" if as_of else "2y"                   # as_of 需更长历史以回溯足量
+    pts = dl.fetch_history(symbol, freq="weekly", period=period)["points"]
+    if as_of:
+        pts = [p for p in pts if p[0] <= as_of]        # ← PIT 截断:严格 <= as_of
+    return [p[1] for p in pts]
+
+
+def _price_factors_from(px):
+    """从(已按 as_of 截断的)价格序列算 (momentum_12_1, ann_vol, price_last)。纯函数。"""
+    if len(px) < 60:
+        return None, None, (px[-1] if px else None)
+    mom = (px[-5] / px[-57] - 1) if len(px) >= 57 else None    # 12-1月动量(跳最近1月)
+    recent = px[-53:] if len(px) >= 53 else px
+    rets = [math.log(recent[i] / recent[i - 1]) for i in range(1, len(recent))]
+    mu = sum(rets) / len(rets)
+    vol = math.sqrt(sum((r - mu) ** 2 for r in rets) / (len(rets) - 1)) * math.sqrt(52)
+    return mom, vol, px[-1]
+
+
+def _fundamental_factors(symbol, as_of=None, pit=False):
+    """→ (earnings_yield, eps_cagr) 由 us_consensus。**pit=True(历史回测)时返回 (None,None)**——
+    前瞻一致预期是"当前"值,无法为过去日期 PIT 重建(评审#1)。"""
+    if pit:
         return None, None
-
-
-def _fundamental_factors(symbol):
-    """→ (earnings_yield, eps_cagr) 由 us_consensus(美股) 算。"""
     try:
         import us_consensus as uc
         c = uc.analyze(symbol)
         fwd_pe = c.get("fwd_pe")
         ey = (1.0 / fwd_pe) if (fwd_pe and fwd_pe > 0) else None
-        gr = c.get("eps_cagr_pct")
-        return ey, gr
+        return ey, c.get("eps_cagr_pct")
     except Exception:  # noqa: BLE001
         return None, None
 
 
 def _quality_factor(symbol, as_of=None):
-    """→ ROE(质量) 由点时财务库取"当时已披露"最新值(无前视)。"""
+    """→ ROE(质量) 由点时财务库取"当时已披露"(available_at<=as_of,无前视)。"""
     try:
         import pit_financials as pf
         from datetime import date
         d = as_of or date.today().strftime("%Y-%m-%d")
-        hit = pf.as_of(pf.load(), symbol, "roe", d)
+        hit = pf.as_of(pf.load(), symbol, "roe", d)    # pf.as_of 已强制 available_at<=d
         return hit["value"] if hit else None
     except Exception:  # noqa: BLE001
         return None
 
 
-def _size_factor(symbol, as_of=None):
-    """→ 规模原始值 = −log(市值)，市值=现价×点时股本。取负→+z=小盘倾斜(与其它因子'+z=溢价侧'一致)。"""
+def _shares_asof(symbol, as_of=None):
     try:
         import pit_financials as pf
         from datetime import date
         d = as_of or date.today().strftime("%Y-%m-%d")
         hit = pf.as_of(pf.load(), symbol, "shares", d)
-        if not hit:
-            return None
-        shares = hit["value"]
-        px = dl.fetch_quote(symbol, cross=False).get("price")
-        if not (shares and px):
-            return None
-        mktcap = px * shares
-        return -math.log(mktcap) if mktcap > 0 else None
+        return hit["value"] if hit else None
     except Exception:  # noqa: BLE001
         return None
 
 
-def gather_raw(symbols, as_of=None):
-    """每只 → {value, quality, growth, momentum, lowvol} 原始因子值(缺失=None)。"""
+def _size_from(shares, price):
+    """规模 = −log(市值)。市值=股本×**as_of 价**(非当前价,评审#1修:as_of 时不得用现价)。纯函数。"""
+    if not (shares and price):
+        return None
+    mktcap = price * shares
+    return -math.log(mktcap) if mktcap > 0 else None
+
+
+def gather_raw(symbols, as_of=None, pit=None):
+    """每只 → 六因子原始值(缺失=None)。
+    pit 未指定时:as_of 给出即视为 PIT 回测模式(自动 pit=True);as_of=None 则当前横截面(pit=False)。
+    PIT 模式下 value/growth 置 None(前瞻一致预期不可历史重建),momentum/lowvol/size 用 <=as_of 截断价。"""
+    if pit is None:
+        pit = as_of is not None
     raw = {f: [] for f in FACTORS}
     meta = []
     for s in symbols:
-        mom, vol = _price_factors(s)
-        ey, gr = _fundamental_factors(s)
+        px = _price_history_asof(s, as_of)             # 已按 as_of 截断
+        mom, vol, price_asof = _price_factors_from(px)
+        ey, gr = _fundamental_factors(s, as_of, pit=pit)
         roe = _quality_factor(s, as_of)
-        sz = _size_factor(s, as_of)
-        raw["value"].append(ey)                        # 盈利收益率越高越"价值"
-        raw["quality"].append(roe)                     # ROE 越高越"质量"(点时库)
-        raw["growth"].append(gr)                       # EPS CAGR 越高越"成长"
-        raw["momentum"].append(mom)                    # 12-1月动量
-        raw["lowvol"].append(-vol if vol is not None else None)  # 负波动:越高越"低波"
-        raw["size"].append(sz)                         # −log(市值):越高越"小盘"(规模溢价侧)
+        shares = _shares_asof(s, as_of)
+        # size:as_of 模式用截断历史的 as_of 价;当前模式用实时报价
+        px_for_size = price_asof if as_of else (dl.fetch_quote(s, cross=False).get("price") if not pit else price_asof)
+        sz = _size_from(shares, px_for_size)
+        raw["value"].append(ey)
+        raw["quality"].append(roe)
+        raw["growth"].append(gr)
+        raw["momentum"].append(mom)
+        raw["lowvol"].append(-vol if vol is not None else None)
+        raw["size"].append(sz)
         meta.append({"symbol": s, "earnings_yield": ey, "roe": roe, "eps_cagr": gr,
-                     "mom_12_1": mom, "ann_vol": vol, "neg_log_mktcap": sz})
+                     "mom_12_1": mom, "ann_vol": vol, "neg_log_mktcap": sz, "pit": pit})
     return raw, meta
 
 

@@ -1057,17 +1057,19 @@
     "name": "信号防过拟合工具箱",
     "tool": "tools/signal_lab.py",
     "category": "回测与业绩归因",
-    "method": "防过拟合原语:功效体检(重叠窗独立观测)/密封holdout/试验台账(多重检验分母)/walk-forward+purge/block-bootstrap显著性(尊重自相关)/BH-FDR/deflated-Sharpe(Šidák试验惩罚)/反转覆盖率门禁",
+    "method": "防过拟合原语:功效体检(重叠窗独立观测)/密封holdout/试验台账(trial_id+param_hash,记失败)/walk-forward+purge/circular-block-bootstrap(启发式非严格零分布)/BH-FDR(控FDR)/sidak_adjusted_sharpe_pvalue(正态近似+Šidák控FWER,非完整DSR)/反转覆盖率门禁(需分母,否则coverage-unknown)",
     "assumptions": [
       "重叠前瞻窗致自相关(故block-bootstrap非iid)",
       "erf算正态CDF(math.erf,无scipy)",
       "holdout发现阶段永不触碰"
     ],
     "limitations": [
-      "样本薄时结论多为null(特性非bug)",
-      "block长度需人工设",
-      "deflated用Šidák近似非完整DSR(无skew/kurt)",
-      "覆盖率门禁只诚实标注不真去偏"
+      "block-bootstrap是启发式:重采样已观测收益vs固定基线均值,未构零假设分布/未处理基线估计误差与选择效应;非严格p值,严格版需时间块置换+scipy/statsmodels oracle校size/power",
+      "sidak_adjusted_sharpe_pvalue是正态近似+Šidák(FWER),非完整Deflated Sharpe(未处理skew/kurtosis);BH控FDR与Šidák控FWER不可混用",
+      "coverage_verdict需交易所历史证券主表/指数成分作分母才算覆盖率,否则输出coverage-unknown(不通过);不真去偏,只诚实标注",
+      "试验台账append-only但非防篡改/非跨机器:无哈希链/无强制统一入口/--no-record可绕过/可手删,'条数==校准次数'仅单机经CLI无删改时成立",
+      "功效effective_obs是非重叠窗计数,非完整power analysis(缺MDE/目标功效/横截面相关)",
+      "样本薄时结论多为null(特性非bug)"
     ],
     "data_sources": [
       "调用方传入(信号前瞻收益/触发索引)"
