@@ -1113,5 +1113,38 @@
     "validated_on": "2026-07-17",
     "revalidate_every_days": 180,
     "owner": "claude"
+  },
+  {
+    "id": "factor_screen",
+    "name": "五面因子 IS-FDR 双门筛",
+    "tool": "tools/factor_screen.py",
+    "category": "回测与业绩归因",
+    "method": "一次跑全部可离线PIT重建因子(quality=ROE/momentum=12-1价格/lowvol=负波动,均由本地pit_financials+CSV价格矩阵as_of截断重建,无网络)→OOS-first回测(复用strategy_backtest脊柱)→四道门:①物质性(OOS CAGR≥门槛)②相对基准净超额>0(真alpha)③BH-FDR跨因子家族(控FDR,多重检验分母=筛了几个因子)④power_at功效≥0.5(样本能否得结论);size/value/growth因缺股本或非PIT显式列'不可离线测'附因,不静默跳过",
+    "assumptions": [
+      "价格矩阵前复权周频",
+      "因子分数越高越优选",
+      "OOS=时间轴后段",
+      "BH-FDR家族=本次所筛因子"
+    ],
+    "limitations": [
+      "本价格矩阵是ETF+大盘股混合篮(含债/金ETF),非干净股票universe,factor语义弱→本工具是机制演示非因子研究",
+      "仅3面可离线筛(quality/momentum/lowvol);size需历史股本、value/growth非PIT,均不可离线测",
+      "10个OOS观测→功效0.07-0.11极低,几乎必然拒(诚实预期)",
+      "bootstrap启发式非严格零分布;coverage多为unknown(无成分分母)",
+      "FDR家族仅本次因子,非全历史试验分母"
+    ],
+    "data_sources": [
+      "价格矩阵CSV",
+      "pit_financials(ROE)",
+      "factor_library(因子集/PIT状态)",
+      "delisting"
+    ],
+    "tests": [
+      "tests/test_factor_screen.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-17",
+    "revalidate_every_days": 180,
+    "owner": "claude"
   }
 ]
