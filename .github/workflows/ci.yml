@@ -36,6 +36,23 @@ jobs:
       - name: 模型治理体检（--strict：validated 却无测试文件即阻断）
         run: python3 tools/model_registry.py audit --strict
 
+      # 可重放审计：无论成败都登记本次 CI 运行(run-id=GITHUB_RUN_ID + SHA + 状态),
+      # 并把复跑提示写入运行摘要页(GitHub 永久保留该 run，即可追溯/复现的审计条目)。
+      - name: 记录运行审计（可重放）
+        if: always()
+        run: |
+          python3 tools/run_audit.py record --trigger ci \
+            --run-id "${{ github.run_id }}" --git-sha "${{ github.sha }}" \
+            --status "${{ job.status == 'success' && 'success' || 'failed' }}" \
+            --command "unittest discover + code_gate + model_registry audit --strict" \
+            --host "gh-actions" --note "${{ github.ref_name }}"
+          {
+            echo "### 运行审计（可重放）";
+            echo "- run-id: \`${{ github.run_id }}\`  ·  状态: **${{ job.status }}**";
+            echo "- 代码版本: \`${{ github.sha }}\`";
+            echo "- ↻ 复跑: \`git checkout ${{ github.sha }} && python3 -m unittest discover -s tests\`";
+          } >> "$GITHUB_STEP_SUMMARY"
+
       # 失败结果通知：配了 NOTIFY_WEBHOOK secret 则推飞书/Slack；否则 GitHub 默认失败邮件兜底。
       # 注意：secrets 不能用于 if: 条件(GitHub 限制)，故在 shell 里判空。
       - name: 失败通知（webhook，可选）

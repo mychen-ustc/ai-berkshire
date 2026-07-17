@@ -106,18 +106,18 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
 <div class="score-hero">
   <div class="big">3.3<small style="font-size:1.1rem;color:var(--muted)"> / 5</small></div>
   <div class="txt">
-    <b>引擎级 L3+、双域 L4、零域 L5。</b> 工程内核扎实（全程 Decimal、纯函数、507 测试 0.11s 全绿、诚实边界遍布），
+    <b>引擎级 L3+、双域 L4、零域 L5。</b> 工程内核扎实（全程 Decimal、纯函数、519 测试 0.11s 全绿、诚实边界遍布），
     但<b>事实源近乎空置</b>、<b>治理未管到旗舰且已漂移</b>、<b>全域未被证明自主运转</b>。<br>
     本质：一套<b>"算得准、但没在自动转、且喂进去的是玩具级数据"</b>的高质量单机研究工具箱，而非在运营的机构级平台。
   </div>
 </div>
 <div class="kpis">
-  <div class="kpi"><div class="n">72</div><div class="l">工具（全零依赖）</div></div>
-  <div class="kpi"><div class="n">507</div><div class="l">回归测试全绿 0.11s</div></div>
-  <div class="kpi"><div class="n">40</div><div class="l">登记模型</div></div>
-  <div class="kpi"><div class="n">77</div><div class="l">skill</div></div>
+  <div class="kpi"><div class="n">73</div><div class="l">工具（全零依赖）</div></div>
+  <div class="kpi"><div class="n">519</div><div class="l">回归测试全绿 0.11s</div></div>
+  <div class="kpi"><div class="n">41</div><div class="l">登记模型</div></div>
+  <div class="kpi"><div class="n">78</div><div class="l">skill</div></div>
   <div class="kpi"><div class="n" style="color:var(--red)">10/12</div><div class="l">域自评虚高</div></div>
-  <div class="kpi"><div class="n" style="color:var(--red)">0</div><div class="l">域达 L5</div></div>
+  <div class="kpi"><div class="n" style="color:var(--green)">1</div><div class="l">域达 L5（运营·诊断后）</div></div>
 </div>
 </section>
 
@@ -179,7 +179,7 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
 <div class="card weak">
   <h3>③ 全域零 L5 —— 没有一处被证明能自主运转</h3>
   <p>无 <code>.github/workflows</code>（PR 不自动跑测试/门禁）、无 pre-commit、cron 装了 3 条 review 但 <b>monitor.py（dead-man's-switch）不在 crontab</b>、日志证据显示定时任务<b>从未自主执行过一次</b>。"装了不转"比"没装"更危险——它给人"在运营"的错觉。</p>
-  <p style="color:var(--green);font-weight:600;margin-top:8px">→ 已改善：CI（ci.yml 每 push/PR）+ cron（周摄取 / 日 monitor --notify）+ notify.py 结果通知（桌面/webhook/日志）三块通用刚性均已补上；仅剩可重放审计（run-id 落盘）差半步完整 L5。</p>
+  <p style="color:var(--green);font-weight:600;margin-top:8px">→ 已补齐（诊断后跟进）：CI（ci.yml 每 push/PR）+ cron 无人值守（周摄取 / 日 monitor --notify）+ notify.py 结果通知 + run_audit.py 可重放审计（run-id/SHA/结果落盘，monitor check_runs 做精确 dead-man's-switch）。<b>L5 四要件全部落地，运营与编排域已实质达 L5。</b></p>
 </div>
 </section>
 
@@ -223,8 +223,8 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
   </div>
   <div class="dir" style="border-left-color:var(--green)">
     <span class="p p1">P1</span><h3>CI 刚性 + 无人值守（成本低）<span class="done"> · ✅ 完成</span></h3>
-    <p><span class="done">✅ cron 自动调度</span>（<code>install-ingest-cron.sh</code>：周摄取 + 日 <code>monitor check --notify</code>）；<span class="done">✅ <code>ci.yml</code></span>：每 push/PR 跑 <b>测试 + code_gate + 治理 <code>--strict</code></b>（validated 却无测试即阻断）；<span class="done">✅ <code>notify.py</code> 结果通知</span>（桌面 osascript / 飞书·Slack webhook / <code>alerts.log</code>），接 monitor 非🟢、cron 摄取失败、CI 失败。</p>
-    <div class="why">诊断曾指"cron 未跑摄取、monitor 不在 crontab、无 .github/workflows、出错不喊人"——L5 通用刚性三块（无人值守 + PR门禁 + 结果通知）均已补上；仅剩可重放审计（run-id 落盘）差半步完整 L5。</div>
+    <p><span class="done">✅ cron 无人值守</span>（周摄取 + 日 <code>monitor check --notify</code>）；<span class="done">✅ <code>ci.yml</code></span>（测试+code_gate+治理 <code>--strict</code>）；<span class="done">✅ <code>notify.py</code> 结果通知</span>（桌面/webhook/日志，接 monitor/cron/CI 失败）；<span class="done">✅ <code>run_audit.py</code> 可重放审计</span>（每次自动运行留 run-id+SHA+结果，<code>trace</code> 给 git checkout 复跑提示，<code>monitor.check_runs</code> 读它做精确 dead-man's-switch）。</p>
+    <div class="why">L5 四要件（自动运转 + 漂移监控 + 结果通知 + 可重放审计）全部落地——<b>运营与编排域已实质达 L5</b>（诊断当时 0 域 L5，此为诊断后跟进成果）。</div>
   </div>
   <div class="dir" style="border-left-color:var(--blue)">
     <span class="p p2">P2 条件</span><h3>打通因子→可验证策略闭环</h3>
@@ -244,7 +244,7 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
 </section>
 
 <footer>
-规模基线（2026-07-16）：72 工具 · 507 回归测试全绿(0.11s) · 40 登记模型 · 77 skill · 全零依赖。<br>
+规模基线（2026-07-16）：73 工具 · 519 回归测试全绿(0.11s) · 41 登记模型 · 78 skill · 全零依赖。<br>
 诊断方法：12 域并行审计 → 对抗质疑防虚高 → 首席评估官综合（25 agent / 385 工具调用 / 17 分钟）。评级只认代码与测试实证，不认文档自述。
 </footer>
 </div>

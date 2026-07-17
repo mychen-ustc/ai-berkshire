@@ -62,6 +62,13 @@ def _age_hours(ts, now):
     return None if ts is None else max(0.0, (now - ts) / 3600.0)
 
 
+def _parse_iso(s):
+    try:
+        return datetime.fromisoformat(s).timestamp()
+    except Exception:  # noqa: BLE001
+        return None
+
+
 # --------------------------------------------------------------------------
 # 检查（I/O）
 # --------------------------------------------------------------------------
@@ -120,6 +127,36 @@ def check_files(now):
     return out
 
 
+def check_runs(now):
+    """自动运行审计:各触发源最近运行时效 + 失败连击(基于 run_audit 真实记录,精确 dead-man's-switch)。"""
+    try:
+        import run_audit as ra
+    except Exception:  # noqa: BLE001
+        return [{"name": "运行审计", "status": "🟡", "note": "run_audit 不可用"}]
+    recs = ra.load()
+    if not recs:
+        return [{"name": "运行审计", "status": "🟢", "note": "暂无记录（cron/CI 首次运行后填充）"}]
+    s = ra.summarize(recs)
+    expect = {"cron-ingest": (8 * 24, 16 * 24), "cron-monitor": (3 * 24, 8 * 24)}  # (warn_h, crit_h)
+    out = []
+    for trig, v in sorted(s.items()):
+        if v["failure_streak"] >= 2:
+            out.append({"name": trig, "status": "🔴",
+                        "note": f"连续失败 {v['failure_streak']} 次（最近 {v['last_run']}）"})
+            continue
+        status = "🟡" if v["last_status"] == "failed" else "🟢"
+        note = f"最近 {v['last_run']}（{v['last_status']}）"
+        if trig in expect:
+            age = _age_hours(_parse_iso(v["last_run"]), now)
+            emoji, fnote = freshness_verdict(age, *expect[trig])
+            if emoji == "🔴":
+                status, note = "🔴", f"{fnote}（最近 {v['last_run']}）"
+            elif emoji == "🟡" and status == "🟢":
+                status, note = "🟡", f"{fnote}（最近 {v['last_run']}）"
+        out.append({"name": trig, "status": status, "note": note})
+    return out
+
+
 def check_cron(now):
     """cron 心跳:复盘日志 mtime 作 dead-man's-switch(预期至少每周更新一次)。"""
     p = os.path.join(ROOT, "logs", "review-cron.log")
@@ -139,6 +176,7 @@ def run_checks():
     groups = {
         "数据源": check_data_sources(now),
         "cron 心跳": check_cron(now),
+        "自动运行审计": check_runs(now),
         "数据新鲜度": check_files(now),
     }
     all_status = [c["status"] for g in groups.values() for c in g]

@@ -1025,5 +1025,31 @@
     "validated_on": "2026-07-16",
     "revalidate_every_days": 180,
     "owner": "claude"
+  },
+  {
+    "id": "run_audit",
+    "name": "可重放审计(自动运行留痕)",
+    "tool": "tools/run_audit.py",
+    "category": "运营与编排",
+    "method": "每次自动运行(cron/CI)生成run-id+审计记录(时间/触发源/命令/git SHA/退出码/耗时)→不可变账本;wrap透传退出码;summarize给失败连击供monitor;replay_hint给git checkout复跑",
+    "assumptions": [
+      "git 可用取 SHA",
+      "started_at ISO 可解析"
+    ],
+    "limitations": [
+      "活数据摄取不可逐字节复现(源在变),只可追溯口径;确定性部分配 lineage 精确复现",
+      "同触发源同秒运行 run-id 会撞(实际 cron/CI 不会)"
+    ],
+    "data_sources": [
+      "git rev-parse",
+      "被包裹命令退出码"
+    ],
+    "tests": [
+      "tests/test_run_audit.py"
+    ],
+    "status": "validated",
+    "validated_on": "2026-07-17",
+    "revalidate_every_days": 180,
+    "owner": "claude"
   }
 ]

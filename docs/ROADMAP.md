@@ -62,6 +62,6 @@
 **下一章的题目不再是"造工具"，而是三件事**：
 1. **数据充实**（P0，**大部完成**）：`ingest_universe.py`+`ashare_financials.py` 已摄取真实主数据(31)/美股公司行动(418)/A股快照(13)/**A股点时财务(+324,质量ROE因子现全市场可算)**/退市样本+新鲜度清单；仍待 **A/H 公司行动**与 **cron 自动调度**。
 2. **治理坐实**（P0）：治理修到旗舰（登记 dcf/industry_valuation/morningstar）+ 消除门禁盲区（已修 tests_missing stat）。
-3. **运营化**（P1，**大部完成**）：✅ CI 刚性（`.github/workflows/ci.yml` 每 push/PR 跑测试+code_gate+治理`--strict`）+ ✅ cron 无人值守（周摄取+日 monitor）+ ✅ 结果通知（`notify.py` 桌面/webhook/日志，接 monitor/cron/CI 失败）；仅剩 **可重放审计**（run-id 落盘）→ 完整 L5。
+3. **运营化**（P1，**✅ 达 L5**）：✅ CI 刚性（`ci.yml` 每 push/PR 跑测试+code_gate+治理`--strict`）+ ✅ cron 无人值守（周摄取+日 monitor）+ ✅ 结果通知（`notify.py` 接 monitor/cron/CI 失败）+ ✅ 可重放审计（`run_audit.py` run-id/SHA/结果落盘，monitor `check_runs` 做 dead-man's-switch）。**L5 四要件（自动运转+漂移监控+结果通知+可重放审计）全部落地，运营与编排域达 L5。**
 
 详见 [全链路能力诊断评级-20260716](全链路能力诊断评级-20260716.md)（含 12 域 L0–L5 评级表 · [HTML 看板](全链路能力诊断评级-20260716.html)）。

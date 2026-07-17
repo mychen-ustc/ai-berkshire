@@ -47,6 +47,7 @@ data/pit_financials.jsonl
 data/corporate_actions.jsonl
 data/delisting.jsonl
 data/lineage.jsonl
+data/run_audit.jsonl
 
 # 组合体检等含真实持仓/规模的私密报告，只存本地
 reports/private/
