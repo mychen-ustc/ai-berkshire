@@ -50,6 +50,7 @@ data/lineage.jsonl
 data/run_audit.jsonl
 data/signal_trials.jsonl
 data/universe_constituents.jsonl
+data/preregistrations.jsonl
 
 # 组合体检等含真实持仓/规模的私密报告，只存本地
 reports/private/

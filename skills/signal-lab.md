@@ -18,6 +18,8 @@
 | `sidak_adjusted_sharpe_pvalue` | 正态近似 Sharpe p + Šidák 试验惩罚（控 **FWER**）。⚠️ **非完整 DSR**（未处理 skew/kurt）；旧名 `deflated_sharpe_pvalue` 留兼容别名 |
 | `coverage_verdict` | 覆盖率门禁（**需分母**：交易所历史证券主表/指数成分）。⚠️ **无分母→coverage-unknown（不通过）**；加一个退市样本≠覆盖完整 |
 | `param_hash` / `trial_uid` | 试验指纹与唯一 ID（台账去重/审计） |
+| `required_n` / `min_detectable_effect` / `power_at` | 真 power analysis（正态近似）——检出 0.5%/月 edge 需 396 月，量化"样本够不够" |
+| `preregister` / `promotion_verdict` | 预注册（哈希链冻结 MDE/max_p/基准阈值防事后改参）+ 按预注册阈值判晋级 |
 
 ## 执行流程
 ```bash

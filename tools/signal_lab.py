@@ -292,11 +292,8 @@ def _chain_hash(prev_hash, rec):
     return hashlib.sha256((str(prev_hash) + "|" + _canonical(rec)).encode()).hexdigest()[:16]
 
 
-def record_trial(rec, path=TRIALS):
-    """追加一次试验,带 **seq(单调)+ prev_hash + chain_hash(哈希链)** → 篡改/删除可被 verify 检出。IO。
-    含失败/0触发也记(不能把 N 次失败藏在 1 个幸存者后)。
-    ⚠️ 诚实边界(评审#5):哈希链使删改**可审计(tamper-evident)**,但仍**非防绕过**——
-    --no-record 可完全不记(留 seq 空档但无记录可证),真正不可绕过需强制统一执行入口(外部基础设施)。"""
+def _append_chained(rec, path):
+    """通用哈希链追加(seq+prev_hash+chain_hash)。供试验台账与预注册册共用。IO。"""
     recs = load_trials(path)
     prev = recs[-1].get("chain_hash", "GENESIS") if recs else "GENESIS"
     seq = (recs[-1].get("seq", -1) + 1) if recs else 0
@@ -308,6 +305,13 @@ def record_trial(rec, path=TRIALS):
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     return rec
+
+
+def record_trial(rec, path=TRIALS):
+    """追加一次试验,带哈希链 → 篡改/删除可被 verify 检出。含失败/0触发也记。IO。
+    ⚠️ 诚实边界(评审#5):哈希链使删改**可审计(tamper-evident)**,但仍**非防绕过**——
+    --no-record 可完全不记,真正不可绕过需强制统一执行入口(外部基础设施)。"""
+    return _append_chained(rec, path)
 
 
 def verify_ledger(path=TRIALS):
@@ -336,6 +340,85 @@ def trial_count(path=TRIALS, split=None):
     if split:
         recs = [r for r in recs if r.get("split") == split]
     return len(recs)
+
+
+# --------------------------------------------------------------------------
+# 真功效分析(评审#7):MDE / 所需样本 / 达成功效(正态近似,复用 tail_risk.norm_ppf)
+# --------------------------------------------------------------------------
+def _z(p):
+    import tail_risk
+    return tail_risk.norm_ppf(p)
+
+
+def required_n(mde, vol_periodic, alpha=0.05, power=0.8):
+    """检出每期均值效应 mde(给定每期波动)所需**期数**(单边)。纯函数。
+    N = ((z_alpha + z_power)·vol / mde)²。这才是 power analysis,非"数窗口"。"""
+    if mde <= 0 or vol_periodic <= 0:
+        return None
+    z = _z(1 - alpha) + _z(power)
+    return math.ceil((z * vol_periodic / mde) ** 2)
+
+
+def min_detectable_effect(n, vol_periodic, alpha=0.05, power=0.8):
+    """给定 n 期与波动,目标功效下**最小可检测效应(MDE)**(每期均值)。纯函数。"""
+    if n <= 0 or vol_periodic <= 0:
+        return None
+    z = _z(1 - alpha) + _z(power)
+    return z * vol_periodic / math.sqrt(n)
+
+
+def power_at(n, effect, vol_periodic, alpha=0.05):
+    """给定 n/效应/波动,单边检验的**达成功效**。纯函数。"""
+    if n <= 0 or vol_periodic <= 0:
+        return None
+    ncp = effect * math.sqrt(n) / vol_periodic          # 非中心参数≈效应的 t
+    return 1.0 - _norm_cdf(_z(1 - alpha) - ncp)
+
+
+# --------------------------------------------------------------------------
+# 预注册(评审#7):跑 OOS 前冻结假设/阈值(哈希链),防事后改参再看同段数据
+# --------------------------------------------------------------------------
+PREREG = os.path.join(ROOT, "data", "preregistrations.jsonl")
+
+
+def preregister(spec, path=PREREG):
+    """在 OOS 跑之前冻结 {因子/参数/horizon/MDE最低值/alpha/目标功效/基准/风险约束} + 参数哈希。
+    哈希链存档 → 事后无法伪造"我早就注册过"。返回记录(含 prereg_id)。IO。"""
+    spec = dict(spec)
+    spec.setdefault("kind", "prereg")
+    spec["param_hash"] = spec.get("param_hash") or param_hash(*(str(spec.get(k)) for k in sorted(spec) if k not in ("recorded_at",)))
+    rec = _append_chained(spec, path)
+    rec_id = rec["chain_hash"]
+    return {**rec, "prereg_id": rec_id}
+
+
+def find_prereg(param_hash_val, path=PREREG):
+    """按 param_hash 找预注册(证明"先注册后验证")。→ 记录或 None。纯读取。"""
+    for r in load_trials(path):
+        if r.get("param_hash") == param_hash_val:
+            return r
+    return None
+
+
+def promotion_verdict(oos, prereg):
+    """按**预注册**阈值判 OOS 是否达标晋级(评审#7:阈值须预注册,不得事后定)。纯函数。
+    prereg 阈值:min_material_edge(每期/年化净超额最低)、max_p(显著性上限)、
+    min_net_excess_vs_bench(相对基准净超额,可选)、min_power(可选)。"""
+    reasons, ok = [], True
+    edge = oos.get("cagr")
+    if prereg.get("min_material_edge") is not None:
+        if edge is None or edge < prereg["min_material_edge"]:
+            ok = False; reasons.append(f"OOS CAGR {edge} < 预注册 material 阈 {prereg['min_material_edge']}")
+    if prereg.get("max_p") is not None:
+        p = oos.get("bootstrap_p")
+        if p is None or p > prereg["max_p"]:
+            ok = False; reasons.append(f"OOS p {p} > 预注册上限 {prereg['max_p']}")
+    if prereg.get("min_net_excess_vs_bench") is not None:
+        ex = oos.get("net_excess_vs_bench")
+        if ex is None or ex < prereg["min_net_excess_vs_bench"]:
+            ok = False; reasons.append(f"相对基准净超额 {ex} < 预注册 {prereg['min_net_excess_vs_bench']}")
+    return {"promote": ok, "reasons": reasons or ["全部预注册阈值达标"],
+            "note": "阈值来自预注册(哈希链),非事后所定;holdout 失败不得改参再看同段数据"}
 
 
 # --------------------------------------------------------------------------

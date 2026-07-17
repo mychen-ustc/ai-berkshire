@@ -237,5 +237,55 @@ class TestCoverageMaster(unittest.TestCase):
             self.assertEqual(sl.load_expected_delisted("u", as_of="2026-01-01", path=p), {"A", "B"})
 
 
+class TestPowerAnalysis(unittest.TestCase):
+    def test_required_n_formula(self):
+        # N = ((z_a+z_p)·vol/mde)²;检出小效应需巨量样本
+        n = sl.required_n(0.005, 0.04, alpha=0.05, power=0.8)
+        self.assertGreater(n, 300)                    # 0.5%效应/4%波动 → 数百期
+        self.assertLess(sl.required_n(0.02, 0.04), n)  # 效应越大所需越少
+
+    def test_mde_inverse(self):
+        mde = sl.min_detectable_effect(24, 0.04, alpha=0.05, power=0.8)
+        self.assertGreater(mde, 0.015)                # 24期只能测出很大的效应
+        # required_n(该 MDE) 应约回到 24
+        self.assertLessEqual(abs(sl.required_n(mde, 0.04) - 24), 2)
+
+    def test_power_at_low_for_small_sample(self):
+        self.assertLess(sl.power_at(24, 0.005, 0.04), 0.5)   # 小样本小效应=功效不足
+        self.assertGreater(sl.power_at(400, 0.005, 0.04), 0.7)
+
+    def test_guards(self):
+        self.assertIsNone(sl.required_n(0, 0.04))
+        self.assertIsNone(sl.min_detectable_effect(0, 0.04))
+
+
+class TestPreregPromotion(unittest.TestCase):
+    def test_preregister_chained(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "pr.jsonl")
+            r = sl.preregister({"factor": "quality", "min_material_edge": 0.1, "max_p": 0.05}, path=p)
+            self.assertIn("prereg_id", r)
+            self.assertIn("param_hash", r)
+            self.assertTrue(sl.verify_ledger(p)["ok"])
+            self.assertIsNotNone(sl.find_prereg(r["param_hash"], path=p))
+
+    def test_promotion_fails_on_p(self):
+        pr = {"min_material_edge": 0.1, "max_p": 0.05}
+        v = sl.promotion_verdict({"cagr": 0.1477, "bootstrap_p": 0.083}, pr)
+        self.assertFalse(v["promote"])
+        self.assertTrue(any("p" in r for r in v["reasons"]))
+
+    def test_promotion_fails_on_edge(self):
+        pr = {"min_material_edge": 0.20, "max_p": 0.05}
+        v = sl.promotion_verdict({"cagr": 0.1477, "bootstrap_p": 0.03}, pr)
+        self.assertFalse(v["promote"])                # CAGR 14.77% < 20% 阈
+
+    def test_promotion_passes(self):
+        pr = {"min_material_edge": 0.1, "max_p": 0.05}
+        v = sl.promotion_verdict({"cagr": 0.1477, "bootstrap_p": 0.03}, pr)
+        self.assertTrue(v["promote"])
+
+
 if __name__ == "__main__":
     unittest.main()

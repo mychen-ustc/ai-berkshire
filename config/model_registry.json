@@ -1057,7 +1057,7 @@
     "name": "信号防过拟合工具箱",
     "tool": "tools/signal_lab.py",
     "category": "回测与业绩归因",
-    "method": "防过拟合原语:功效体检(重叠窗独立观测)/密封holdout/试验台账(哈希链seq+prev_hash+chain_hash防篡改可审计,verify检出删改,记失败)/walk-forward+purge/circular-block-bootstrap(启发式非严格零分布)/BH-FDR(控FDR)/sidak_adjusted_sharpe_pvalue(正态近似+Šidák控FWER,非完整DSR)/反转覆盖率门禁(需真分母:coverage_from_master载交易所历史成分,否则coverage-unknown)",
+    "method": "防过拟合原语:功效体检(重叠窗独立观测)/密封holdout/试验台账(哈希链seq+prev_hash+chain_hash防篡改可审计,verify检出删改,记失败)/walk-forward+purge/circular-block-bootstrap(启发式非严格零分布)/BH-FDR(控FDR)/sidak_adjusted_sharpe_pvalue(正态近似+Šidák控FWER,非完整DSR)/反转覆盖率门禁(需真分母:coverage_from_master载交易所历史成分,否则coverage-unknown) ;真功效分析(required_n/MDE/power_at,正态近似复用tail_risk.norm_ppf);预注册(哈希链冻结阈值防事后改参)+promotion_verdict(按预注册阈值晋级)",
     "assumptions": [
       "重叠前瞻窗致自相关(故block-bootstrap非iid)",
       "erf算正态CDF(math.erf,无scipy)",
