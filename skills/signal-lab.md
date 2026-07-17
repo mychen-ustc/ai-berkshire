@@ -10,7 +10,8 @@
 |---|---|
 | `effective_independent_obs` | 功效体检：重叠前瞻窗把 N 次触发压成几个独立观测（诚实预期锚） |
 | `holdout_split` / `assert_no_holdout_leak` | 密封时间轴样本外，发现阶段永不触碰（**唯二无法回填之一**） |
-| `record_trial` / `trial_count` | append-only 试验台账 = 多重比较的分母（**唯二无法回填之二**） |
+| `record_trial` / `verify_ledger` | 试验台账 = 多重比较分母；**哈希链(seq+prev_hash+chain_hash)防篡改可审计**，`verify` 检出删改（`signal_lab.py verify`） |
+| `load_expected_delisted` / `coverage_from_master` | 从交易所历史成分主表载**真覆盖率分母**（数据待摄取，缺则 coverage-unknown） |
 | `walk_forward_splits` | 滚动训练/测试 + purge（防重叠标签泄漏）+ embargo |
 | `block_bootstrap_pvalue` | 圆形分块自助**启发式**证据（尊重重叠窗自相关）。⚠️ 非严格经验零分布 p（重采样已观测收益 vs 固定基线，未处理基线误差/选择效应），仅证据强弱；严格版需时间块置换 + scipy oracle |
 | `benjamini_hochberg` | BH-FDR 多重检验（控 **FDR**，与 Šidák 控 FWER 不同） |

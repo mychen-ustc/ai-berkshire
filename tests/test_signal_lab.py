@@ -159,5 +159,83 @@ class TestTrialLedger(unittest.TestCase):
         self.assertEqual(sl.trial_count("/tmp/nonexistent_trials_xyz.jsonl"), 0)
 
 
+class TestLedgerChain(unittest.TestCase):
+    def test_chain_intact_after_records(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "t.jsonl")
+            for i in range(3):
+                sl.record_trial({"signal": "rsi", "symbol": f"S{i}"}, p)
+            v = sl.verify_ledger(p)
+            self.assertTrue(v["ok"])
+            self.assertEqual(v["n"], 3)
+            # seq 单调 + prev_hash 衔接
+            recs = sl.load_trials(p)
+            self.assertEqual([r["seq"] for r in recs], [0, 1, 2])
+            self.assertEqual(recs[1]["prev_hash"], recs[0]["chain_hash"])
+
+    def test_tamper_detected(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "t.jsonl")
+            for i in range(3):
+                sl.record_trial({"signal": "rsi", "symbol": f"S{i}"}, p)
+            recs = [json.loads(l) for l in open(p)]
+            recs[1]["symbol"] = "TAMPERED"          # 篡改中间一条
+            with open(p, "w") as f:
+                f.write("\n".join(json.dumps(r, ensure_ascii=False) for r in recs) + "\n")
+            v = sl.verify_ledger(p)
+            self.assertFalse(v["ok"])
+            self.assertIn(1, v["broken_at"])
+
+    def test_deletion_detected(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "t.jsonl")
+            for i in range(3):
+                sl.record_trial({"signal": "rsi", "symbol": f"S{i}"}, p)
+            recs = [json.loads(l) for l in open(p)]
+            del recs[1]                              # 删中间一条 → seq 空档 + 链断
+            with open(p, "w") as f:
+                f.write("\n".join(json.dumps(r, ensure_ascii=False) for r in recs) + "\n")
+            self.assertFalse(sl.verify_ledger(p)["ok"])
+
+
+class TestCoverageMaster(unittest.TestCase):
+    def test_unknown_when_no_file(self):
+        r = sl.coverage_from_master(["600519"], ["LEHMQ"], universe="csi300",
+                                    path="/tmp/no_such_constituents.jsonl")
+        self.assertFalse(r["trustworthy"])
+        self.assertIsNone(r["survivorship_coverage"])
+
+    def test_loads_denominator_and_computes(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "c.jsonl")
+            with open(p, "w") as f:
+                f.write(json.dumps({"universe": "mini", "as_of": "2020-01-01",
+                                    "delisted": ["X", "Y", "Z"]}) + "\n")
+            exp = sl.load_expected_delisted("mini", path=p)
+            self.assertEqual(exp, {"X", "Y", "Z"})
+            # 我们的退市库有 X,Y → 覆盖 2/3 = 67% < 80% → 不通过
+            r = sl.coverage_from_master(["A"], ["X", "Y"], universe="mini", path=p)
+            self.assertAlmostEqual(r["survivorship_coverage"], 2 / 3)
+            self.assertFalse(r["trustworthy"])
+
+    def test_asof_picks_prior_snapshot(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "c.jsonl")
+            with open(p, "w") as f:
+                f.write(json.dumps({"universe": "u", "as_of": "2019-01-01", "delisted": ["A"]}) + "\n")
+                f.write(json.dumps({"universe": "u", "as_of": "2025-01-01", "delisted": ["A", "B"]}) + "\n")
+            self.assertEqual(sl.load_expected_delisted("u", as_of="2020-06-30", path=p), {"A"})
+            self.assertEqual(sl.load_expected_delisted("u", as_of="2026-01-01", path=p), {"A", "B"})
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -232,6 +232,37 @@ def coverage_verdict(tested_symbols, delisting_symbols, expected_delisted=None,
             "verdict": "可信" if trustworthy else ("coverage-unknown/不可信" if cov_frac is None else "coverage-partial/不可信")}
 
 
+CONSTITUENTS = os.path.join(ROOT, "data", "universe_constituents.jsonl")
+
+
+def load_expected_delisted(universe, as_of=None, path=CONSTITUENTS):
+    """真分母来源:某 universe(指数/市场)在 as_of 前**本应存在的已退市**名单(交易所历史证券主表/指数成分)。
+    → set 或 None(无数据源)。纯读取。文件缺失/无匹配 → None → 上游 coverage_verdict 判 coverage-unknown。
+    ⚠️ 生产需接交易所历史成分/退市全量;本工具只提供机制,分母数据须另行摄取(免费源受限,诚实待补)。"""
+    if not os.path.exists(path):
+        return None
+    best = None
+    for ln in open(path, encoding="utf-8"):
+        if not ln.strip():
+            continue
+        r = json.loads(ln)
+        if r.get("universe") != universe:
+            continue
+        if as_of and r.get("as_of") and r["as_of"] > as_of:
+            continue                                   # 只取 as_of 前的成分快照
+        if best is None or (r.get("as_of") or "") >= (best.get("as_of") or ""):
+            best = r
+    return set(best.get("delisted", [])) if best else None
+
+
+def coverage_from_master(tested_symbols, delisting_symbols, universe, as_of=None,
+                         pit_covered_symbols=None, path=CONSTITUENTS, **kw):
+    """便捷:从成分主表载真分母 → coverage_verdict。无分母源即 coverage-unknown(诚实,不通过)。"""
+    exp = load_expected_delisted(universe, as_of, path)
+    return coverage_verdict(tested_symbols, delisting_symbols, expected_delisted=exp,
+                            pit_covered_symbols=pit_covered_symbols, **kw)
+
+
 # --------------------------------------------------------------------------
 # 试验台账(append-only,多重比较的分母)
 # --------------------------------------------------------------------------
@@ -249,13 +280,47 @@ def trial_uid(rec):
     return hashlib.sha256(key.encode()).hexdigest()[:12]
 
 
+def _canonical(rec):
+    """记录的规范化内容(排除 chain_hash 自身),用于哈希。纯函数。"""
+    core = {k: v for k, v in rec.items() if k != "chain_hash"}
+    return json.dumps(core, ensure_ascii=False, sort_keys=True)
+
+
+def _chain_hash(prev_hash, rec):
+    """链式哈希 = sha256(前一条 chain_hash | 本条规范化内容)。纯函数。防中间删改(篡改即断链)。"""
+    import hashlib
+    return hashlib.sha256((str(prev_hash) + "|" + _canonical(rec)).encode()).hexdigest()[:16]
+
+
 def record_trial(rec, path=TRIALS):
-    """追加一次信号校准试验(从第 1 次起记,含失败/0触发,不能把 N 次失败藏在 1 个幸存者后)。IO。
-    ⚠️ 诚实边界(评审#5):append-only 但**非防篡改/非跨机器**——无哈希链、无统一强制入口、可手删、
-    --no-record 可绕过。故"台账条数==历史校准次数"仅在单机、经统一 CLI、无人为删改时成立,不是密码学保证。"""
+    """追加一次试验,带 **seq(单调)+ prev_hash + chain_hash(哈希链)** → 篡改/删除可被 verify 检出。IO。
+    含失败/0触发也记(不能把 N 次失败藏在 1 个幸存者后)。
+    ⚠️ 诚实边界(评审#5):哈希链使删改**可审计(tamper-evident)**,但仍**非防绕过**——
+    --no-record 可完全不记(留 seq 空档但无记录可证),真正不可绕过需强制统一执行入口(外部基础设施)。"""
+    recs = load_trials(path)
+    prev = recs[-1].get("chain_hash", "GENESIS") if recs else "GENESIS"
+    seq = (recs[-1].get("seq", -1) + 1) if recs else 0
+    rec = dict(rec)
+    rec["seq"] = seq
+    rec["prev_hash"] = prev
+    rec["chain_hash"] = _chain_hash(prev, rec)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    return rec
+
+
+def verify_ledger(path=TRIALS):
+    """校验哈希链完整性:重算每条 chain_hash + 检 seq 单调 + prev_hash 衔接。→ 检出篡改/删除。纯计算。"""
+    recs = load_trials(path)
+    prev, broken = "GENESIS", []
+    for i, r in enumerate(recs):
+        expect = _chain_hash(prev, {k: v for k, v in r.items() if k != "chain_hash"})
+        if r.get("chain_hash") != expect or r.get("seq") != i or r.get("prev_hash") != prev:
+            broken.append(i)
+        prev = r.get("chain_hash", "")
+    return {"ok": len(broken) == 0, "n": len(recs), "broken_at": broken,
+            "verdict": "完整(未检出篡改/删除)" if not broken else f"⚠️ 链断裂于第 {broken} 条(疑篡改/删除)"}
 
 
 def load_trials(path=TRIALS):
@@ -315,8 +380,14 @@ def main():
     p.add_argument("--min-obs", dest="min_obs", type=int, default=20)
     p.add_argument("--json", action="store_true")
     sub.add_parser("demo", help="各原语自检")
+    sub.add_parser("verify", help="校验试验台账哈希链完整性(检出篡改/删除)")
     args = ap.parse_args()
-    {"power": cmd_power, "demo": cmd_demo}.get(args.cmd, lambda a: ap.print_help())(args)
+
+    def cmd_verify(a):
+        v = verify_ledger()
+        print(f"试验台账: {trial_count()} 条 · 链完整性: {v['verdict']}")
+    {"power": cmd_power, "demo": cmd_demo, "verify": cmd_verify}.get(
+        args.cmd, lambda a: ap.print_help())(args)
 
 
 if __name__ == "__main__":
