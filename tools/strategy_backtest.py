@@ -100,6 +100,30 @@ def split_is_oos(periods, oos_frac=0.4):
     return periods[:k], periods[k:]
 
 
+def bench_periods(prices, bench, rebal_dates):
+    """基准(如 SPY)按同再平衡日的买入持有每期收益。纯函数。"""
+    out = []
+    for i in range(len(rebal_dates) - 1):
+        d0, d1 = rebal_dates[i], rebal_dates[i + 1]
+        px = prices.get(bench, {})
+        r = (px[d1] / px[d0] - 1.0) if px.get(d0) and px.get(d1) else 0.0
+        out.append({"d0": d0, "d1": d1, "net": round(r, 6), "turnover": 0.0})
+    return out
+
+
+def net_excess_cagr(strat_cagr, bench_cagr):
+    """策略相对基准的净超额 CAGR。纯函数。"""
+    if strat_cagr is None or bench_cagr is None:
+        return None
+    return strat_cagr - bench_cagr
+
+
+def strategy_param_hash(factor, universe, top_frac, cost_bps, oos_frac):
+    """策略参数指纹(预注册与回测须一致,否则 promote 视为改参)。纯函数。"""
+    import signal_lab as _sl
+    return _sl.param_hash("strategy", factor, universe, top_frac, cost_bps, oos_frac)
+
+
 def perf(periods, ppy=12, rf=0.04):
     """一段期收益的绩效:CAGR/波动/最大回撤/Sharpe(净额)。复用 quant_metrics。纯函数。"""
     rets = [p["net"] for p in periods]
@@ -177,6 +201,28 @@ def cmd_run(args):
     res = {"factor": args.factor, "universe_n": len(universe), "rebalances": len(periods),
            "IS": is_perf, "OOS": oos_perf, "ALL_biased": all_perf,
            "oos_bootstrap_p": oos_boot["p_value"], "coverage": cov}
+    # 相对基准净超额(OOS):基准存在于价格矩阵时按同再平衡日买入持有
+    bench = args.benchmark if args.benchmark in prices else None
+    if bench:
+        bp = bench_periods(prices, bench, rebal)
+        _, bench_oos = split_is_oos(bp, args.oos_frac)
+        bench_perf = perf(bench_oos)
+        res["bench"] = bench
+        res["bench_oos_cagr"] = bench_perf["cagr"]
+        oos_perf["net_excess_vs_bench"] = net_excess_cagr(oos_perf["cagr"], bench_perf["cagr"])
+    # 晋级门禁:找预注册(须先注册后验证),按**预注册**阈值判 promote
+    ph = strategy_param_hash(args.factor, args.universe, args.top_frac, args.cost_bps, args.oos_frac)
+    res["param_hash"] = ph
+    prereg = sl.find_prereg(ph)
+    if prereg:
+        oos_for_gate = {"cagr": oos_perf["cagr"], "bootstrap_p": res["oos_bootstrap_p"],
+                        "net_excess_vs_bench": oos_perf.get("net_excess_vs_bench")}
+        res["promotion"] = {**sl.promotion_verdict(oos_for_gate, prereg),
+                            "prereg_id": prereg.get("chain_hash", "")[:12]}
+    else:
+        res["promotion"] = {"promote": False, "status": "no-prereg",
+                            "reasons": [f"无匹配预注册(param_hash {ph[:12]});未预注册的策略仅探索性、不得晋级"],
+                            "note": "先 `strategy_backtest.py prereg` 冻结阈值,再 run 才可判 promote"}
     if not args.no_record:
         _record(args, res)
         res["trial_id_recorded"] = True
@@ -202,8 +248,24 @@ def _record(args, res):
            "top_frac": args.top_frac, "cost_bps": args.cost_bps, "oos_frac": args.oos_frac,
            "oos_cagr": res["OOS"]["cagr"], "oos_sharpe": res["OOS"]["sharpe"],
            "oos_bootstrap_p": res["oos_bootstrap_p"], "coverage": res["coverage"]["verdict"]}
-    rec["param_hash"] = sl.param_hash(args.factor, args.universe, args.top_frac, args.cost_bps, args.oos_frac)
+    rec["param_hash"] = strategy_param_hash(args.factor, args.universe, args.top_frac, args.cost_bps, args.oos_frac)
+    rec["promote"] = res.get("promotion", {}).get("promote")
     sl.record_trial(rec)
+
+
+def cmd_prereg(args):
+    """OOS 跑之前冻结晋级阈值(哈希链)。param_hash 与 run 一致 → run 时自动判 promote。"""
+    ph = strategy_param_hash(args.factor, args.universe, args.top_frac, args.cost_bps, args.oos_frac)
+    spec = {"kind": "prereg", "strategy": "factor-longonly", "factor": args.factor,
+            "universe": args.universe, "top_frac": args.top_frac, "cost_bps": args.cost_bps,
+            "oos_frac": args.oos_frac, "param_hash": ph,
+            "min_material_edge": args.min_material_edge, "max_p": args.max_p,
+            "min_net_excess_vs_bench": args.min_net_excess, "alpha": 0.05, "target_power": 0.8}
+    r = sl.preregister(spec)
+    print(f"✅ 预注册冻结 · prereg_id {r['prereg_id'][:12]} · param_hash {ph[:12]}")
+    print(f"   阈值:material_edge≥{args.min_material_edge} · p≤{args.max_p}"
+          + (f" · 净超额≥{args.min_net_excess}" if args.min_net_excess is not None else ""))
+    print(f"   现在跑 `run --factor {args.factor} --universe {args.universe} ...`(同参)即自动判 promote")
 
 
 def _pct(x):
@@ -221,9 +283,17 @@ def _render(args, res, universe):
               f"回撤 {_pct(p['maxdd'])} · Sharpe {p['sharpe'] if p['sharpe'] is None else round(p['sharpe'],2)}")
     print(f"\n  OOS 净额显著性(vs 0,启发式 bootstrap): p={res['oos_bootstrap_p']:.3f}"
           + ("(弱证据/不显著)" if res['oos_bootstrap_p'] >= 0.05 else "(有证据)"))
+    if res.get("bench"):
+        print(f"  相对基准 {res['bench']}(OOS): 策略 {_pct(res['OOS']['cagr'])} − 基准 "
+              f"{_pct(res.get('bench_oos_cagr'))} = 净超额 {_pct(res['OOS'].get('net_excess_vs_bench'))}")
     print(f"  覆盖率门禁: {res['coverage']['verdict']}")
     for f in res["coverage"]["flags"]:
         print(f"    ⚠️ {f[:80]}")
+    pr = res.get("promotion", {})
+    icon = "🟢 晋级" if pr.get("promote") else ("⚪ 无预注册" if pr.get("status") == "no-prereg" else "🔴 不晋级")
+    print(f"\n  晋级门禁: {icon}" + (f" · prereg {pr['prereg_id']}" if pr.get("prereg_id") else ""))
+    for rsn in pr.get("reasons", []):
+        print(f"    · {rsn[:88]}")
     print(f"\n  ⚠️ OOS 才算数(全样本有偏);净额已扣 {args.cost_bps}bps 换手成本;universe 薄+单因子=演示引擎;"
           "覆盖率 coverage-unknown 表示无幸存者分母、不得称'无偏差';预期多为 null。非交易建议。")
 
@@ -238,10 +308,23 @@ def main():
     r.add_argument("--cost-bps", dest="cost_bps", type=float, default=10.0, help="单边换手成本 bps")
     r.add_argument("--oos-frac", dest="oos_frac", type=float, default=0.4, help="样本外比例(时间轴后段)")
     r.add_argument("--universe", default="price-matrix", help="universe 标识(供覆盖率分母查找)")
+    r.add_argument("--benchmark", default="SPY", help="相对基准(须在价格矩阵内,如 SPY);缺则跳过净超额")
     r.add_argument("--no-record", dest="no_record", action="store_true")
     r.add_argument("--json", action="store_true")
+
+    pr = sub.add_parser("prereg", help="OOS 跑前冻结晋级阈值(哈希链);param_hash 与 run 一致")
+    pr.add_argument("--factor", default="quality")
+    pr.add_argument("--top-frac", dest="top_frac", type=float, default=0.5)
+    pr.add_argument("--cost-bps", dest="cost_bps", type=float, default=10.0)
+    pr.add_argument("--oos-frac", dest="oos_frac", type=float, default=0.4)
+    pr.add_argument("--universe", default="price-matrix")
+    pr.add_argument("--min-material-edge", dest="min_material_edge", type=float, default=0.05,
+                    help="OOS CAGR 最低门槛(年化)")
+    pr.add_argument("--max-p", dest="max_p", type=float, default=0.05, help="OOS 显著性 p 上限")
+    pr.add_argument("--min-net-excess", dest="min_net_excess", type=float, default=None,
+                    help="相对基准 OOS 净超额最低(可选)")
     args = ap.parse_args()
-    {"run": cmd_run}.get(args.cmd, lambda a: ap.print_help())(args)
+    {"run": cmd_run, "prereg": cmd_prereg}.get(args.cmd, lambda a: ap.print_help())(args)
 
 
 if __name__ == "__main__":

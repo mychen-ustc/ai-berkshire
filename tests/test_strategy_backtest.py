@@ -93,5 +93,33 @@ class TestSplitAndPerf(unittest.TestCase):
         self.assertIsNone(sb.perf([])["cagr"])
 
 
+class TestBenchmarkExcess(unittest.TestCase):
+    def test_bench_periods(self):
+        prices = {"SPY": {"d0": 100.0, "d1": 110.0, "d2": 121.0}}
+        bp = sb.bench_periods(prices, "SPY", ["d0", "d1", "d2"])
+        self.assertEqual(len(bp), 2)
+        self.assertAlmostEqual(bp[0]["net"], 0.10, places=6)
+        self.assertEqual(bp[0]["turnover"], 0.0)
+
+    def test_bench_periods_missing_price(self):
+        bp = sb.bench_periods({"SPY": {"d0": 100.0}}, "SPY", ["d0", "d1"])
+        self.assertEqual(bp[0]["net"], 0.0)                 # 缺价 → 0,不崩
+
+    def test_net_excess(self):
+        self.assertAlmostEqual(sb.net_excess_cagr(0.15, 0.16), -0.01, places=6)
+        self.assertIsNone(sb.net_excess_cagr(0.15, None))
+
+
+class TestParamHashConsistency(unittest.TestCase):
+    def test_prereg_and_run_hash_match(self):
+        # 预注册与回测须产出同一 param_hash,否则 promote 视为改参
+        a = sb.strategy_param_hash("quality", "u1", 0.5, 10.0, 0.4)
+        b = sb.strategy_param_hash("quality", "u1", 0.5, 10.0, 0.4)
+        self.assertEqual(a, b)
+        # 任一参数变化 → 指纹变化(换参=换策略)
+        self.assertNotEqual(a, sb.strategy_param_hash("quality", "u1", 0.6, 10.0, 0.4))
+        self.assertNotEqual(a, sb.strategy_param_hash("momentum", "u1", 0.5, 10.0, 0.4))
+
+
 if __name__ == "__main__":
     unittest.main()

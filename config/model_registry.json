@@ -1088,7 +1088,7 @@
     "name": "因子策略回测脊柱(OOS-first)",
     "tool": "tools/strategy_backtest.py",
     "category": "回测与业绩归因",
-    "method": "PIT因子(仅PIT_SAFE,ROE走pit_financials.as_of)→月度纯多头选股→扣TCA净额→walk-forward样本内/外分报→OOS显著性(bootstrap)→coverage_from_master门禁→哈希链台账",
+    "method": "PIT因子(仅PIT_SAFE,ROE走pit_financials.as_of)→月度纯多头选股→扣TCA净额→walk-forward样本内/外分报→OOS显著性(bootstrap)→coverage_from_master门禁→哈希链台账 ;闭环:prereg 子命令预注册阈值(哈希链)→run 按同 param_hash 自动判 promotion_verdict(未注册→仅探索性拒晋级);相对基准(SPY)OOS 净超额揭示真alpha",
     "assumptions": [
       "价格矩阵前复权",
       "月度再平衡等权",
